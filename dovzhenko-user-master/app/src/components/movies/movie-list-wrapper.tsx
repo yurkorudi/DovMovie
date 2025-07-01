@@ -19,12 +19,14 @@ const MovieListWrapper = ({
 	const [currentDate, setCurrentDate] = useState<Moment>(moment());
 
 	const getMovieListByDate = (date: Moment) => {
+		if (!movies || !Array.isArray(movies)) return [];
+
 		return movies.filter((movie) =>
 			movie.showtimes.some((showtime) =>
-				moment(showtime.dateTime).isSame(date, 'day'),
-			),
+			moment(showtime.dateTime).isSame(date, 'day')
+			)
 		);
-	};
+		};
 
 	useEffect(() => {
 		setMovieList(getMovieListByDate(moment()));

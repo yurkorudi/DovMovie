@@ -18,7 +18,7 @@ import { TContact } from '@/lib/types/contacts';
  */
 export const getMainCarouselSlides = async () => {
 	try {
-		const response = await fetch('https://dvzh.uno/api/main-carousel', {
+		const response = await fetch('http://localhost:3001/api/main-carousel', {
 			cache: 'no-cache',
 		});
 		const data = await response.json();
@@ -41,7 +41,7 @@ export const getMainCarouselSlides = async () => {
  */
 export const getEvents = async (): Promise<TEvent[]> => {
 	try {
-		const response = await fetch('https://dvzh.uno/api/events', {
+		const response = await fetch('http://localhost:3001/api/events', {
 			cache: 'no-cache',
 		});
 		const data = await response.json();
@@ -59,7 +59,7 @@ export const getEvents = async (): Promise<TEvent[]> => {
  */
 export const getStudios = async (): Promise<TStudio[]> => {
 	try {
-		const response = await fetch('https://dvzh.uno/api/studios', {
+		const response = await fetch('http://localhost:3001/api/studios', {
 			cache: 'no-cache',
 		});
 		const data = await response.json();
@@ -77,7 +77,7 @@ export const getStudios = async (): Promise<TStudio[]> => {
  */
 export const getTeamSlides = async (): Promise<TAboutUs[]> => {
 	try {
-		const response = await fetch('https://dvzh.uno/api/about-us', {
+		const response = await fetch('http://localhost:3001/api/about-us', {
 			cache: 'no-cache',
 		});
 		const data = await response.json();
@@ -95,7 +95,7 @@ export const getTeamSlides = async (): Promise<TAboutUs[]> => {
  */
 export const getContacts = async (): Promise<TContact> => {
 	try {
-		const response = await fetch('https://dvzh.uno/api/contacts');
+		const response = await fetch('http://localhost:3001/api/contacts');
 		const data = await response.json();
 
 		return data;
@@ -106,7 +106,7 @@ export const getContacts = async (): Promise<TContact> => {
 
 export const sendMessage = async (formData: FormData) => {
 	try {
-		const response = await fetch('https://dvzh.uno/api/message', {
+		const response = await fetch('http://localhost:3001/api/message', {
 			method: 'POST',
 			body: formData,
 		});
@@ -125,7 +125,7 @@ export const sendMessage = async (formData: FormData) => {
 
 export const getCurrentMovies = async () => {
 	try {
-		const response = await fetch('https://dvzh.uno/api/movie', {
+		const response = await fetch('http://localhost:3001/api/movie', {
 			cache: 'no-cache',
 		});
 		const data = await response.json();
@@ -138,7 +138,7 @@ export const getCurrentMovies = async () => {
 
 export const getMovieById = async (id: string) => {
 	try {
-		const response = await fetch(`https://dvzh.uno/api/movie/get?id=${id}`, {
+		const response = await fetch(`http://localhost:3001/api/movie/get?id=${id}`, {
 			cache: 'no-cache',
 		});
 		const data = await response.json();

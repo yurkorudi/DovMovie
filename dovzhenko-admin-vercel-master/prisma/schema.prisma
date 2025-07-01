@@ -148,6 +148,48 @@ model Contacts {
   scheduleEng String
 }
 
+model Hall {
+  id          String     @id @default(cuid())
+  name        String
+  rows        Int
+  seatsPerRow Int
+  sessions    Session[]
+  seats       Seat[]     @relation("HallSeats")
+}
+
+model Seat {
+  id      String   @id @default(cuid())
+  row     Int
+  number  Int
+  hallId  String
+  hall    Hall     @relation("HallSeats", fields: [hallId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  filmTitle  String
+  filmPoster String
+  startTime  DateTime
+  duration   Int
+  price      Int
+  hallId     String
+  hall       Hall      @relation(fields: [hallId], references: [id])
+  tickets    Ticket[]
+}
+
+model Ticket {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  seatId     String
+  seat       Seat     @relation(fields: [seatId], references: [id])
+  phone      String
+  createdAt  DateTime @default(now())
+  isOffline  Boolean  @default(false)
+}
+
+
 model Message {
   id        String   @id @default(cuid())
   name      String
@@ -246,3 +288,5 @@ model TwoFactorConfirmation {
 
   @@unique([userId])
 }
+
+
