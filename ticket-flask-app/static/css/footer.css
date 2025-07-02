@@ -6,6 +6,19 @@ footer{
     align-items: center;
     color: white;
     opacity: 0.8;
+    background: linear-gradient(90deg, #291666, #291666 77.6%, #2b1d70 89.06%, #291666);
+    position: relative;
+    bottom: 0;
+}
+
+footer::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;          
+  background: white;
 }
 
 .support{
