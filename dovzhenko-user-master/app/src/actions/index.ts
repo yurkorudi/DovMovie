@@ -29,6 +29,8 @@ export const getMainCarouselSlides = async () => {
 	}
 };
 
+
+
 /**
  * Fetches event data from the API.
  *

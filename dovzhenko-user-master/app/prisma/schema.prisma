@@ -1,0 +1,292 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum EventType {
+  KINO
+  MUSIC
+  PERFORMANCE
+  THEATER
+  TALKS
+  STANDUP
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?
+  image                 String?
+  password              String?
+  role                  UserRole               @default(USER)
+  accounts              Account[]
+  isTwoFactorEnabled    Boolean                @default(false)
+  twoFactorConfirmation TwoFactorConfirmation?
+  mainCarousel          MainCarousel[]
+  events                Event[]
+  studios               Studio[]
+  aboutSlides           About[]
+  movies                Movie[]
+  MovieHeader           MovieHeader[]
+}
+
+model MainCarousel {
+  id                String    @id @default(cuid())
+  startTime         DateTime
+  dateForDisplay    String
+  dateForDisplayEng String
+  title             String
+  titleEng          String
+  description       String
+  descriptionEng    String
+  image             String
+  link              String?
+  linkTitle         String?
+  linkTitleEng      String?
+  typeImage         EventType
+  order             String
+  createdBy         User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById       String
+}
+
+model Event {
+  id                 String    @id @default(cuid())
+  typeImage          EventType
+  title              String
+  titleEng           String
+  startTime          DateTime
+  startDateString    String
+  startDateStringEng String
+  cardDescription    String
+  cardDescriptionEng String
+  link               String
+  backgroundImage    String
+  createdBy          User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById        String
+  freeEntry          Boolean   @default(false)
+}
+
+model Studio {
+  id              String @id @default(cuid())
+  name            String
+  nameEng         String
+  description     String
+  descriptionEng  String
+  image           String
+  contactsName    String
+  contactsNameEng String
+  contactsPhone   String
+  ageDiapason     String
+  ageDiapasonEng  String
+  scheduleDays    String
+  scheduleDaysEng String
+  scheduleTime    String
+  scheduleTimeEng String
+  order           String
+  createdBy       User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById     String
+}
+
+model About {
+  id          String @id @default(cuid())
+  name        String
+  nameEng     String
+  surname     String
+  surnameEng  String
+  position    String
+  positionEng String
+  image       String
+  secondImage String
+  order       String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+}
+
+model Contacts {
+  id          String @id @default(cuid())
+  address     String
+  addressEng  String
+  phone       String
+  email       String
+  schedule    String
+  scheduleEng String
+}
+
+model Hall {
+  id          String     @id @default(cuid())
+  name        String
+  rows        Int
+  seatsPerRow Int
+  sessions    Session[]
+  seats       Seat[]     @relation("HallSeats")
+}
+
+model Seat {
+  id      String   @id @default(cuid())
+  row     Int
+  number  Int
+  hallId  String
+  hall    Hall     @relation("HallSeats", fields: [hallId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  filmTitle  String
+  filmPoster String
+  startTime  DateTime
+  duration   Int
+  price      Int
+  hallId     String
+  hall       Hall      @relation(fields: [hallId], references: [id])
+  tickets    Ticket[]
+}
+
+model Ticket {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  seatId     String
+  seat       Seat     @relation(fields: [seatId], references: [id])
+  phone      String
+  createdAt  DateTime @default(now())
+  isOffline  Boolean  @default(false)
+}
+
+
+model Message {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  message   String
+  type      Int
+  createdAt DateTime @default(now())
+}
+
+model Movie {
+  id             String     @id @default(cuid())
+  title          String
+  titleEng       String
+  age            String
+  genre          String
+  genreEng       String
+  filmMaker      String
+  filmMakerEng   String
+  country        String
+  countryEng     String
+  duration       String
+  description    String @db.Text
+  descriptionEng String @db.Text
+  trailerLink    String
+  ticketLink     String
+  showtimes      Showtime[]
+  applications   Json       @default("[]")
+  poster         String
+  price          String
+
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Showtime {
+  id       String   @id @default(cuid())
+  dateTime DateTime
+  movieId  String
+  movie    Movie    @relation(fields: [movieId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MovieHeader {
+  id              String   @id @default(cuid())
+  title           String
+  titleEng        String
+  subtitle        String
+  subtitleEng     String
+  image           String
+  address         String
+  addressEng      String
+  contactsPhone   String
+  contactTitle    String
+  contactTitleEng String
+  createdBy       User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById     String
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+}
+
+
