@@ -21,8 +21,7 @@ const GilroyRegular = localFont({
 const MovieDetails = ({ movie }: { movie: TMovie }) => {
   const isLg = useMediaQuery({ query: '(min-width: 978px)' });
 
-  if (!movie) return <p className="text-white">Завантаження...</p>;
-
+  // Безпечний парсинг
   let apps: { value: string; label: string }[] = [];
   try {
     apps = JSON.parse(movie.applications || '[]');
@@ -61,7 +60,8 @@ const MovieDetails = ({ movie }: { movie: TMovie }) => {
         {isLg && (
           <div className="mt-4">
             <Link
-              href={`/session/${movie.id}`}
+              href={movie?.ticketLink || ''}
+              target="_blank"
               className="block w-full rounded-sm bg-gold px-4 py-2 text-center text-main transition hover:bg-gold-hover"
             >
               {t(['Купити квиток', 'Buy ticket'])}
@@ -146,7 +146,7 @@ const MovieDetails = ({ movie }: { movie: TMovie }) => {
         {!isLg && (
           <div className="mt-8">
             <Link
-              href={`/session/${movie.id}`}
+              href={movie.ticketLink}
               className="block w-full rounded-sm bg-gold px-4 py-2 text-center text-main transition hover:bg-gold-hover"
             >
               {t(['Купити квиток', 'Buy ticket'])}

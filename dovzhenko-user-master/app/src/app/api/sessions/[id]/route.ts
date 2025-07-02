@@ -5,7 +5,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 	const sessionId = params.id;
 
 	try {
-		// Спробуємо знайти сесію по ID
 		const session = await prisma.session.findUnique({
 			where: { id: sessionId },
 			include: {
@@ -14,7 +13,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 		});
 
 		if (!session) {
-			console.warn(`❗ Сеанс не знайдено з id: ${sessionId}`);
 			return NextResponse.json({ error: 'Сеанс не знайдено' }, { status: 404 });
 		}
 
@@ -23,12 +21,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 		});
 
 		const takenTickets = await prisma.ticket.findMany({
-			where: { sessionId: session.id },
+			where: { sessionId },
 			select: { seatId: true },
 		});
 
 		const takenSeatIds = takenTickets.map((t) => t.seatId);
 
+		// групуємо по рядках для зручності
 		const seatsGrouped = Array.from({ length: session.hall.rows }, (_, rowIndex) => {
 			return allSeats
 				.filter((seat) => seat.row === rowIndex + 1)
@@ -57,8 +56,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 			},
 			seats: seatsGrouped,
 		});
-	} catch (error: any) {
-		console.error('❌ SERVER ERROR:', error);
-		return NextResponse.json({ error: 'Помилка сервера', detail: error.message }, { status: 500 });
+	} catch (error) {
+		console.error(error);
+		return NextResponse.json({ error: 'Помилка сервера' }, { status: 500 });
 	}
 }
