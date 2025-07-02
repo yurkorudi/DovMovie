@@ -1,0 +1,64 @@
+body {
+    background: url("/static/img/background.webp");
+    margin: 0px;
+}
+
+main{
+    padding: 15px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+main button{
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    
+}
+
+.puyment{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+main p,
+main button{
+    font-size: 14px;
+}
+
+main h1{
+    text-align: center;
+}
+
+.film_inf{
+    display: flex;
+    flex-direction: row;    
+    gap: 15px;
+}
+
+.hall { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; gap: 8px; }
+.seat {
+    display: inline-block;
+    padding: 6px 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+.seat input { display: none; }
+.seat.taken {
+    background: #444;
+    color: #999;
+    cursor: not-allowed;
+}
+.seat.available:hover {
+    background: #a2d5ab;
+}
+.seat.available input:checked + span {
+    background: #60b273;
+    color: #fff;
+}

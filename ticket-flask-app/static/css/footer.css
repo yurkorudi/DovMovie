@@ -1,0 +1,14 @@
+footer{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 15px;
+    align-items: center;
+    color: white;
+    opacity: 0.8;
+}
+
+.support{
+    display: flex;
+    flex-direction: row;
+}
