@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Обрати місця – {{ session.film_title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    .hall { display: flex; flex-direction: column; gap: 8px; }
+    .row { display: flex; gap: 8px; }
+    .seat {
+      display: inline-block;
+      padding: 6px 10px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .seat input { display: none; }
+    .seat.taken {
+      background: #444;
+      color: #999;
+      cursor: not-allowed;
+    }
+    .seat.available:hover {
+      background: #a2d5ab;
+    }
+    .seat.available input:checked + span {
+      background: #60b273;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Купити квиток: {{ session.film_title }}</h1>
+  <img src="{{ session.film_poster }}" alt="{{ session.film_title }}" width="200">
+  <p><strong>Початок:</strong> {{ session.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
+  <p><strong>Тривалість:</strong> {{ session.duration }} хв</p>
+  <p><strong>Ціна:</strong> {{ session.price }} грн</p>
+
+  <h2>Оберіть місця:</h2>
+  <form action="{{ url_for('checkout') }}" method="post">
+    <input type="hidden" name="session_id" value="{{ session.id }}">
+    <div class="hall">
+      {% for row in rows %}
+        <div class="row">
+          {% for seat in row %}
+            <label class="seat {% if seat.taken %}taken{% else %}available{% endif %}">
+              {% if not seat.taken %}
+                <input
+                  type="checkbox"
+                  name="seat_ids"
+                  value="{{ seat.id }}"
+                  id="seat-{{ seat.id }}"
+                >
+                <span>{{ seat.row }}-{{ seat.number }}</span>
+              {% else %}
+                <span>{{ seat.row }}-{{ seat.number }}</span>
+              {% endif %}
+            </label>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <button type="submit">Перейти до оплати</button>
+  </form>
+</body>
+</html>
