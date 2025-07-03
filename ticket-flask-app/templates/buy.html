@@ -9,14 +9,13 @@
   {% include('header.html') %}
   
   <main>
-    <h1>Купити квиток: {{ session.film_title }}</h1>
     
     <div class="film_inf">
       <div class="poster">
-        <img src="/static/img/red.jpg" alt="{{ session.film_title }}" width="200">
+        <img src="/static/img/red.jpg" alt="{{ session.film_title }}">
       </div>
       <div class="discription">
-        <p><strong>Назва:</strong> </p>
+        <p><strong>Назва:</strong> Lilo and Stitch {{ session.film_title }}</p>
         <p><strong>Початок:</strong> </p>
         <p><strong>Тривалість:</strong>  хв</p>
         <p><strong>Ціна:</strong>  грн</p>

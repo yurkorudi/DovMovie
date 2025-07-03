@@ -1,6 +1,7 @@
 body {
     background: url("/static/img/background.webp");
     margin: 0px;
+    overflow-x: hidden;
 }
 
 main{
@@ -19,9 +20,23 @@ main button{
 }
 
 .puyment{
-    width: 100%;
+    width: 100vw;
     display: flex;
     justify-content: center;
+}
+
+.puyment button{
+    color: #291666;
+    font-weight: bold;
+    width: 300px;
+    height: 40px;
+    font-size: 16px;
+    background: #E1CB84;
+    border: currentColor 2px solid;
+}
+
+.puyment button:hover{
+    background: #ffc400;
 }
 
 main p,
@@ -61,4 +76,21 @@ main h1{
 .seat.available input:checked + span {
     background: #60b273;
     color: #fff;
+}
+
+.poster img{
+    max-width: 300px;
+    max-height: 440pxsju;
+}
+
+.discription *{
+    margin: 0 0 15px 0;
+}
+
+.discription p{
+    font-size: 16px;
+}
+
+.discription p:first-child{
+    font-size: 30px;
 }
