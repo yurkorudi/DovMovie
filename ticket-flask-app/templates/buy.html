@@ -2,12 +2,12 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Обрати місця –</title>
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <title>Обрати місця – {{ movie_session.film_title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
   {% include('header.html') %}
-  
+
   <main>
     
     <div class="film_inf">
@@ -16,47 +16,50 @@
       </div>
       <div class="discription">
         <p><strong>Назва:</strong> Lilo and Stitch {{ session.film_title }}</p>
-        <p><strong>Початок:</strong> </p>
-        <p><strong>Тривалість:</strong>  хв</p>
-        <p><strong>Ціна:</strong>  грн</p>
+        <p><strong>Початок:</strong> {{ movie_session.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>Тривалість:</strong> {{ movie_session.duration }} хв</p>
+        <p><strong>Ціна:</strong> {{ movie_session.price }} грн</p>
       </div>
-      
     </div>
-    
+
     <div class="holl">
       <h2>Оберіть місця:</h2>
-      <form action="" method="post">
-        <input type="hidden" name="session_id" value="">
+      <form action="{{ url_for('checkout') }}" method="post">
+        <input type="hidden" name="session_id" value="{{ movie_session.id }}">
+        <!-- Поле для телефону -->
+        <label>Телефон:
+          <input type="text" name="phone" required>
+        </label>
+
         <div class="hall">
-          
+          {% for row in rows %}
             <div class="row">
-              
-                <label class="seat ">
-                  
-                    <input
-                      type="checkbox"
-                      name="seat_ids"
-                      value=""
-                      id="seat-"
-                    >
-                    <span></span>
-                  
-                    <span></span>
-                  
-                </label>
-              
+            {% for seat in row %}
+              <label class="seat {% if seat.taken %}taken{% else %}available{% endif %}">
+                {% if not seat.taken %}
+                  <input
+                    type="checkbox"
+                    name="seat_ids"
+                    value="{{ seat.id }}"
+                    id="seat-{{ seat.id }}"
+                  >
+                  <span>{{ seat.row }}-{{ seat.number }}</span>
+                {% else %}
+                  <span>{{ seat.row }}-{{ seat.number }}</span>
+                {% endif %}
+              </label>
+            {% endfor %}
             </div>
-          
-        </div>  
+          {% endfor %}
+        </div>
+
         <div class="puyment">
           <button type="submit">Перейти до оплати</button>
         </div>
       </form>
     </div>
   </main>
-  
+
   {% include('footer.html') %}
-
-
 </body>
 </html>
