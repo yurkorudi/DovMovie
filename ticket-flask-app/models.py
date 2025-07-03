@@ -6,7 +6,7 @@ class Session(db.Model):
     id              = db.Column('id', db.String(64), primary_key=True)
     film_title      = db.Column('filmTitle',    db.String(255))
     film_poster     = db.Column('filmPoster',   db.String(255))
-    # start_time      = db.Column('startTime',    db.DateTime)
+    start_time      = db.Column('startTime',    db.DateTime)
     duration        = db.Column('duration',     db.Integer)
     price           = db.Column('price',        db.Integer)
     hall_id         = db.Column('hallId',       db.String(64),
