@@ -5,19 +5,20 @@ header{
     align-items: center;
     background: linear-gradient(90deg, #291666, #291666 77.6%, #2b1d70 89.06%, #291666);
     margin: 0;
-    padding: 15px;
+    padding: 17px 60px;
 }
 
 .menu *{
-    margin: 0 10px;
     text-transform: uppercase;
     font-size: 12px;
+    font-family: "Gilroy", sans-serif;
 }
 
 .menu a{
     color: white;
     text-decoration: none;
     position: relative;
+    margin: 0 40px 0 0;
 }
 
 .menu a::after {
@@ -44,4 +45,5 @@ header{
     background: transparent;
     border: none;
     color: white;
+    margin: 0 0 0 20px;
 }

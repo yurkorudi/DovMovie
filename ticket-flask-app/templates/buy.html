@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Обрати місця – {{ movie_session.film_title }}</title>
+  <title>Обрати місця –</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
@@ -16,16 +16,16 @@
       </div>
       <div class="discription">
         <p><strong>Назва:</strong> Lilo and Stitch {{ session.film_title }}</p>
-        <p><strong>Початок:</strong> {{ movie_session.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
-        <p><strong>Тривалість:</strong> {{ movie_session.duration }} хв</p>
-        <p><strong>Ціна:</strong> {{ movie_session.price }} грн</p>
+        <p><strong>Початок:</strong> </p>
+        <p><strong>Тривалість:</strong>  хв</p>
+        <p><strong>Ціна:</strong>  грн</p>
       </div>
     </div>
 
     <div class="holl">
       <h2>Оберіть місця:</h2>
       <form action="{{ url_for('checkout') }}" method="post">
-        <input type="hidden" name="session_id" value="{{ movie_session.id }}">
+        <input type="hidden" name="session_id" value="">
         <!-- Поле для телефону -->
         <label>Телефон:
           <input type="text" name="phone" required>

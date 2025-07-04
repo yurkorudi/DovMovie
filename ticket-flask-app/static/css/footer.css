@@ -2,11 +2,11 @@ footer{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    padding: 15px;
+    padding: 15px 60px;
     align-items: center;
     color: white;
-    opacity: 0.8;
-    background: linear-gradient(to bottom, transparent, #291666 100%);
+    opacity: 0.95;
+    background: linear-gradient(to bottom, transparent -80%, #291666 100%);
     position: relative;
     bottom: 0;
 }
@@ -24,4 +24,25 @@ footer::before {
 .support{
     display: flex;
     flex-direction: row;
+}
+
+.support p{
+  font-size: 10px;
+}
+
+.partner-logo img{
+  height: 28px;
+  width: 40px;
+  padding: 10px;
+}
+
+@media (max-width: 768px) {
+    .partner-logo img{
+      position: absolute;
+      bottom: 0;
+    }
+
+    .logo{
+      position: relative;
+    }
 }
