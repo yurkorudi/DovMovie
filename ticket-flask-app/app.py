@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 import os
+from user_agents import *
 
 from models import Session, Hall, Seat, Ticket
 from extensions import db
@@ -17,7 +18,10 @@ with app.app_context():
 @app.route('/')
 def home():
     sessions = Session.query.all()
-    return render_template('buy.html')
+    ua_string = request.headers.get("User-Agent", "")
+    user_agent = parse(ua_string)    
+    is_mobile = user_agent.is_mobile
+    return render_template('buy.html', is_mobile = is_mobile)
 
 
 
@@ -67,12 +71,17 @@ def buy_ticket():
     print(f"Session: {session}, Hall: {hall}, Rows: {rows}")
     print(session.start_time)
 
+    ua_string = request.headers.get("User-Agent", "")
+    user_agent = parse(ua_string)    
+    is_mobile = user_agent.is_mobile
+
     return render_template(
         'buy.html',
         movie_session=session,
         hall=hall,
-        rows=rows
+        rows=rows,
+        is_mobile = is_mobile
     )
 
 if __name__ == '__main__':
-    app.run(debug=True, host="192.168.0.103")
+    app.run(debug=True, host="192.168.1.216")

@@ -10,6 +10,13 @@
         <div class="logo">
             <img src="/static/img/logo.svg" alt="">
         </div>
+        {% if is_mobile %}
+        <div class="burger-menu" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        {% endif %}
         <div class="menu">
             <a href="">Movies</a>
             <a href="">Events</a>
@@ -19,5 +26,10 @@
             <button>Cooperation</button>
         </div>
     </header>
+    <script>
+        function toggleMenu() {
+            document.querySelector('.menu').classList.toggle('active');
+        }
+    </script>
 </body>
 </html>

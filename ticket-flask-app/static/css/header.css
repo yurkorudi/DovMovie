@@ -47,3 +47,21 @@ header{
     color: white;
     margin: 0 0 0 20px;
 }
+
+.menu span {
+    display: block;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+    header .menu{
+        display: none;
+        width: 100vw;
+        background: linear-gradient(90deg, #291666, #291666 77.6%, #2b1d70 89.06%, #291666);
+        opacity: 0.9;
+    }
+
+    
+}
