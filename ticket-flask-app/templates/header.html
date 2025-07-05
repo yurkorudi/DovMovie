@@ -24,6 +24,16 @@
             <a href="">About</a>
             <a href="">Contacts</a>
             <button>Cooperation</button>
+            {% if is_mobile %}
+            <div class="social-media">
+                <a href="">
+                    <img src="/static/img/insta.png" alt="">
+                </a>
+                <a href="">
+                    <img src="/static/img/fe_facebook.png" alt="">
+                </a>
+            </div>
+            {% endif %}
         </div>
     </header>
     <script>
@@ -34,9 +44,11 @@
             if (window.getComputedStyle(menu).display !== 'none') {
                 menu.style.display = "none";
                 burger.classList.remove('active');
+                document.body.style.overflow = '';
             } else {
                 menu.style.display = "flex";
                 burger.classList.add('active');
+                document.body.style.overflow = 'hidden';
             }
             
         }
