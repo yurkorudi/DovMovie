@@ -28,7 +28,17 @@
     </header>
     <script>
         function toggleMenu() {
-            document.querySelector('.menu').classList.toggle('active');
+            const menu = document.querySelector('.menu');
+            const burger = document.querySelector('.burger-menu');
+            
+            if (window.getComputedStyle(menu).display !== 'none') {
+                menu.style.display = "none";
+                burger.classList.remove('active');
+            } else {
+                menu.style.display = "flex";
+                burger.classList.add('active');
+            }
+            
         }
     </script>
 </body>
