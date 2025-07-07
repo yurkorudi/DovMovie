@@ -233,4 +233,5 @@ main { flex: 1; }
   .booking-layout { flex-direction: column; }
   .left-column, .right-column { width: 100%; }
   .hall { margin-top: 1rem; }
+  body {padding-top: 60px;}
 }
