@@ -1,40 +1,223 @@
 from extensions import db
+from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, Enum, ForeignKey
+from sqlalchemy.orm import relationship
 
 
-class Session(db.Model):
-    __tablename__   = 'Session'
-    id              = db.Column('id', db.String(64), primary_key=True)
-    film_title      = db.Column('filmTitle',    db.String(255))
-    film_poster     = db.Column('filmPoster',   db.String(255))
-    start_time      = db.Column('startTime',    db.DateTime)
-    duration        = db.Column('duration',     db.Integer)
-    price           = db.Column('price',        db.Integer)
-    hall_id         = db.Column('hallId',       db.String(64),
-                                  db.ForeignKey('Hall.id'))
+UserRole = Enum('USER', 'ADMIN', name='UserRole')
+EventType = Enum('KINO', 'MUSIC', 'PERFORMANCE', 'THEATER', 'TALKS', 'STANDUP', name='EventType')
 
-class Hall(db.Model):
-    __tablename__   = 'Hall'
-    id              = db.Column('id',          db.String(64), primary_key=True)
-    name            = db.Column('name',        db.String(100))
-    rows            = db.Column('rows',        db.Integer)
-    seats_per_row   = db.Column('seatsPerRow', db.Integer)
-    seats           = db.relationship('Seat', backref='hall')
+class Account(db.Model):
+    __tablename__ = 'Account'
+    id = Column('id', String, primary_key=True)
+    userId = Column('userId', String, ForeignKey('User.id', ondelete='CASCADE'), nullable=False)
+    type = Column('type', String, nullable=False)
+    provider = Column('provider', String, nullable=False)
+    providerAccountId = Column('providerAccountId', String, nullable=False)
+    refresh_token = Column('refresh_token', Text)
+    access_token = Column('access_token', Text)
+    expires_at = Column('expires_at', Integer)
+    token_type = Column('token_type', String)
+    scope = Column('scope', String)
+    id_token = Column('id_token', Text)
+    session_state = Column('session_state', String)
 
-class Seat(db.Model):
-    __tablename__   = 'Seat'
-    id              = db.Column('id',     db.String(64), primary_key=True)
-    row             = db.Column('row',    db.Integer)
-    number          = db.Column('number', db.Integer)
-    hall_id         = db.Column('hallId', db.String(64),
-                                  db.ForeignKey('Hall.id'))
+    user = relationship('User', back_populates='accounts')
 
-class Ticket(db.Model):
-    __tablename__   = 'Ticket'
-    id              = db.Column('id',         db.String(64), primary_key=True)
-    session_id      = db.Column('sessionId',  db.String(64),
-                                  db.ForeignKey('Session.id'))
-    seat_id         = db.Column('seatId',     db.String(64),
-                                  db.ForeignKey('Seat.id'))
-    phone           = db.Column('phone',      db.String(20))
-    created_at      = db.Column('createdAt',  db.DateTime)
-    is_offline      = db.Column('isOffline',  db.Boolean)
+class User(db.Model):
+    __tablename__ = 'User'
+    id = Column('id', String, primary_key=True)
+    name = Column('name', String)
+    email = Column('email', String, unique=True)
+    emailVerified = Column('emailVerified', DateTime)
+    image = Column('image', String)
+    password = Column('password', String)
+    role = Column('role', UserRole, default='USER')
+    isTwoFactorEnabled = Column('isTwoFactorEnabled', Boolean, default=False)
+
+    accounts = relationship('Account', back_populates='user')
+    twoFactorConfirmation = relationship('TwoFactorConfirmation', uselist=False, back_populates='user')
+    mainCarousel = relationship('MainCarousel', back_populates='createdBy')
+    events = relationship('Event', back_populates='createdBy')
+    studios = relationship('Studio', back_populates='createdBy')
+    aboutSlides = relationship('About', back_populates='createdBy')
+    movies = relationship('Movie', back_populates='createdBy')
+    MovieHeader = relationship('MovieHeader', back_populates='createdBy')
+
+class MainCarousel(db.Model):
+    __tablename__ = 'MainCarousel'
+    id = Column('id', String, primary_key=True)
+    startTime = Column('startTime', DateTime, nullable=False)
+    dateForDisplay = Column('dateForDisplay', String)
+    dateForDisplayEng = Column('dateForDisplayEng', String)
+    title = Column('title', String)
+    titleEng = Column('titleEng', String)
+    description = Column('description', String)
+    descriptionEng = Column('descriptionEng', String)
+    image = Column('image', String)
+    link = Column('link', String)
+    linkTitle = Column('linkTitle', String)
+    linkTitleEng = Column('linkTitleEng', String)
+    typeImage = Column('typeImage', EventType)
+    order = Column('order', String)
+    createdById = Column('createdById', String, ForeignKey('User.id', ondelete='CASCADE'))
+
+    createdBy = relationship('User', back_populates='mainCarousel')
+
+class Event(db.Model):
+    __tablename__ = 'Event'
+    id = Column('id', String, primary_key=True)
+    typeImage = Column('typeImage', EventType)
+    title = Column('title', String)
+    titleEng = Column('titleEng', String)
+    startTime = Column('startTime', DateTime)
+    startDateString = Column('startDateString', String)
+    startDateStringEng = Column('startDateStringEng', String)
+    cardDescription = Column('cardDescription', String)
+    cardDescriptionEng = Column('cardDescriptionEng', String)
+    link = Column('link', String)
+    backgroundImage = Column('backgroundImage', String)
+    createdById = Column('createdById', String, ForeignKey('User.id', ondelete='CASCADE'))
+    freeEntry = Column('freeEntry', Boolean, default=False)
+
+    createdBy = relationship('User', back_populates='events')
+
+class Studio(db.Model):
+    __tablename__ = 'Studio'
+    id = Column('id', String, primary_key=True)
+    name = Column('name', String)
+    nameEng = Column('nameEng', String)
+    description = Column('description', String)
+    descriptionEng = Column('descriptionEng', String)
+    image = Column('image', String)
+    contactsName = Column('contactsName', String)
+    contactsNameEng = Column('contactsNameEng', String)
+    contactsPhone = Column('contactsPhone', String)
+    ageDiapason = Column('ageDiapason', String)
+    ageDiapasonEng = Column('ageDiapasonEng', String)
+    scheduleDays = Column('scheduleDays', String)
+    scheduleDaysEng = Column('scheduleDaysEng', String)
+    scheduleTime = Column('scheduleTime', String)
+    scheduleTimeEng = Column('scheduleTimeEng', String)
+    order = Column('order', String)
+    createdById = Column('createdById', String, ForeignKey('User.id', ondelete='CASCADE'))
+
+    createdBy = relationship('User', back_populates='studios')
+
+class About(db.Model):
+    __tablename__ = 'About'
+    id = Column('id', String, primary_key=True)
+    name = Column('name', String)
+    nameEng = Column('nameEng', String)
+    surname = Column('surname', String)
+    surnameEng = Column('surnameEng', String)
+    position = Column('position', String)
+    positionEng = Column('positionEng', String)
+    image = Column('image', String)
+    secondImage = Column('secondImage', String)
+    order = Column('order', String)
+    createdById = Column('createdById', String, ForeignKey('User.id', ondelete='CASCADE'))
+
+    createdBy = relationship('User', back_populates='aboutSlides')
+
+class Contacts(db.Model):
+    __tablename__ = 'Contacts'
+    id = Column('id', String, primary_key=True)
+    address = Column('address', String)
+    addressEng = Column('addressEng', String)
+    phone = Column('phone', String)
+    email = Column('email', String)
+    schedule = Column('schedule', String)
+    scheduleEng = Column('scheduleEng', String)
+
+class Message(db.Model):
+    __tablename__ = 'Message'
+    id = Column('id', String, primary_key=True)
+    name = Column('name', String)
+    phone = Column('phone', String)
+    message = Column('message', String)
+    type = Column('type', Integer)
+    createdAt = Column('createdAt', DateTime)
+
+class Movie(db.Model):
+    __tablename__ = 'Movie'
+    id = Column('id', String, primary_key=True)
+    title = Column('title', String)
+    titleEng = Column('titleEng', String)
+    age = Column('age', String)
+    genre = Column('genre', String)
+    genreEng = Column('genreEng', String)
+    filmMaker = Column('filmMaker', String)
+    filmMakerEng = Column('filmMakerEng', String)
+    country = Column('country', String)
+    countryEng = Column('countryEng', String)
+    duration = Column('duration', String)
+    description = Column('description', Text)
+    descriptionEng = Column('descriptionEng', Text)
+    trailerLink = Column('trailerLink', String)
+    ticketLink = Column('ticketLink', String)
+    applications = Column('applications', String)
+    poster = Column('poster', String)
+    price = Column('price', String)
+    createdById = Column('createdById', String, ForeignKey('User.id', ondelete='CASCADE'))
+    createdAt = Column('createdAt', DateTime)
+    updatedAt = Column('updatedAt', DateTime)
+
+    createdBy = relationship('User', back_populates='movies')
+    showtimes = relationship('Showtime', back_populates='movie')
+
+class Showtime(db.Model):
+    __tablename__ = 'Showtime'
+    id = Column('id', String, primary_key=True)
+    dateTime = Column('dateTime', DateTime)
+    movieId = Column('movieId', String, ForeignKey('Movie.id'))
+    createdAt = Column('createdAt', DateTime)
+    updatedAt = Column('updatedAt', DateTime)
+
+    movie = relationship('Movie', back_populates='showtimes')
+
+class MovieHeader(db.Model):
+    __tablename__ = 'MovieHeader'
+    id = Column('id', String, primary_key=True)
+    title = Column('title', String)
+    titleEng = Column('titleEng', String)
+    subtitle = Column('subtitle', String)
+    subtitleEng = Column('subtitleEng', String)
+    image = Column('image', String)
+    address = Column('address', String)
+    addressEng = Column('addressEng', String)
+    contactsPhone = Column('contactsPhone', String)
+    contactTitle = Column('contactTitle', String)
+    contactTitleEng = Column('contactTitleEng', String)
+    createdById = Column('createdById', String, ForeignKey('User.id', ondelete='CASCADE'))
+    createdAt = Column('createdAt', DateTime)
+    updatedAt = Column('updatedAt', DateTime)
+
+    createdBy = relationship('User', back_populates='MovieHeader')
+
+class VerificationToken(db.Model):
+    __tablename__ = 'VerificationToken'
+    id = Column('id', String, primary_key=True)
+    email = Column('email', String)
+    token = Column('token', String, unique=True)
+    expires = Column('expires', DateTime)
+
+class PasswordResetToken(db.Model):
+    __tablename__ = 'PasswordResetToken'
+    id = Column('id', String, primary_key=True)
+    email = Column('email', String)
+    token = Column('token', String, unique=True)
+    expires = Column('expires', DateTime)
+
+class TwoFactorToken(db.Model):
+    __tablename__ = 'TwoFactorToken'
+    id = Column('id', String, primary_key=True)
+    email = Column('email', String)
+    token = Column('token', String, unique=True)
+    expires = Column('expires', DateTime)
+
+class TwoFactorConfirmation(db.Model):
+    __tablename__ = 'TwoFactorConfirmation'
+    id = Column('id', String, primary_key=True)
+    userId = Column('userId', String, ForeignKey('User.id', ondelete='CASCADE'))
+
+    user = relationship('User', back_populates='twoFactorConfirmation')

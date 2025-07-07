@@ -3,25 +3,19 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 from user_agents import *
 
-from models import Session, Hall, Seat, Ticket
+from models import Movie
 from extensions import db
 
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://rootforchaplin:Super_Password22@167.172.62.229:3306/DovMov'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
 db.init_app(app)
 
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
-@app.route('/')
-def home():
-    sessions = Session.query.all()
-    ua_string = request.headers.get("User-Agent", "")
-    user_agent = parse(ua_string)    
-    is_mobile = user_agent.is_mobile
-    return render_template('buy.html', is_mobile = is_mobile)
+
 
 
 
@@ -37,7 +31,7 @@ def checkout():
 
 
     for sid in seat_ids:
-        ticket = Ticket(session_id=session_id, seat_id=sid)
+        # ticket = Ticket(session_id=session_id, seat_id=sid)
         db.session.add(ticket)
     db.session.commit()
 
@@ -47,39 +41,41 @@ def checkout():
 
 @app.route('/buy')
 def buy_ticket():
-    session_id = request.args.get('session_id', 'session_test_1')
-    if not session_id:
+    mov_id = request.args.get('movie_id')
+    if not mov_id:
         return "Missing session_id", 400
 
-    session = db.session.get(Session, session_id)
-    if not session:
-        return "Session not found", 404
+    # session = db.session.get(Session, session_id)
+    # if not session:
+    #     return "Session not found", 404
 
-    hall = db.session.get(Hall, session.hall_id)
-    all_seats = Seat.query.filter_by(hall_id=hall.id).all()
-    taken = [t.seat_id for t in Ticket.query.filter_by(session_id=session.id).all()]
 
-    rows = []
-    for row_num in range(1, hall.rows + 1):
-        row = [seat for seat in all_seats if seat.row == row_num]
-        for seat in row:
-            seat.taken = seat.id in taken
-        rows.append(row)
-        
-    
-    print('__' * 40)
-    print(f"Session: {session}, Hall: {hall}, Rows: {rows}")
-    print(session.start_time)
 
+    movie = Movie.query.filter_by(id=mov_id).first()
+    if not movie:
+        return "Movie not found", 404
     ua_string = request.headers.get("User-Agent", "")
     user_agent = parse(ua_string)    
     is_mobile = user_agent.is_mobile
+    movie_data = {
+        'id' : movie.id,
+        'title' : movie.title,
+        'age' : movie.age,
+        'genre' : movie.genre,
+        'filmMaker' : movie.filmMaker,
+        'duration' : movie.duration,
+        'description' : movie.description,
+        'trailerLink' : movie.trailerLink,
+        'poster' : movie.poster,
+        'price' : movie.price,
+    }
+    print(movie_data)
 
     return render_template(
         'buy.html',
-        movie_session=session,
-        hall=hall,
-        rows=rows,
+        movie_data = movie_data,
+        movie_session=None,
+        occupied_seats=[],
         is_mobile = is_mobile
     )
 
