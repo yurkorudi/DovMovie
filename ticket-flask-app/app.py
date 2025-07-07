@@ -43,7 +43,7 @@ def checkout():
 def buy_ticket():
     mov_id = request.args.get('movie_id')
     if not mov_id:
-        return "Missing session_id", 400
+        pass
 
     # session = db.session.get(Session, session_id)
     # if not session:
@@ -53,11 +53,10 @@ def buy_ticket():
 
     movie = Movie.query.filter_by(id=mov_id).first()
     if not movie:
-        return "Movie not found", 404
-    ua_string = request.headers.get("User-Agent", "")
-    user_agent = parse(ua_string)    
-    is_mobile = user_agent.is_mobile
-    movie_data = {
+        movie_data = {'title' : 'Movie not found',
+            'poster' : 'static/img/red.jpg'}
+    else: 
+        movie_data = {
         'id' : movie.id,
         'title' : movie.title,
         'age' : movie.age,
@@ -69,6 +68,10 @@ def buy_ticket():
         'poster' : movie.poster,
         'price' : movie.price,
     }
+    ua_string = request.headers.get("User-Agent", "")
+    user_agent = parse(ua_string)    
+    is_mobile = user_agent.is_mobile
+
     print(movie_data)
 
     return render_template(
@@ -80,4 +83,4 @@ def buy_ticket():
     )
 
 if __name__ == '__main__':
-    app.run(debug=True, host='192.168.1.21')
+    app.run(debug=True, host="192.168.0.103")
