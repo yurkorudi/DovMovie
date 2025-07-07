@@ -2,6 +2,14 @@ body {
     background: url("/static/img/background.webp");
     margin: 0px;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
 }
 
 main{
@@ -9,6 +17,7 @@ main{
     color: white;
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 main button{
