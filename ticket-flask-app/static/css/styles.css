@@ -1,14 +1,22 @@
 /* === Sticky footer & base === */
 
-@font-face {
+/* @font-face {
   font-family: 'Open_Sans_Medium';
   src: url('static/OpenSans_Condensed-Light.ttf');
-}
+} */
 
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap");
+
+
+
+/* PAULO YOU'RE THE BEST!!! 💕💖*/
 
 html, body {
   height: 100%;
   margin: 0;
+  font-family: 'Montserrat', sans-serif;
 }
 body {
   background: url("/static/img/background.webp") no-repeat center/cover;
@@ -77,7 +85,6 @@ main { flex: 1; }
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
-  /* max-width: 800px; */
   width: 100%;
   color: #fff;
 }
@@ -89,13 +96,15 @@ main { flex: 1; }
 .film-info .details {
   line-height: 1.4;
   flex: 1;
-  font-family: 'Open_Sans_Medium';
+  font-family: 'Montserrat', sans-serif;
   font-size: 18px;
+  font-weight: 400;
 }
 .film-info .details h1 {
   margin-top: 0;
-  font-family: "Arial";
+  font-family: 'Montserrat', sans-serif;
   font-size: 36px;
+  font-weight: 700; 
 }
 
 .poster img {
