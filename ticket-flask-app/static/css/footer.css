@@ -49,6 +49,10 @@ footer::before {
     margin-bottom: 15px;
   }
 
+  footer .menu *{
+    margin: 0;
+  }
+
   .logo{
     display: flex;
     flex-direction: row;
