@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <title>{{ movie_data['title'] }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class='hide-scrollbar'>
+
   {% include 'header.html' %}
 
- <main class="booking-layout">
+ <main class="booking-layout hide-scrollbar">
 
 
   <section class="film-info">
@@ -43,6 +44,7 @@
 
 
   {% include 'footer.html' %}
+
 
   <script>
   window.addEventListener('DOMContentLoaded', () => {
