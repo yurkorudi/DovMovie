@@ -18,6 +18,24 @@ import uuid
 from models import Movie
 from extensions import db
 
+from reportlab.lib.pagesizes import A6
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import mm
+
+pdfmetrics.registerFont(
+    TTFont('DejaVuSans', 'ticket-flask-app/static/fonts/DejaVuSans.ttf'),
+)
+pdfmetrics.registerFont(
+    TTFont('DejaVuSans-Bold', 'ticket-flask-app/static/fonts/DejaVuSans-Bold.ttf')
+)
+pdfmetrics.registerFont(
+    TTFont('DejaVuSans-BoldOblique', 'ticket-flask-app/static/fonts/DejaVuSans-BoldOblique.ttf')
+)
+pdfmetrics.registerFont(
+    TTFont('DejaVuSans-ExtraLight', 'ticket-flask-app/static/fonts/DejaVuSans-ExtraLight.ttf') 
+)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
@@ -81,6 +99,98 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 # _________ wev page code _______# 
 
 
+@app.route('/ticket_pdf', methods=['GET'])
+def ticket_pdf():
+    from io import BytesIO
+    from flask import send_file, session as flask_session
+    from reportlab.lib.pagesizes import A6
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import mm
+    from models import Session as DBSess, Film as DBFilm, User as DBUser
+
+
+    data = flask_session.get('confirmation_data')
+    if not data:
+        return "Немає даних квитка", 400
+
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A6)
+    width, height = A6
+
+
+    banner_h = 8 * mm
+    p.setFillColorRGB(129, 0, 0)
+    p.rect(0, height - banner_h, width, banner_h, fill=1, stroke=0)
+
+    margin_x = 6 * mm
+    header_bottom = height - banner_h - 2 * mm
+
+
+    film = DBFilm.query.filter_by(name=data['movie_name']).first()
+    poster_path = film.image.path if film and film.image else 'static/img/default_poster.png'
+    poster_w = 30 * mm
+    poster_h = 40 * mm
+    p.drawImage(
+        poster_path,
+        margin_x,
+        header_bottom - poster_h,
+        width=poster_w,
+        height=poster_h,
+        mask='auto'
+    )
+
+
+    title_x = margin_x + poster_w + 3 * mm
+    title_y = header_bottom - 3 * mm
+    p.setFillColorRGB(0, 0, 0)
+    p.setFont("DejaVuSans-Bold", 10)
+    p.drawString(title_x, title_y, data['movie_name'])
+
+    y = header_bottom - poster_h - 6 * mm
+    p.setFont("DejaVuSans", 6)
+    p.drawString(margin_x, y, f"Куплено користувачем: {DBUser.query.filter_by(login=data.get('user', '')).first().first_name} {DBUser.query.filter_by(login=data.get('user', '')).first().last_name}")
+    y -= 6 * mm
+
+    sess = DBSess.query.filter_by(session_id=data['session_id']).first()
+    dt_str = sess.session_datetime.strftime('%Y-%m-%d %H:%M')
+    p.drawString(margin_x, y, f"Сеанс: {dt_str}")
+    y -= 8 * mm
+
+    for t in data['tickets']:
+        p.drawString(
+            margin_x,
+            y,
+            f"Місце: {t['seatNumber']}   Ряд: {t['row']}   Ціна: {t['cost']} грн"
+        )
+        y -= 6 * mm
+
+
+    footer_y = 8 * mm
+    p.setStrokeColorRGB(128, 0, 0)
+    p.setLineWidth(0.5)
+    p.line(margin_x, footer_y + 4 * mm, width - margin_x, footer_y + 4 * mm)
+
+    p.setFont("DejaVuSans", 6)
+    footer = (
+        "Телефон: +38 (044) 123-45-67   •   "
+        "Місто: Львів   •   "
+        "Адреса: Червоної калини 81 "
+    )
+    p.drawString(margin_x + 4, footer_y, footer)
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name='ticket.pdf',
+        mimetype='application/pdf'
+    )
+
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -96,6 +206,9 @@ def admin_logout():
     session.pop('is_admin', None)
     return redirect(url_for('admin_login'))
 
+@app.route('/kasa')
+def admin_kasa():
+    return render_template('admin/kasa.html')
 
 def rro_send(payload: dict, url=None):
     print(url)
