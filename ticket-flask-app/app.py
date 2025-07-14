@@ -15,8 +15,9 @@ import os
 from user_agents import *
 import requests
 import uuid
-from models import Movie
+from models import Movie, Showtime
 from extensions import db
+from datetime import *
 
 from reportlab.lib.pagesizes import A6
 from reportlab.pdfgen import canvas
@@ -24,17 +25,19 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 
+
+
 pdfmetrics.registerFont(
-    TTFont('DejaVuSans', 'ticket-flask-app/static/fonts/DejaVuSans.ttf'),
+    TTFont('DejaVuSans', 'static/fonts/DejaVuSans.ttf'),
 )
 pdfmetrics.registerFont(
-    TTFont('DejaVuSans-Bold', 'ticket-flask-app/static/fonts/DejaVuSans-Bold.ttf')
+    TTFont('DejaVuSans-Bold', 'static/fonts/DejaVuSans-Bold.ttf')
 )
 pdfmetrics.registerFont(
-    TTFont('DejaVuSans-BoldOblique', 'ticket-flask-app/static/fonts/DejaVuSans-BoldOblique.ttf')
+    TTFont('DejaVuSans-BoldOblique', 'static/fonts/DejaVuSans-BoldOblique.ttf')
 )
 pdfmetrics.registerFont(
-    TTFont('DejaVuSans-ExtraLight', 'ticket-flask-app/static/fonts/DejaVuSans-ExtraLight.ttf') 
+    TTFont('DejaVuSans-ExtraLight', 'static/fonts/DejaVuSans-ExtraLight.ttf') 
 )
 
 app = Flask(__name__)
@@ -57,7 +60,7 @@ class MainViev(BaseView):
     def index(self, **kwargs):
         print ('____ is in admin kasa page ____ ')
         
-        return self.render('kasa.html')
+        return self.render('admin/kasa.html')
     
     
     def is_accessible(self):
@@ -97,6 +100,43 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
 # _________ wev page code _______# 
+
+
+
+
+# _____________________________ api ___________________________________#
+
+
+@app.route('/api/sessions')
+def get_sessions():
+    date_str = request.args.get('date')
+    try:
+        date = datetime.fromisoformat(date_str).date()
+    except Exception:
+        date = datetime.utcnow().date()
+
+
+    sessions = (db.session.query(Showtime)
+                .filter(db.func.date(Showtime.dateTime) == date)
+                .all())
+
+
+    result = []
+    for s in sessions:
+        film = Movie.query.filter_by(id=s.movieId).first()
+        result.append({
+            "id": s.id,
+            "time": s.dateTime.strftime("%H:%M"),
+            "title": film.title,
+            "duration": film.duration
+        })
+    print(result)
+    return jsonify(result)
+
+
+
+
+
 
 
 @app.route('/ticket_pdf', methods=['GET'])
@@ -206,7 +246,7 @@ def admin_logout():
     session.pop('is_admin', None)
     return redirect(url_for('admin_login'))
 
-@app.route('/kasa')
+@app.route('/admin/kasa', methods=['POST'])
 def admin_kasa():
     return render_template('admin/kasa.html')
 
@@ -218,6 +258,8 @@ def rro_send(payload: dict, url=None):
     return resp.json()
 
 
+
+@app.route('/open_shift', methods=['POST'])
 def open_shift():
     payload = {
         "ver": 6,
@@ -229,7 +271,9 @@ def open_shift():
             "task": 0
         }
     }
-    return rro_send(payload)
+    a = rro_send(payload)
+    print(a)
+    return redirect(url_for('/admin/kasa'))
 
 
 
