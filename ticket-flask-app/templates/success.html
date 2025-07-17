@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>квиток</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/success.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include 'header.html' %}
+
+  <main class="sucsess">
+    <h1 class='h1'>Sucsess buy</h1>
+    <div class="ticket-pdf"></div>
+    <div class="sucsess-button">
+        <button class="btn btn-load" onclick="">Download</button>
+        <button class="btn btn-return" onclick="">Return home</button>
+    </div>
+  </main>
+
+  {% include 'footer.html' %}
+</body>
+</html>

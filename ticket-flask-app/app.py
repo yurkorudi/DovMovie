@@ -18,12 +18,19 @@ import uuid
 from models import Movie, Showtime
 from extensions import db
 from datetime import *
+from zoneinfo import ZoneInfo
+import pytz
+
+from flask import send_file, session as flask_session
+
 
 from reportlab.lib.pagesizes import A6
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
+
+import re
 
 
 
@@ -42,7 +49,7 @@ pdfmetrics.registerFont(
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
-app.config['DM_HOST'] = '192.168.178.143'
+app.config['DM_HOST'] = '192.168.0.247'
 app.config['DM_PORT'] = 3939
 app.config['DM_DEVICE'] = 'test'
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
@@ -52,7 +59,11 @@ app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', '1234')
 db.init_app(app)
 Session(app)
 
+
+UTC = pytz.UTC
+KYIV = pytz.timezone('Europe/Kiev')
 # _____________________ admin panel ________________________# 
+
 
 
 class MainViev(BaseView):
@@ -134,6 +145,59 @@ def get_sessions():
     return jsonify(result)
 
 
+@app.route('/api/sessions/dates')
+def get_session_dates():
+    print("STATE: ___________________________________ DATES _______________________________________")
+    movie_id = request.args.get('movie_id', type=str)
+    print(movie_id)
+    if not movie_id:
+        print('not movie id')
+        return jsonify([]), 404
+
+    sessions = Showtime.query.filter_by(movieId=movie_id).all()
+    dates = {
+        s.dateTime
+         .replace(tzinfo=UTC)
+         .astimezone(KYIV)
+         .date()
+        for s in sessions
+    }
+    sorted_dates = sorted(dates)
+    print(sorted_dates)
+    return jsonify([d.isoformat() for d in dates])
+
+
+@app.route('/api/sessions/times')
+def get_session_times():
+    print("STATE: ___________________________________ TIMES _______________________________________")
+    movie_id = request.args.get('movie_id', type=str)
+    date_str = request.args.get('date')  
+    try:
+        date_obj = datetime.fromisoformat(date_str).date()
+    except:
+        print(' exceptionnn ')
+        return jsonify([])
+
+    sessions = (
+      Showtime.query
+      .filter_by(movieId=movie_id)
+      .filter(db.func.date(Showtime.dateTime) == date_obj)
+      .all()
+    )
+    times = {
+        s.dateTime
+         .replace(tzinfo=UTC)
+         .astimezone(KYIV)
+         .strftime('%H:%M')
+        for s in sessions
+    }
+    sorted_times = sorted(times)
+    
+    print('time list: ', sorted_times)
+    return jsonify(sorted_times)
+
+
+
 
 
 
@@ -142,7 +206,6 @@ def get_sessions():
 @app.route('/ticket_pdf', methods=['GET'])
 def ticket_pdf():
     from io import BytesIO
-    from flask import send_file, session as flask_session
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
@@ -250,7 +313,7 @@ def admin_logout():
 def admin_kasa():
     return render_template('admin/kasa.html')
 
-def rro_send(payload: dict, url=None):
+def rro_send(payload: dict, url: str = None):
     print(url)
     # url = f"http://{current_app.config['DM_HOST']}:{current_app.config['DM_PORT']}/dm/execute-pkg"
     resp = requests.post(url, json=payload, headers={'Content-Type':'application/json'})
@@ -259,22 +322,94 @@ def rro_send(payload: dict, url=None):
 
 
 
-@app.route('/open_shift', methods=['POST'])
+@app.route('/open_shift', methods=['POST',  'GET'])
 def open_shift():
     payload = {
-        "ver": 6,
-        "source": "CenterDovzhenkoCinema",
-        "device": current_app.config['DM_DEVICE'],
-        "tag": f"open_shift_{uuid4()}",
-        "type": 1,
-        "fiscal": {
-            "task": 0
+      "ver": 6,
+      "source": "CenterDovzhenkoCinema",
+      "device": current_app.config['DM_DEVICE'],
+      "tag": f"open_shift_{uuid4()}",
+      "type": 1,
+      "fiscal": {"task": 0}
+    }
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-pkg"
+    result = rro_send(payload, url)
+    print(result)
+    return redirect(url_for('admin_kasa'))
+
+
+@app.route('/close_shift', methods=['POST', 'GET'])
+def close_shift():
+    payload = {
+      "ver": 6,
+      "source": "CenterDovzhenkoCinema",
+      "device": current_app.config['DM_DEVICE'],
+      "tag": f"close_shift_{uuid4()}",
+      "type": 1,
+      "fiscal": {"task": 11}
+    }
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-pkg"
+    result = rro_send(payload, url)
+    print(result)
+    return redirect(url_for('admin_kasa'))
+
+
+
+
+@app.route('/print_receipt', methods=['POST', 'GET'])
+def print_receipt():
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": current_app.config['DM_DEVICE'],
+    "tag": "",
+    "need_pf_img": "1",
+    "need_pf_pdf": "1",
+    "need_pf_txt": "1",
+    "need_pf_doccmd": "1",
+    "type": "1",
+    "userinfo": {
+        "email": "",
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "API",
+        "receipt": {
+            "sum": 4240.16,
+            "disc": 0.00,
+            "disc_type": 0,
+            "round": 0.00,
+            "comment_up": "Приклад коментаря зверху чеку",
+            "comment_down": "Приклад коментаря \nзнизу чеку",
+            "rows": [
+                {
+                    "code": "100",
+                    "code1": "79545322",
+                    "code2": "00456",
+                    "name": 'name',
+                    "cnt": 1,
+                    "price": 4240.16,
+                    "disc": 0.00,
+                    "disc_type": 0,
+                    "cost": 0,
+                    "taxgrp": 1,
+                    "comment": "Коментар до продукту 1"
+                }
+            ],
+            "pays": [
+                {
+                    "type": 0,
+                    "sum": 4240.16,
+                    "comment": "коментар до оплати готівкою"
+                }
+            ]
         }
     }
-    a = rro_send(payload)
-    print(a)
-    return redirect(url_for('/admin/kasa'))
-
+    }
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-pkg"
+    result = rro_send(payload=data, url=url)
+    return jsonify(result)
 
 
 def sell_ticket():
@@ -369,6 +504,10 @@ def buy_ticket():
             movie_data = {'title' : 'Movie not found',
                 'poster' : 'static/img/red.jpg'}
         else: 
+            s = movie.applications
+            values = re.findall(r'"value"\s*:\s*"([^"]+)"', s)
+            print('_____________________________________________________________ apps!!!!!!!!!:')
+            print(values)
             movie_data = {
             'id' : movie.id,
             'title' : movie.title,
@@ -378,9 +517,12 @@ def buy_ticket():
             'duration' : movie.duration,
             'description' : movie.description,
             'trailerLink' : movie.trailerLink,
+            'app' : app,
             'poster' : movie.poster,
             'price' : movie.price,
         }
+        print('_____________________________________________________________ apps:')
+        print('app', movie_data['app'])
         ua_string = request.headers.get("User-Agent", "")
         user_agent = parse(ua_string)    
         is_mobile = user_agent.is_mobile
@@ -399,6 +541,10 @@ def buy_ticket():
         
     except:
         return jsonify({'status' : 'error'})
+    
+@app.route('/success', methods=['GET'])
+def success():
+    return render_template('success.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

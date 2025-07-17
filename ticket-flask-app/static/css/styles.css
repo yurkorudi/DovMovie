@@ -117,6 +117,8 @@ main { flex: 1; }
   display: flex;
   flex-direction: column;
   align-items: center; 
+  justify-content: center;
+  position: relative;
 }
 
 .description {
@@ -136,10 +138,24 @@ main { flex: 1; }
 }
 
 
-.selected-seats-info {
+#selected-seats-info {
+  position: absolute;
+  top: 95%;
   color: #fff;
   font-size: 0.9rem;
   line-height: 1.4;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+}
+
+#selected-seats-info p{
+  border: 3px solid #6b21a8;
+  border-radius: 6px;
+  padding: 0.6rem 2.2rem;
 }
 
 .btn-trailer {
@@ -164,6 +180,46 @@ main { flex: 1; }
   align-items: center;
 }
 
+/* Сесійні блоки — стилі в темній тональності з glassmorphism */
+.session-blocks .session-block {
+  background: rgba(255,255,255,0.1);       /* напівпрозорий білий фон */
+  backdrop-filter: blur(8px);              /* розмиття за стеком */
+  border: 1px solid rgba(255,255,255,0.2); /* тонка світла обводка */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);   /* м’яка тінь */
+  transition: transform 0.2s, background 0.2s;
+}
+
+/* Hover і active стани */
+.session-blocks .session-block:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.session-blocks .session-block.active {
+  background: linear-gradient(135deg, #7a1ea1, #e91e63);
+  border-color: #e91e63;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* Підлаштування тексту */
+.session-blocks .session-block {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  color: #eee;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+}
+
+/* Відступи між блоками */
+.session-blocks {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+
+
+
+
 
 .btn-trailer:hover {
   opacity: 1;
@@ -186,6 +242,7 @@ main { flex: 1; }
   background: rgba(0,0,0,0.3);
   padding: 1rem;
   text-align: center;
+  width: max-content;
 }
 .screen {
   font-weight: bold;
@@ -244,5 +301,11 @@ main { flex: 1; }
   body {
     padding-top: 60px;
     /* overflow: hidden; */
+  }
+  #selected-seats-info{
+    position: relative;
+    flex-direction: row;
+    top: 0;
+    gap: 15px;
   }
 }
