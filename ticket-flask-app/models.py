@@ -1,6 +1,8 @@
 from extensions import db
-from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, Enum, ForeignKey, Date
 from sqlalchemy.orm import relationship
+from datetime import datetime
+
 
 
 UserRole = Enum('USER', 'ADMIN', name='UserRole')
@@ -164,6 +166,23 @@ class Movie(db.Model):
 
     createdBy = relationship('User', back_populates='movies')
     showtimes = relationship('Showtime', back_populates='movie')
+
+class Ticket(db.Model):
+    __tablename__ = 'Tickets'
+    idTickets  = Column(Integer, primary_key=True, autoincrement=True)
+    seatRow    = Column(String(45), nullable=False)
+    seatNumb = Column(String(45), nullable=False)
+    email      = Column(String(45), nullable=True)
+    first_name = Column(String(45), nullable=True)
+    last_name  = Column(String(45), nullable=True)
+    payment_method    = Column(String(45), nullable=True)
+    cost       = Column(String(45), nullable=False)
+    sessionId  = Column(String(80), ForeignKey('Showtime.id'), nullable=False)
+    sessionId  = Column('sessionId', String(80), ForeignKey('Showtime.id'), nullable=False)
+    date_of_purchase = Column(Date, default=datetime.utcnow().date)
+
+
+
 
 class Showtime(db.Model):
     __tablename__ = 'Showtime'

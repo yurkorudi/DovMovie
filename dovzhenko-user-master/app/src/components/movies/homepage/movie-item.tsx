@@ -83,7 +83,7 @@ const MovieItem = ({ movie, index }: { movie: TMovie; index: number }) => {
 				<div className={clsx(ForumSans.className, 'mt-auto pb-[27px]')}>
 					<DividerLine className='mb-[25px]' />
 					<Link
-						href={movie.ticketLink}
+						href={`${process.env.NEXT_PUBLIC_TICKET_APP_URL}/buy?movie_id=${movie.id}`}
 						target='_blank'
 						className='uppercase text-gold underline hover:text-gold-hover'
 					>

@@ -29,7 +29,9 @@
       color: #fff;
     }
     .booking-layout { padding: 1rem; }
-    .hall-wrapper { margin-top: 1.5rem; }
+    .hall-wrapper { 
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 <body>
@@ -45,6 +47,7 @@
         <div id="selected-seats-info"></div>
 
         </div>
+      
       <div class="details">
         <h1>{{ movie_data['title'] }}</h1>
         <p><strong>Вік</strong> {{ movie_data['age'] }}</p>
@@ -76,6 +79,13 @@
 
   <script>
   window.addEventListener('DOMContentLoaded', () => {
+    size = 0;
+    if ("{{ is_mobile }}" === "False"){
+      size = 32;
+    }
+    else {
+      size = 20;
+    }
     const movieId    = "{{ movie_data['id'] }}";
     const dateBlocks = document.getElementById('date-blocks');
     const timeContainer = document.getElementById('time-container');
@@ -151,10 +161,8 @@
     function drawHall() {
       seatsEl.innerHTML = '';
       priceDisplay.textContent = '';
-      const size = 32, gap = 2;
+      const stylesST = getComputedStyle(seatsEl);
       seatsEl.style.display = 'inline-grid';
-      seatsEl.style.gridAutoRows = `${size}px`;
-      seatsEl.style.gap = `${gap}px`;
       seatsEl.style.gridTemplateColumns = `repeat(${Math.max(...hallStructure.map(r=>r.length))+1}, ${size}px)`;
 
       hallStructure.forEach((row, r) => {

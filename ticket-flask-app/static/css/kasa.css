@@ -7,6 +7,23 @@ main{
     justify-content: space-around;
 }
 
+#selected-seats-info {
+  border: 2px solid #fff;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.4);
+  max-width: 200px;
+  margin-top: 10px;
+}
+
+#selected-seats-info p {
+  margin: 4px 0;
+  font-weight: 500;
+}
+
+
+
+
 .kasa-menu{
     display: flex;
     flex-direction: column;
@@ -44,6 +61,17 @@ input[type="date"] {
     gap: 10px;
 }
 
+.place.occupied {
+  background-color: #0a2240; /* темно‑синій фон */
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.session-item.active {
+  background-color: rgba(255,255,255,0.2);
+  border-left: 4px solid gold;
+}
+
 .kasa-action button{
     background: #E1CB84;
     border: none;
@@ -55,4 +83,8 @@ input[type="date"] {
 
 .kasa-action button:hover{
     background: goldenrod;
+}
+
+.kasa-holl .hall-wrapper .hall{
+  width: min-content;
 }

@@ -15,11 +15,13 @@ import os
 from user_agents import *
 import requests
 import uuid
-from models import Movie, Showtime
+from models import Movie, Showtime, Ticket
 from extensions import db
 from datetime import *
 from zoneinfo import ZoneInfo
 import pytz
+import json
+from sqlalchemy import func
 
 from flask import send_file, session as flask_session
 
@@ -31,25 +33,25 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 
 import re
+from flask_apscheduler import APScheduler
 
 
-
-pdfmetrics.registerFont(
-    TTFont('DejaVuSans', 'static/fonts/DejaVuSans.ttf'),
-)
-pdfmetrics.registerFont(
-    TTFont('DejaVuSans-Bold', 'static/fonts/DejaVuSans-Bold.ttf')
-)
-pdfmetrics.registerFont(
-    TTFont('DejaVuSans-BoldOblique', 'static/fonts/DejaVuSans-BoldOblique.ttf')
-)
-pdfmetrics.registerFont(
-    TTFont('DejaVuSans-ExtraLight', 'static/fonts/DejaVuSans-ExtraLight.ttf') 
-)
+# pdfmetrics.registerFont(
+#     TTFont('DejaVuSans', 'static/fonts/DejaVuSans.ttf'),
+# )
+# pdfmetrics.registerFont(
+#     TTFont('DejaVuSans-Bold', 'static/fonts/DejaVuSans-Bold.ttf')
+# )
+# pdfmetrics.registerFont(
+#     TTFont('DejaVuSans-BoldOblique', 'static/fonts/DejaVuSans-BoldOblique.ttf')
+# )
+# pdfmetrics.registerFont(
+#     TTFont('DejaVuSans-ExtraLight', 'static/fonts/DejaVuSans-ExtraLight.ttf') 
+# )
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
-app.config['DM_HOST'] = '192.168.0.247'
+app.config['DM_HOST'] = '192.168.31.36'
 app.config['DM_PORT'] = 3939
 app.config['DM_DEVICE'] = 'test'
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
@@ -116,6 +118,21 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
 # _____________________________ api ___________________________________#
+
+@app.route('/api/tickets')
+def api_tickets():
+
+    tickets = db.session.query(Ticket).all()
+    result = []
+    for t in tickets:
+        row = int(t.seatRow) - 1
+        col = int(t.seatNumb) - 1
+        result.append({
+            'sessionId':  t.sessionId,
+            'row':        row,
+            'seatNumber': col
+        })
+    return jsonify(result)
 
 
 @app.route('/api/sessions')
@@ -313,9 +330,57 @@ def admin_logout():
 def admin_kasa():
     return render_template('admin/kasa.html')
 
+
+
+
+
+@app.route('/admin/reports', methods=['GET'])
+def admin_reports():
+    # Отримання дати з параметра або встановлення сьогоднішньої
+    selected_date_str = request.args.get('date')
+    try:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date() if selected_date_str else date.today()
+    except ValueError:
+        selected_date = date.today()
+
+    # Отримання квитків, проданих у цю дату
+    tickets = db.session.query(Ticket, Showtime, Movie) \
+        .join(Showtime, Showtime.id == Ticket.sessionId) \
+        .join(Movie, Movie.id == Showtime.movieId) \
+        .filter(Ticket.date_of_purchase == selected_date) \
+        .all()
+
+    print('Всього квитків:', len(tickets))
+
+    # Групування по фільму, годині і ціні
+    report_data = {}
+    for ticket, session, film in tickets:
+        key = (film.title, session.dateTime.strftime('%H:%M'), ticket.cost)
+        report_data[key] = report_data.get(key, 0) + 1
+
+    # Форматування для шаблону
+    formatted_data = [{
+        'title': k[0],
+        'time': k[1],
+        'price': k[2],
+        'count': v
+    } for k, v in report_data.items()]
+
+    total_tickets = sum(item['count'] for item in formatted_data)
+    total_revenue = sum(item['count'] * float(item['price']) for item in formatted_data)
+
+
+    return render_template('admin/reports.html',
+                        data=formatted_data,
+                        selected_date=selected_date.strftime('%Y-%m-%d'),
+                        total_tickets=total_tickets,
+                        total_revenue=total_revenue)
+
+    
+
+
 def rro_send(payload: dict, url: str = None):
     print(url)
-    # url = f"http://{current_app.config['DM_HOST']}:{current_app.config['DM_PORT']}/dm/execute-pkg"
     resp = requests.post(url, json=payload, headers={'Content-Type':'application/json'})
     resp.raise_for_status()
     return resp.json()
@@ -324,10 +389,11 @@ def rro_send(payload: dict, url: str = None):
 
 @app.route('/open_shift', methods=['POST',  'GET'])
 def open_shift():
+    device = app.config['DM_DEVICE']
     payload = {
       "ver": 6,
       "source": "CenterDovzhenkoCinema",
-      "device": current_app.config['DM_DEVICE'],
+      "device": device,
       "tag": f"open_shift_{uuid4()}",
       "type": 1,
       "fiscal": {"task": 0}
@@ -340,10 +406,11 @@ def open_shift():
 
 @app.route('/close_shift', methods=['POST', 'GET'])
 def close_shift():
+    device = app.config['DM_DEVICE']
     payload = {
       "ver": 6,
       "source": "CenterDovzhenkoCinema",
-      "device": current_app.config['DM_DEVICE'],
+      "device": device,
       "tag": f"close_shift_{uuid4()}",
       "type": 1,
       "fiscal": {"task": 11}
@@ -354,7 +421,83 @@ def close_shift():
     return redirect(url_for('admin_kasa'))
 
 
+def autoopen_shift():
+    print("Auto opening shift")
+    device = app.config['DM_DEVICE']
+    payload = {
+      "ver": 6,
+      "source": "CenterDovzhenkoCinema",
+      "device": device,
+      "tag": f"auto_open_shift_{uuid4()}",
+      "type": 1,
+      "fiscal": {"task": 0}
+    }
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-pkg"
+    result = rro_send(payload, url)
+    print(result)
+    
 
+def autoclosed_shift():
+    print("Auto closing shift")
+    device = app.config['DM_DEVICE']
+    payload = {
+      "ver": 6,
+      "source": "CenterDovzhenkoCinema",
+      "device": device,
+      "tag": f"auto_close_shift_{uuid4()}",
+      "type": 1,
+      "fiscal": {"task": 11}
+    }
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-pkg"
+    result = rro_send(payload, url)
+    print(result)
+    
+@app.route('/prod_cash', methods=['POST'])
+def cash_prod():
+    data = request.get_json()
+    
+    
+    print('__________________________________________', data)
+    prod_date = date.today()
+    for item in data:
+        t = Ticket(
+            seatRow=item['row'],
+            seatNumb=item['seatNumber'],
+            sessionId=item['sessionId'],
+            cost=item['cost'],
+            payment_method='cash',
+            date_of_purchase=prod_date
+        )
+        db.session.add(t)
+    db.session.commit()
+    
+    return jsonify({'status':'ok'})
+
+
+@app.route('/prod_card', methods=['POST'])
+def card_prod():
+    data = request.get_json()
+    
+    
+    print('__________________________________________', data)
+    for item in data:
+        t = Ticket(
+            seatRow=item['row'],
+            seatNumb=item['seatNumber'],
+            sessionId=item['sessionId'],
+            cost=item['cost'], 
+            payment_method='card'
+        )
+        db.session.add(t)
+    db.session.commit()
+    
+    return jsonify({'status':'ok'})
+
+
+
+    
+
+        
 
 @app.route('/print_receipt', methods=['POST', 'GET'])
 def print_receipt():
@@ -498,7 +641,7 @@ def checkout():
 def buy_ticket():
     try: 
         mov_id = request.args.get('movie_id')
-
+        print('_____________________________________________________________ mov_id:', mov_id)
         movie = Movie.query.filter_by(id=mov_id).first()
         if not movie:
             movie_data = {'title' : 'Movie not found',
@@ -545,6 +688,32 @@ def buy_ticket():
 @app.route('/success', methods=['GET'])
 def success():
     return render_template('success.html')
+
+
+class Config:
+    SCHEDULER_API_ENABLED = True
+    SCHEDULER_TIMEZONE = 'Europe/Kiev'
+    
+    JOBS = [{
+        'id' : 'close_shift_job',
+        'func' : autoclosed_shift,
+        'trigger' : 'cron',
+        'hour' : 23,
+        'minute' : 30,
+    }, 
+    {
+        'id' : 'open_shift_job',
+        'func' : autoopen_shift,
+        'trigger' : 'cron',
+        'hour' : 2,
+        'minute': 44
+    }]
+
+
+app.config.from_object(Config())
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
 
 if __name__ == '__main__':
     app.run(debug=True)
