@@ -66,6 +66,8 @@ let occupiedBySession = [];
 window.addEventListener('DOMContentLoaded', async() => {
 
   await loadAllTickets();
+  const priceMap = {
+  };
     const hallStructure = [
     [3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0],
     [3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0],
@@ -80,11 +82,25 @@ window.addEventListener('DOMContentLoaded', async() => {
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0],
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0],
     ];
-  const priceMap = {
-    1: {{ session.price|default(100, true) }},
-    2: 120,
-    3: 85
-  };
+  const selectedDate = new Date();
+  const dayOfWeek = selectedDate.getDay(); 
+  const dayName = getWeekdayName(dayOfWeek);
+  if (dayOfWeek === 6 || dayOfWeek === 0) {
+    priceMap[1] = 110;
+    priceMap[2] = 110;
+    priceMap[3] = 110;
+  } 
+  if (dayOfWeek === 2) {
+    priceMap[1] = 80;
+    priceMap[2] = 80;
+    priceMap[3] = 80;
+  }
+  else {
+    priceMap[1] = 100;
+    priceMap[2] = 100;
+    priceMap[3] = 100;
+  }
+
   let data_struct = []
   const seatsEl      = document.getElementById('seats');
   const priceDisplay = document.getElementById('price-display');
@@ -158,6 +174,11 @@ window.addEventListener('DOMContentLoaded', async() => {
     return;
   }
 
+  firstName = document.getElementById('client-firstname').value;
+  console.log('Ім\'я клієнта:', firstName);
+
+
+
     data_struct = arr.map(s => ({
       row:        s.row + 1,
       seatNumber: s.seatNumber + 1,
@@ -176,12 +197,42 @@ window.addEventListener('DOMContentLoaded', async() => {
     window.selectedSeatsJson = JSON.stringify(data_struct);
     console.log('data_struct:', data_struct);
   }
+  const dateInput   = document.getElementById('myDate');
 
+  function getWeekdayName(day) {
+  return ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'Пʼятниця', 'Субота'][day];
+}
+  
+dateInput.addEventListener('change', () => {
+  const selectedDate = new Date(dateInput.value);
+  const dayOfWeek = selectedDate.getDay(); 
+  const dayName = getWeekdayName(dayOfWeek);
+  console.log(`Обраний день тижня: ${dayName}`);
+
+
+  if (dayOfWeek === 6 || dayOfWeek === 0) {
+    priceMap[1] = 110;
+    priceMap[2] = 110;
+    priceMap[3] = 110;
+  } 
+  if (dayOfWeek === 2) {
+    priceMap[1] = 80;
+    priceMap[2] = 80;
+    priceMap[3] = 80;
+  }
+  else {
+    priceMap[1] = 100;
+    priceMap[2] = 100;
+    priceMap[3] = 100;
+  }
+});
 
   drawHall();
 
 
-  const dateInput   = document.getElementById('myDate');
+
+
+
   const sessionList = document.getElementById('sessionList');
 
   if (!dateInput || !sessionList) {
@@ -197,8 +248,12 @@ window.addEventListener('DOMContentLoaded', async() => {
     return;
   }
 
-
-  
+  console.log('Відправка даних:', data_struct);
+  for (f in data_struct) {
+    data_struct[f]['firstName'] = document.getElementById('client-firstname').value;
+    data_struct[f]['lastName']  = document.getElementById('client-lastname').value;
+    data_struct[f]['email']     = document.getElementById('client-email').value;
+  }
 
   const res = await fetch(`/prod_${paymentMethod}`, {
     method: 'POST',
