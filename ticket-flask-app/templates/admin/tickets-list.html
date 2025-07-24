@@ -11,22 +11,123 @@
      {% include 'admin/admin-header.html' %}
 
      <main>
-        <h1>Квитки</h1>
-
-        <div class="tickets-memu">
-            <div class="kasa-session">
-                <div id="sessionList"></div>
-            </div>
+        <div class="kasa-holl">
+            
+        </div>
+        <div class="kasa-memu">
             <div class="kasa-shedule">
                 <input type="date" id="myDate" name="myDate">
             </div>
-
+            <div class="kasa-session">
+                <div id="sessionList"></div>
+            </div>            
         </div>
         
      </main>
 
 <script>
+    const bookedBySession = {};
 
+  async function loadAllTickets() {
+    try {
+      const res  = await fetch('/api/tickets');
+      const data = await res.json();
+      data.forEach(t => {
+        if (!bookedBySession[t.sessionId]) 
+          bookedBySession[t.sessionId] = [];
+        bookedBySession[t.sessionId].push({ row: t.row, seatNumber: t.seatNumber });
+      });
+    } catch (e) {
+      console.error('Не вдалося завантажити продані квитки', e);
+    }
+  }
+
+
+window.addEventListener('DOMContentLoaded', async() => {
+
+  await loadAllTickets();
+
+
+  const dateInput   = document.getElementById('myDate');
+  const sessionList = document.getElementById('sessionList');
+
+  if (!dateInput || !sessionList) {
+    console.error('Не знайдено #myDate або #sessionList – перевір HTML');
+    return;
+  }
+
+
+
+  async function sendOrder(paymentMethod) {
+    if (!window.currentSessionId) {
+    alert('Спочатку виберіть сеанс справа');
+    return;
+  }
+
+
+  
+
+  const res = await fetch(`/prod_${paymentMethod}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data_struct)
+  });
+
+  if (!res.ok) {
+    console.error('Server error:', await res.text());
+    alert('Помилка при відправці');
+    return;
+  }
+
+  const result = await res.json();
+  console.log('Sold:', result);
+  alert(`Успіх: продано ${result} квитків (${paymentMethod})`);
+  window.location.reload();
+}
+
+  async function fetchSessions(date) {
+    console.log('Запит сесій на дату:', date);
+    try {
+      const res = await fetch(`/api/sessions?date=${date}`);
+      console.log('Статус відповіді:', res.status);
+      const data = await res.json();
+      console.log('Отримані сесії:', data);
+      renderSessions(data);
+    } catch (err) {
+      console.error('Помилка fetchSessions:', err);
+    }
+  }
+
+  function renderSessions(sessions) {
+  sessionList.innerHTML = '';
+  if (!sessions.length) {
+    sessionList.textContent = 'Немає сеансів на цей день';
+    return;
+  }
+  sessions.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'session-item';
+    div.innerHTML = `
+      <strong>${s.time}</strong>
+      <span>${s.title}</span>
+    `;
+
+    sessionList.appendChild(div);
+  });
+}
+
+
+
+
+  dateInput.addEventListener('change', () => {
+    fetchSessions(dateInput.value);
+  });
+
+
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.value = today;
+  fetchSessions(today);
+});
 </script>
 
 </body>
