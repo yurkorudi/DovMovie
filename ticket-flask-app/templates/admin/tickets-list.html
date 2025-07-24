@@ -14,30 +14,65 @@
         <div class="kasa-holl">
             
         </div>
-        <div class="kasa-memu">
+
+        <div class="tickets-memu">
+
             <div class="kasa-shedule">
                 <input type="date" id="myDate" name="myDate"></input>
             </div>
             <div class="kasa-session">
-                <div id="sessionList"></div>
-            </div>            
-        </div>
+
+                    <div id="sessionList">
+                        <p>helloca</p>
+                    </div>
+                </div>
+            </div>
+
         
      </main>
 
 <script>
-  const bookedBySession = {};
+    const dateInput   = document.getElementById('myDate');
+    const sessionList = document.getElementById('sessionList');
+    const list = document.querySelectorAll('kasa-holl');
+    let occupiedBySession = [];
+    const bookedBySession = {};
 
-  async function loadAllTickets() {
+
+    async function loadAllTickets() {
+
     try {
       const ddt = new Date().toISOString().split('T')[0];
       const response = await fetch(`/api/sessions?date=${encodeURIComponent(ddt)}`);
       const sessions = await response.json();
       renderSessions(sessions);
     } catch (e) {
-      console.error('Не вдалося завантажити дані', e);
+
+      console.error('Не вдалося завантажити продані квитки', e);
     }
   }
+
+
+    window.onload = function() {
+        loadAllTickets();
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        fetchSessions(dateInput.value);
+    };
+
+    async function fetchSessions(date) {
+        console.log('Запит сесій на дату:', date);
+        try {
+            const res = await fetch(`/api/sessions?date=${date}`);
+            console.log('Статус відповіді:', res.status);
+            const data = await res.json();
+            console.log('Отримані сесії:', data);
+            renderSessions(data);
+        } catch (err) {
+            console.error('Помилка fetchSessions:', err);
+        }
+    }
+
 
   function renderSessions(sessions) {
     const sessionList = document.getElementById('sessionList');
@@ -57,7 +92,7 @@
         window.currentSessionId = s.id;
         console.log(`Обрано сеанс ${s.title} (ID: ${s.id})`);
 
-        // Очистити старий вивід квитків
+
         const holl = document.querySelector('.kasa-holl');
         holl.innerHTML = '';
 
@@ -121,6 +156,7 @@
       }
     }
   });
+
 </script>
 
 
