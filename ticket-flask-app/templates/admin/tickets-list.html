@@ -14,21 +14,25 @@
         <div class="kasa-holl">
             
         </div>
+
         <div class="tickets-memu">
-            
+
             <div class="kasa-shedule">
                 <input type="date" id="myDate" name="myDate">
             </div>
             <div class="kasa-session">
+
                     <div id="sessionList">
                         <p>helloca</p>
                     </div>
                 </div>
             </div>
+
         
      </main>
 
 <script>
+
     const dateInput   = document.getElementById('myDate');
     const sessionList = document.getElementById('sessionList');
     const list = document.querySelectorAll('kasa-holl');
@@ -36,6 +40,7 @@
     const bookedBySession = {};
 
     async function loadAllTickets() {
+
     try {
       const res  = await fetch('/api/tickets');
       const data = await res.json();
@@ -48,6 +53,7 @@
       console.error('Не вдалося завантажити продані квитки', e);
     }
   }
+
 
     window.onload = function() {
         loadAllTickets();
@@ -103,6 +109,7 @@
         fetchSessions(dateInput.value);
     });
     
+
 </script>
 
 </body>
