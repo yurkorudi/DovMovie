@@ -116,7 +116,12 @@ window.addEventListener('DOMContentLoaded', async() => {
   });
 }
 
-
+const info = document.getElementById('kasa-holl');
+    info.innerHTML = '';
+    const totalEl = document.createElement('p');
+    totalEl.className = 'total-sum';
+    totalEl.textContent = `Сума: ${total} ₴`;
+    info.appendChild(totalEl);
 
 
   dateInput.addEventListener('change', () => {
