@@ -119,6 +119,12 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 # _____________________________ api ___________________________________#
 
+
+    
+
+    
+
+
 @app.route('/api/tickets')
 def api_tickets():
 
@@ -128,6 +134,7 @@ def api_tickets():
         row = int(t.seatRow) - 1
         col = int(t.seatNumb) - 1
         result.append({
+            
             'sessionId':  t.sessionId,
             'row':        row,
             'seatNumber': col
@@ -213,6 +220,32 @@ def get_session_times():
     print('time list: ', sorted_times)
     return jsonify(sorted_times)
 
+@app.route('/api/tickets_list')
+def api_tickets_list():
+    session_id = request.args.get('session_id')
+
+    if not session_id:
+        return jsonify({"error": "Missing session_id"}), 400
+
+    try:
+        tickets = Ticket.query.filter_by(sessionId=session_id).all()
+    except Exception as e:
+        print("Помилка в базі:", e)
+        return jsonify({"error": "DB query failed"}), 500
+
+    result = []
+    for t in tickets:
+        result.append({
+            "row": t.seatRow,
+            "seatNumber": t.seatNumb,
+            "cost": t.cost,
+            "firstName": t.first_name,
+            "lastName": t.last_name,
+            "email": t.email,
+            "payment_method": t.payment_method
+        })
+
+    return jsonify(result)
 
 
 

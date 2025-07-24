@@ -30,6 +30,31 @@ main { flex: 1; }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+.ticket-info {
+  padding: 8px;
+  margin-bottom: 10px;
+  background: #f5f5f5;
+  border-left: 4px solid #333;
+}
+
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ticket-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 10px 15px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 14px;
+}
 
 
 .booking-layout {

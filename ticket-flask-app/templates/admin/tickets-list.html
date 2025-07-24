@@ -16,7 +16,7 @@
         </div>
         <div class="kasa-memu">
             <div class="kasa-shedule">
-                <input type="date" id="myDate" name="myDate">
+                <input type="date" id="myDate" name="myDate"></input>
             </div>
             <div class="kasa-session">
                 <div id="sessionList"></div>
@@ -26,114 +26,104 @@
      </main>
 
 <script>
-    const bookedBySession = {};
+  const bookedBySession = {};
 
   async function loadAllTickets() {
     try {
-      const res  = await fetch('/api/tickets');
-      const data = await res.json();
-      data.forEach(t => {
-        if (!bookedBySession[t.sessionId]) 
-          bookedBySession[t.sessionId] = [];
-        bookedBySession[t.sessionId].push({ row: t.row, seatNumber: t.seatNumber });
-      });
+      const ddt = new Date().toISOString().split('T')[0];
+      const response = await fetch(`/api/sessions?date=${encodeURIComponent(ddt)}`);
+      const sessions = await response.json();
+      renderSessions(sessions);
     } catch (e) {
-      console.error('Не вдалося завантажити продані квитки', e);
-    }
-  }
-
-
-window.addEventListener('DOMContentLoaded', async() => {
-
-  await loadAllTickets();
-
-
-  const dateInput   = document.getElementById('myDate');
-  const sessionList = document.getElementById('sessionList');
-
-  if (!dateInput || !sessionList) {
-    console.error('Не знайдено #myDate або #sessionList – перевір HTML');
-    return;
-  }
-
-
-
-  async function sendOrder(paymentMethod) {
-    if (!window.currentSessionId) {
-    alert('Спочатку виберіть сеанс справа');
-    return;
-  }
-
-
-  
-
-  const res = await fetch(`/prod_${paymentMethod}`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(data_struct)
-  });
-
-  if (!res.ok) {
-    console.error('Server error:', await res.text());
-    alert('Помилка при відправці');
-    return;
-  }
-
-  const result = await res.json();
-  console.log('Sold:', result);
-  alert(`Успіх: продано ${result} квитків (${paymentMethod})`);
-  window.location.reload();
-}
-
-  async function fetchSessions(date) {
-    console.log('Запит сесій на дату:', date);
-    try {
-      const res = await fetch(`/api/sessions?date=${date}`);
-      console.log('Статус відповіді:', res.status);
-      const data = await res.json();
-      console.log('Отримані сесії:', data);
-      renderSessions(data);
-    } catch (err) {
-      console.error('Помилка fetchSessions:', err);
+      console.error('Не вдалося завантажити дані', e);
     }
   }
 
   function renderSessions(sessions) {
-  sessionList.innerHTML = '';
-  if (!sessions.length) {
-    sessionList.textContent = 'Немає сеансів на цей день';
-    return;
+    const sessionList = document.getElementById('sessionList');
+    sessionList.innerHTML = '';
+
+    if (!sessions.length) {
+      sessionList.textContent = 'Немає сеансів на цей день';
+      return;
+    }
+
+    sessions.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'session-item';
+      div.innerHTML = `<strong>${s.time}</strong> — <span>${s.title}</span> <em>(${s.duration} хв)</em>`;
+
+      div.addEventListener('click', async () => {
+        window.currentSessionId = s.id;
+        console.log(`Обрано сеанс ${s.title} (ID: ${s.id})`);
+
+        // Очистити старий вивід квитків
+        const holl = document.querySelector('.kasa-holl');
+        holl.innerHTML = '';
+
+        try {
+          const res = await fetch(`/api/tickets_list?session_id=${s.id}`);
+          const tickets = await res.json();
+          console.log('Квитки:', tickets);
+
+          if (!tickets.length) {
+            holl.innerHTML = `<p>Квитків ще немає.</p>`;
+            return;
+          }
+
+          const list = document.createElement('div');
+          list.className = 'ticket-list';
+
+          tickets.forEach((t, i) => {
+            const ticket = document.createElement('div');
+            ticket.className = 'ticket-item';
+            ticket.innerHTML = `
+              <div><strong>Квиток ${i + 1}</strong></div>
+              <div>Ряд: ${t.row}, Місце: ${t.seatNumber}</div>
+              <div>Ціна: ${t.cost} ₴</div>
+              <div>Ім’я: ${t.firstName || '-'}</div>
+              <div>Прізвище: ${t.lastName || '-'}</div>
+              <div>Email: ${t.email || '-'}</div>
+              <div>Оплата: ${t.payment_method || '-'}</div>
+            `;
+            list.appendChild(ticket);
+          });
+
+          holl.appendChild(list);
+
+        } catch (err) {
+          console.error('Помилка при завантаженні квитків:', err);
+        }
+      });
+
+      sessionList.appendChild(div);
+    });
   }
-  sessions.forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'session-item';
-    div.innerHTML = `
-      <strong>${s.time}</strong>
-      <span>${s.title}</span>
-    `;
 
-    sessionList.appendChild(div);
+  window.addEventListener('DOMContentLoaded', async () => {
+    await loadAllTickets();
+
+    const dateInput = document.getElementById('myDate');
+    dateInput.value = new Date().toISOString().split('T')[0];
+
+    dateInput.addEventListener('change', () => {
+      const date = dateInput.value;
+      fetchSessions(date);
+    });
+
+    async function fetchSessions(date) {
+      try {
+        const res = await fetch(`/api/sessions?date=${encodeURIComponent(date)}`);
+        const data = await res.json();
+        renderSessions(data);
+      } catch (err) {
+        console.error('Помилка fetchSessions:', err);
+      }
+    }
   });
-}
-
-const info = document.getElementById('kasa-holl');
-    info.innerHTML = '';
-    const totalEl = document.createElement('p');
-    totalEl.className = 'total-sum';
-    totalEl.textContent = `Сума: ${total} ₴`;
-    info.appendChild(totalEl);
-
-
-  dateInput.addEventListener('change', () => {
-    fetchSessions(dateInput.value);
-  });
-
-
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.value = today;
-  fetchSessions(today);
-});
 </script>
+
+
 
 </body>
 </html>
