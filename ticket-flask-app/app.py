@@ -506,7 +506,10 @@ def cash_prod():
             sessionId=item['sessionId'],
             cost=item['cost'],
             payment_method='cash',
-            date_of_purchase=prod_date
+            date_of_purchase=prod_date,
+            email=item['email'],
+            first_name=item['firstName'],
+            last_name=item['lastName']
         )
         db.session.add(t)
     db.session.commit()
