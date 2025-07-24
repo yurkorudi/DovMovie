@@ -14,21 +14,33 @@
         <div class="kasa-holl">
             
         </div>
-        <div class="kasa-memu">
+
+        <div class="tickets-memu">
+
             <div class="kasa-shedule">
                 <input type="date" id="myDate" name="myDate">
             </div>
             <div class="kasa-session">
-                <div id="sessionList"></div>
-            </div>            
-        </div>
+
+                    <div id="sessionList">
+                        <p>helloca</p>
+                    </div>
+                </div>
+            </div>
+
         
      </main>
 
 <script>
+
+    const dateInput   = document.getElementById('myDate');
+    const sessionList = document.getElementById('sessionList');
+    const list = document.querySelectorAll('kasa-holl');
+    let occupiedBySession = [];
     const bookedBySession = {};
 
-  async function loadAllTickets() {
+    async function loadAllTickets() {
+
     try {
       const res  = await fetch('/api/tickets');
       const data = await res.json();
@@ -43,96 +55,61 @@
   }
 
 
-window.addEventListener('DOMContentLoaded', async() => {
+    window.onload = function() {
+        loadAllTickets();
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        fetchSessions(dateInput.value);
+    };
 
-  await loadAllTickets();
-
-
-  const dateInput   = document.getElementById('myDate');
-  const sessionList = document.getElementById('sessionList');
-
-  if (!dateInput || !sessionList) {
-    console.error('Не знайдено #myDate або #sessionList – перевір HTML');
-    return;
-  }
-
-
-
-  async function sendOrder(paymentMethod) {
-    if (!window.currentSessionId) {
-    alert('Спочатку виберіть сеанс справа');
-    return;
-  }
-
-
-  
-
-  const res = await fetch(`/prod_${paymentMethod}`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(data_struct)
-  });
-
-  if (!res.ok) {
-    console.error('Server error:', await res.text());
-    alert('Помилка при відправці');
-    return;
-  }
-
-  const result = await res.json();
-  console.log('Sold:', result);
-  alert(`Успіх: продано ${result} квитків (${paymentMethod})`);
-  window.location.reload();
-}
-
-  async function fetchSessions(date) {
-    console.log('Запит сесій на дату:', date);
-    try {
-      const res = await fetch(`/api/sessions?date=${date}`);
-      console.log('Статус відповіді:', res.status);
-      const data = await res.json();
-      console.log('Отримані сесії:', data);
-      renderSessions(data);
-    } catch (err) {
-      console.error('Помилка fetchSessions:', err);
+    async function fetchSessions(date) {
+        console.log('Запит сесій на дату:', date);
+        try {
+            const res = await fetch(`/api/sessions?date=${date}`);
+            console.log('Статус відповіді:', res.status);
+            const data = await res.json();
+            console.log('Отримані сесії:', data);
+            renderSessions(data);
+        } catch (err) {
+            console.error('Помилка fetchSessions:', err);
+        }
     }
-  }
 
-  function renderSessions(sessions) {
-  sessionList.innerHTML = '';
-  if (!sessions.length) {
-    sessionList.textContent = 'Немає сеансів на цей день';
-    return;
-  }
-  sessions.forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'session-item';
-    div.innerHTML = `
-      <strong>${s.time}</strong>
-      <span>${s.title}</span>
-    `;
+    function renderSessions(sessions) {
+        sessionList.innerHTML = '';
+        if (!sessions.length) {
+            sessionList.textContent = 'Немає сеансів на цей день';
+            return;
+        }
+        sessions.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'session-item';
+            div.innerHTML = `
+            <strong>${s.time}</strong>
+            <span>${s.title}</span>
+            `;
 
-    sessionList.appendChild(div);
-  });
-}
+            div.addEventListener('click', () => {
 
-const info = document.getElementById('kasa-holl');
-    info.innerHTML = '';
-    const totalEl = document.createElement('p');
-    totalEl.className = 'total-sum';
-    totalEl.textContent = `Сума: ${total} ₴`;
-    info.appendChild(totalEl);
+                sessionList.querySelectorAll('.session-item.active').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
 
 
-  dateInput.addEventListener('change', () => {
-    fetchSessions(dateInput.value);
-  });
+                window.currentSessionId = s.id;
 
+                occupiedBySession = bookedBySession[s.id] || [];
+                console.log('Обрано сесію:', s.id, 'Зайняті місця:', occupiedBySession);
+            });
 
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.value = today;
-  fetchSessions(today);
-});
+            sessionList.appendChild(div);
+        });
+    }
+
+    dateInput.addEventListener('change', () => {
+        fetchSessions(dateInput.value);
+    });
+    
+
 </script>
 
 </body>
