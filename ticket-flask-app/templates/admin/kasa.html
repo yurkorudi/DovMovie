@@ -21,6 +21,9 @@
             </section>
         </div>
         <div class="kasa-menu">
+          <div class="sold-tickets">
+            <a href="{{ url_for('admin_tickets') }}">Продані квитки</a>
+          </div>
             <div class="kasa-shedule">
                 <input type="date" id="myDate" name="myDate">
             </div>
@@ -33,7 +36,12 @@
               <button id="pay-return">return</button>
             </div>
             <div id='selected-seats-info'></div>
-        </div>
+            <div class="client-info">
+              <input type="text" id="client-firstname" placeholder="Ім'я клієнта">
+              <input type="text" id="client-lastname" placeholder="Прізвище клієнта">
+              <input type="email" id="client-email" placeholder="Email клієнта">
+            </div>
+          </div>
      </main>
 
 <script>

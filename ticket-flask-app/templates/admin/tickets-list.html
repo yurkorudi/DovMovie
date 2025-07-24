@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kasa.css') }}">
+    <title>Робоча каса</title>
+</head>
+<body>
+     {% include 'admin/admin-header.html' %}
+
+     <main>
+        <h1>Квитки</h1>
+
+        <div class="tickets-memu">
+            <div class="kasa-session">
+                <div id="sessionList"></div>
+            </div>
+            <div class="kasa-shedule">
+                <input type="date" id="myDate" name="myDate">
+            </div>
+
+        </div>
+        
+     </main>
+
+<script>
+
+</script>
+
+</body>
+</html>

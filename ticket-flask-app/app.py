@@ -376,7 +376,47 @@ def admin_reports():
                         total_tickets=total_tickets,
                         total_revenue=total_revenue)
 
-    
+@app.route('/admin/tickets-list', methods=['GET'])
+def admin_tickets():
+    # Отримання дати з параметра або встановлення сьогоднішньої
+    selected_date_str = request.args.get('date')
+    try:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date() if selected_date_str else date.today()
+    except ValueError:
+        selected_date = date.today()
+
+    # Отримання квитків, проданих у цю дату
+    tickets = db.session.query(Ticket, Showtime, Movie) \
+        .join(Showtime, Showtime.id == Ticket.sessionId) \
+        .join(Movie, Movie.id == Showtime.movieId) \
+        .filter(Ticket.date_of_purchase == selected_date) \
+        .all()
+
+    print('Всього квитків:', len(tickets))
+
+    # Групування по фільму, годині і ціні
+    report_data = {}
+    for ticket, session, film in tickets:
+        key = (film.title, session.dateTime.strftime('%H:%M'), ticket.cost)
+        report_data[key] = report_data.get(key, 0) + 1
+
+    # Форматування для шаблону
+    formatted_data = [{
+        'title': k[0],
+        'time': k[1],
+        'price': k[2],
+        'count': v
+    } for k, v in report_data.items()]
+
+    total_tickets = sum(item['count'] for item in formatted_data)
+    total_revenue = sum(item['count'] * float(item['price']) for item in formatted_data)
+
+
+    return render_template('admin/tickets-list.html',
+                        data=formatted_data,
+                        selected_date=selected_date.strftime('%Y-%m-%d'),
+                        total_tickets=total_tickets,
+                        total_revenue=total_revenue)
 
 
 def rro_send(payload: dict, url: str = None):
