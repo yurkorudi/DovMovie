@@ -134,4 +134,9 @@ export const footerNavigation = [
 		key: 'Contacts',
 		link: '#contacts',
 	},
+	{
+		text: 'НАША ПОЛІТИКА',
+		key: 'our politics',
+		link: 'http://127.0.0.1:5000/political/',
+	},
 ] as const;
