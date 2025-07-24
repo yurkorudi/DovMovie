@@ -137,6 +137,6 @@ export const footerNavigation = [
 	{
 		text: 'НАША ПОЛІТИКА',
 		key: 'our politics',
-		link: 'http://127.0.0.1:5000/political/',
+		link: 'http://127.0.0.1:5000/political',
 	},
 ] as const;
