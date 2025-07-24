@@ -11,22 +11,98 @@
      {% include 'admin/admin-header.html' %}
 
      <main>
-        <h1>Квитки</h1>
-
+        <div class="kasa-holl">
+            
+        </div>
         <div class="tickets-memu">
-            <div class="kasa-session">
-                <div id="sessionList"></div>
-            </div>
+            
             <div class="kasa-shedule">
                 <input type="date" id="myDate" name="myDate">
             </div>
-
-        </div>
+            <div class="kasa-session">
+                    <div id="sessionList">
+                        <p>helloca</p>
+                    </div>
+                </div>
+            </div>
         
      </main>
 
 <script>
+    const dateInput   = document.getElementById('myDate');
+    const sessionList = document.getElementById('sessionList');
+    const list = document.querySelectorAll('kasa-holl');
+    let occupiedBySession = [];
+    const bookedBySession = {};
 
+    async function loadAllTickets() {
+    try {
+      const res  = await fetch('/api/tickets');
+      const data = await res.json();
+      data.forEach(t => {
+        if (!bookedBySession[t.sessionId]) 
+          bookedBySession[t.sessionId] = [];
+        bookedBySession[t.sessionId].push({ row: t.row, seatNumber: t.seatNumber });
+      });
+    } catch (e) {
+      console.error('Не вдалося завантажити продані квитки', e);
+    }
+  }
+
+    window.onload = function() {
+        loadAllTickets();
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        fetchSessions(dateInput.value);
+    };
+
+    async function fetchSessions(date) {
+        console.log('Запит сесій на дату:', date);
+        try {
+            const res = await fetch(`/api/sessions?date=${date}`);
+            console.log('Статус відповіді:', res.status);
+            const data = await res.json();
+            console.log('Отримані сесії:', data);
+            renderSessions(data);
+        } catch (err) {
+            console.error('Помилка fetchSessions:', err);
+        }
+    }
+
+    function renderSessions(sessions) {
+        sessionList.innerHTML = '';
+        if (!sessions.length) {
+            sessionList.textContent = 'Немає сеансів на цей день';
+            return;
+        }
+        sessions.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'session-item';
+            div.innerHTML = `
+            <strong>${s.time}</strong>
+            <span>${s.title}</span>
+            `;
+
+            div.addEventListener('click', () => {
+
+                sessionList.querySelectorAll('.session-item.active').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+
+
+                window.currentSessionId = s.id;
+
+                occupiedBySession = bookedBySession[s.id] || [];
+                console.log('Обрано сесію:', s.id, 'Зайняті місця:', occupiedBySession);
+            });
+
+            sessionList.appendChild(div);
+        });
+    }
+
+    dateInput.addEventListener('change', () => {
+        fetchSessions(dateInput.value);
+    });
+    
 </script>
 
 </body>
