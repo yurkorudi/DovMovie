@@ -706,6 +706,12 @@ def buy_ticket():
     except:
         return jsonify({'status' : 'error'})
     
+@app.route('/political')
+def political():  
+    return render_template(
+            'politicals.html'
+        )
+
 @app.route('/success', methods=['GET'])
 def success():
     return render_template('success.html')

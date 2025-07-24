@@ -1,0 +1,26 @@
+main{
+    padding: 15px;
+    color: white;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+h1{
+    font-size: 20px;
+    cursor: pointer;
+}
+
+h2{
+    font-size: 18px;
+}
+
+main div{
+    margin-bottom: 40px;
+}
+
+.political-info{
+    display: none;
+}
+
+h1.active ~ .political-info{
+    display: block;
+}
