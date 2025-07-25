@@ -411,14 +411,14 @@ def admin_reports():
 
 @app.route('/admin/tickets-list', methods=['GET'])
 def admin_tickets():
-    # Отримання дати з параметра або встановлення сьогоднішньої
+
     selected_date_str = request.args.get('date')
     try:
         selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date() if selected_date_str else date.today()
     except ValueError:
         selected_date = date.today()
 
-    tickets = redirect(url_for('api/tickets'))
+    tickets = redirect(url_for('api_tickets'))
     print(tickets)
 
 
@@ -427,10 +427,10 @@ def admin_tickets():
 
 
     return render_template('admin/tickets-list.html',
-                        data=formatted_data,
-                        selected_date=selected_date.strftime('%Y-%m-%d'),
-                        total_tickets=total_tickets,
-                        total_revenue=total_revenue)
+                        data=tickets,
+                        selected_date=selected_date.strftime('%Y-%m-%d'))
+                        # total_tickets=total_tickets,
+                        # total_revenue=total_revenue)
 
 
 def rro_send(payload: dict, url: str = None):
