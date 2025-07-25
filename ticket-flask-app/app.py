@@ -408,6 +408,48 @@ def admin_reports():
                         total_tickets=total_tickets,
                         total_revenue=total_revenue)
 
+@app.route('/admin/full-report', methods=['GET'])
+def admin_full_reports():
+    # Отримання дати з параметра або встановлення сьогоднішньої
+    selected_date_str = request.args.get('date')
+    try:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date() if selected_date_str else date.today()
+    except ValueError:
+        selected_date = date.today()
+
+    # Отримання квитків, проданих у цю дату
+    tickets = db.session.query(Ticket, Showtime, Movie) \
+        .join(Showtime, Showtime.id == Ticket.sessionId) \
+        .join(Movie, Movie.id == Showtime.movieId) \
+        .filter(Ticket.date_of_purchase == selected_date) \
+        .all()
+
+    print('Всього квитків:', len(tickets))
+
+    # Групування по фільму, годині і ціні
+    report_data = {}
+    for ticket, session, film in tickets:
+        key = (film.title, session.dateTime.strftime('%H:%M'), ticket.cost)
+        report_data[key] = report_data.get(key, 0) + 1
+
+    # Форматування для шаблону
+    formatted_data = [{
+        'title': k[0],
+        'time': k[1],
+        'price': k[2],
+        'count': v
+    } for k, v in report_data.items()]
+
+    total_tickets = sum(item['count'] for item in formatted_data)
+    total_revenue = sum(item['count'] * float(item['price']) for item in formatted_data)
+
+
+    return render_template('admin/full-report.html',
+                        data=formatted_data,
+                        selected_date=selected_date.strftime('%Y-%m-%d'),
+                        total_tickets=total_tickets,
+                        total_revenue=total_revenue)
+
 @app.route('/admin/tickets-list', methods=['GET'])
 def admin_tickets():
 
@@ -419,11 +461,6 @@ def admin_tickets():
 
     tickets = redirect(url_for('api_tickets'))
     print(tickets)
-
-
-    
-
-
 
     return render_template('admin/tickets-list.html',
                         data=tickets,
@@ -810,6 +847,48 @@ def political():
     return render_template(
             'politicals.html'
         )
+
+@app.route('/payment')
+def payment():  
+    try: 
+        mov_id = request.args.get('movie_id')
+        movie = Movie.query.filter_by(id=mov_id).first()
+        if not movie:
+            movie_data = {'title' : 'Movie not found',
+                'poster' : 'static/img/red.jpg'}
+        else: 
+            s = movie.applications
+            values = re.findall(r'"value"\s*:\s*"([^"]+)"', s)
+            movie_data = {
+            'id' : movie.id,
+            'title' : movie.title,
+            'age' : movie.age,
+            'genre' : movie.genre,
+            'filmMaker' : movie.filmMaker,
+            'duration' : movie.duration,
+            'description' : movie.description,
+            'trailerLink' : movie.trailerLink,
+            'app' : app,
+            'poster' : movie.poster,
+            'price' : movie.price,
+        }
+        ua_string = request.headers.get("User-Agent", "")
+        user_agent = parse(ua_string)    
+        is_mobile = user_agent.is_mobile
+
+        seats_raw = request.args.get('seats')
+        seats = json.loads(seats_raw) if seats_raw else []
+
+        return render_template(
+                'online-pay.html',
+                movie_data = movie_data,
+                movie_session=None,
+                occupied_seats=[],
+                is_mobile = is_mobile,
+                seats=seats
+            )
+    except:
+        return jsonify({'status' : 'error'})
 
 @app.route('/success', methods=['GET'])
 def success():

@@ -41,12 +41,12 @@ main { flex: 1; }
 .booking-layout {
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
   padding: 2rem;
   gap: 3rem;
-  overflow: hidden;
-  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 
@@ -83,6 +83,7 @@ main { flex: 1; }
 
 .film-info {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   gap: 2rem;
   width: 100%;
@@ -90,7 +91,7 @@ main { flex: 1; }
   justify-content: center;
   align-items: center;
 }
-.film-info .poster img {
+.poster img {
   width: 100%;
   max-width: 300px;
   border-radius: 8px;
@@ -141,24 +142,35 @@ main { flex: 1; }
 
 
 #selected-seats-info {
-  position: absolute;
   top: 100%;
   color: #fff;
   font-size: 0.9rem;
   line-height: 1.4;
-  width: 80vw;
+  width: 100%;
+  height: min-content;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-
 }
 
 #selected-seats-info p{
   border: 3px solid #6b21a8;
   border-radius: 6px;
-  padding: 0.6rem 2.2rem;
+  width: 80%;
   text-align: center;
+}
+
+#selected-seats-info button{
+  border: 3px solid #6b21a8;
+  background: transparent;
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .btn-trailer {
@@ -231,10 +243,12 @@ main { flex: 1; }
 .hall-wrapper {
   display: flex;
   flex-direction: column;
-  align-self: center;  
+  justify-content: center;
+  align-items: center;  
   width: 100%;
   max-width: 500px;
-  padding-right: 2.2rem;
+  margin-left: -20%;
+  
 }
 .hall-wrapper h2 {
   color: #fff;
@@ -281,6 +295,7 @@ main { flex: 1; }
   background: #eee;
   cursor: pointer;
   transition: background .2s;
+  color: black;
 }
 
 .place.type-2 { background: #d1c4e9; }
@@ -299,23 +314,10 @@ main { flex: 1; }
   color: #fff;
 }
 
-@media (max-width: 1100px) {
-  .hall {
-    margin-left: 6.2rem;
-  }
-  
-}
-
-@media (max-width: 900px) {
-  .hall {
-    margin-left: 8.2rem;
-  }
-  
-}
 
 @media (max-width: 830px) {
-  .hall {
-    margin-left: 10.2rem;
+  .hall-wrapper {
+    margin-left: 0;
   }
   
 }
@@ -345,7 +347,7 @@ main { flex: 1; }
     padding: 0.6rem 1.2rem;
   }
 
-  .hall {
+  .hall-wrapper {
     margin-left: 0;
   }
 

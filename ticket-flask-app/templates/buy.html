@@ -38,15 +38,16 @@
   {% include 'header.html' %}
 
   <main class="booking-layout hide-scrollbar">
-    <section class="film-info">
-      <div class="poster">
-        <img src="{{ movie_data['poster'] }}" alt="{{ movie_data['title'] }}">
-        <a href="{{ movie_data['trailerLink'] }}" target="_blank" class="btn-trailer">
-          Дивитись трейлер
-        </a>
-        <div id="selected-seats-info"></div>
+    <div class="poster">
+      <img src="{{ movie_data['poster'] }}" alt="{{ movie_data['title'] }}">
+      <a href="{{ movie_data['trailerLink'] }}" target="_blank" class="btn-trailer">
+        Дивитись трейлер
+      </a>
+      <div id="selected-seats-info"></div>
 
-        </div>
+    </div>
+    <section class="film-info">
+      
       
       <div class="details">
         <h1>{{ movie_data['title'] }}</h1>
@@ -64,15 +65,17 @@
           <div id="time-blocks" class="session-blocks"></div>
         </div>
       </div>
-    </section>
 
-    <section class="hall-wrapper hidden" id="hall-section">
+      <section class="hall-wrapper hidden" id="hall-section">
       <div class="hall">
         <div class="screen">Екран</div>
         <div id="price-display" class="price-display"></div>
         <div id="seats"></div>
       </div>
     </section>
+    </section>
+
+    
   </main>
 
   {% include 'footer.html' %}
@@ -96,6 +99,46 @@
     const datesUrl = `/api/sessions/dates?movie_id=${movieId}`;
     const timesUrl = date => `/api/sessions/times?movie_id=${movieId}&date=${date}`;
 
+    let dayOfWeek;
+    const bookedBySession = {};
+    let occupiedBySession = [];
+
+    async function loadAllTickets() {
+      try {
+        const res  = await fetch('/api/tickets');
+        const data = await res.json();
+        data.forEach(t => {
+          if (!bookedBySession[t.sessionId]) 
+            bookedBySession[t.sessionId] = [];
+          bookedBySession[t.sessionId].push({ row: t.row, seatNumber: t.seatNumber });
+        });
+      } catch (e) {
+        console.error('Не вдалося завантажити продані квитки', e);
+      }
+    }
+
+    async function fetchSessions(date) {
+      console.log('Запит сесій на дату:', date);
+      try {
+        const res = await fetch(`/api/sessions?date=${date}`);
+        console.log('Статус відповіді:', res.status);
+        const data = await res.json();
+        console.log('Отримані сесії:', data);
+        renderSessions(data);
+      } catch (err) {
+        console.error('Помилка fetchSessions:', err);
+      }
+    }
+
+    function renderSessions(sessions) {  
+      console.log(sessions);    
+      sessions.forEach(s => {
+        window.currentSessionId = s.id;
+        occupiedBySession = bookedBySession[s.id] || [];
+        console.log('Обрано сесію:', s.id, 'Зайняті місця:', occupiedBySession);
+        });
+    }
+
     // Отримати дати
     fetch(datesUrl)
       .then(r => r.json())
@@ -117,6 +160,15 @@
       timeBlocks.innerHTML = '';
       timeContainer.classList.remove('hidden');
       hallSection.classList.add('hidden');
+
+      const selectedDay = new Date(block.dataset.value);
+      const selectedDayNumber = selectedDay.getDay();
+      dayOfWeek = selectedDayNumber;
+
+      loadAllTickets();
+
+      fetchSessions(block.dataset.value);
+
       fetch(timesUrl(block.dataset.value))
         .then(r => r.json())
         .then(times => {
@@ -153,12 +205,29 @@
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0],
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0],
     ];
-    const occupiedBySession = {{ occupied_seats|default([])|tojson }};
     const seatsEl      = document.getElementById('seats');
     const priceDisplay = document.getElementById('price-display');
-    const priceMap     = { 1: {{ session.price|default(100, true) }}, 2: 120, 3: 85 };
+    const priceMap = {};
+    
 
     function drawHall() {
+
+      if (dayOfWeek === 6 || dayOfWeek === 0) {
+        priceMap[1] = 110;
+        priceMap[2] = 110;
+        priceMap[3] = 110;
+      } 
+      else if (dayOfWeek === 2) {
+        priceMap[1] = 80;
+        priceMap[2] = 80;
+        priceMap[3] = 80;
+      }
+      else {
+        priceMap[1] = 100;
+        priceMap[2] = 100;
+        priceMap[3] = 100;
+      }
+      
       seatsEl.innerHTML = '';
       priceDisplay.textContent = '';
       const stylesST = getComputedStyle(seatsEl);
@@ -196,12 +265,22 @@
       });
     }
 
+    function buyTicket(tickets){
+      const dataParam = encodeURIComponent(JSON.stringify(tickets));
+      window.location.href = `/payment?seats=${dataParam}`;
+    }
+
     function updateSelectedSeats() {
       const selected = Array.from(seatsEl.querySelectorAll('.place.selected'));
       const arr = selected.map(el => ({ row:+el.dataset.row, seatNumber:+el.dataset.col, cost:+el.dataset.price }));
       const input = document.getElementById('selectedSeatsInput'); if (input) input.value = JSON.stringify(arr);
       const info = document.getElementById('selected-seats-info'); info.innerHTML = '';
       arr.forEach((s,i) => info.innerHTML += `<p>Квиток <br> Ряд ${s.row+1}, Місце ${s.seatNumber+1}, ${s.cost}₴</p>`);
+      
+      const btn = document.createElement('button');
+      btn.textContent = 'Pay';
+      btn.addEventListener('click', () => buyTicket(arr));
+      info.appendChild(btn);
     }
   });
   </script>

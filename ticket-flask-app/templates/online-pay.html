@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ movie_data['title'] }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    .hidden { display: none; }
+    .session-blocks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .session-block {
+      padding: 0.5rem 1rem;
+      background: #f0f0f0;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    .session-block:hover {
+      background: #e0e0e0;
+    }
+    .session-block.active {
+      background: #ff416c;
+      color: #fff;
+    }
+    .booking-layout { padding: 1rem; }
+    .hall-wrapper { 
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  {% include 'header.html' %}
+
+  <main class="booking-layout payment">
+    <div class="tickets">
+        <h1>{{ movie_data['title'] }}</h1>
+        {% set total_cost = 0 %}
+        {% for seat in seats %}
+            <div class="ticket">Row: {{ seat.row + 1}}, Seat: {{ seat.seatNumber + 1}}, Price: {{ seat.cost }}</div>
+            {% set total_cost = total_cost + seat.cost %}
+        {% endfor %}
+        <h2>{{ total_cost }}$</h2>
+    </div>
+    <div class="payment-menu">
+        <div class="client-info">
+            <input type="text" id="client-firstname" placeholder="Ім'я клієнта">
+            <input type="text" id="client-lastname" placeholder="Прізвище клієнта">
+            <input type="email" id="client-email" placeholder="Email клієнта">
+        </div>
+        <button>Buy</button>
+    </div>
+  </main>
+
+  {% include 'footer.html' %}
+
+</body>
+</html>

@@ -7,6 +7,9 @@ main{
 h1{
     font-size: 20px;
     cursor: pointer;
+    border: 2px solid white;
+    border-radius: 8px;
+    padding: 5px;
 }
 
 h2{
