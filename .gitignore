@@ -1,6 +1,9 @@
 ### NextJS template
 # dependencies
 /node_modules
+/dovzhenko-user-master
+/dovzhenko-user-master.zip
+/dovzhennko-admin-vercel-master
 /.pnp
 .pnp.js
 

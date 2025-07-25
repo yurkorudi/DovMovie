@@ -267,7 +267,7 @@
 
     function buyTicket(tickets){
       const dataParam = encodeURIComponent(JSON.stringify(tickets));
-      window.location.href = `/payment?seats=${dataParam}`;
+      window.location.href = `/payment?seats=${dataParam}&movie_id={{ movie_data['id'] }}`;
     }
 
     function updateSelectedSeats() {

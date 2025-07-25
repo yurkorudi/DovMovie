@@ -29,6 +29,11 @@
       background: #ff416c;
       color: #fff;
     }
+
+    button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
     .booking-layout { padding: 1rem; }
     .hall-wrapper { 
       margin-top: 1.5rem;
@@ -41,10 +46,8 @@
   <main class="booking-layout payment">
     <div class="tickets">
         <h1>{{ movie_data['title'] }}</h1>
-        {% set total_cost = 0 %}
         {% for seat in seats %}
             <div class="ticket">Row: {{ seat.row + 1}}, Seat: {{ seat.seatNumber + 1}}, Price: {{ seat.cost }}</div>
-            {% set total_cost = total_cost + seat.cost %}
         {% endfor %}
         <h2>{{ total_cost }}$</h2>
     </div>
@@ -54,10 +57,29 @@
             <input type="text" id="client-lastname" placeholder="Прізвище клієнта">
             <input type="email" id="client-email" placeholder="Email клієнта">
         </div>
-        <button>Buy</button>
+        <button id='buy-button' disabled>Buy</button>
     </div>
   </main>
+  <script>
+  const firstNameInput = document.getElementById('client-firstname');
+  const lastNameInput  = document.getElementById('client-lastname');
+  const emailInput     = document.getElementById('client-email');
+  const buyButton      = document.getElementById('buy-button');
 
+  function validateInputs() {
+    const allFilled = firstNameInput.value.trim() &&
+                      lastNameInput.value.trim() &&
+                      emailInput.value.trim();
+
+    buyButton.disabled = !allFilled;
+  }
+
+  [firstNameInput, lastNameInput, emailInput].forEach(input => {
+    input.addEventListener('input', validateInputs);
+  });
+
+  validateInputs();
+</script>
   {% include 'footer.html' %}
 
 </body>

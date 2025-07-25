@@ -410,14 +410,12 @@ def admin_reports():
 
 @app.route('/admin/full-report', methods=['GET'])
 def admin_full_reports():
-    # Отримання дати з параметра або встановлення сьогоднішньої
     selected_date_str = request.args.get('date')
     try:
         selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date() if selected_date_str else date.today()
     except ValueError:
         selected_date = date.today()
 
-    # Отримання квитків, проданих у цю дату
     tickets = db.session.query(Ticket, Showtime, Movie) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
@@ -848,13 +846,15 @@ def political():
             'politicals.html'
         )
 
-@app.route('/payment')
-def payment():  
+@app.route('/payment', methods=['GET', 'POST'])
+def payment(movie_data=None, selected_seats=None):  
     try: 
         mov_id = request.args.get('movie_id')
+        print('_____________________________________________________________ mov_id:', mov_id)
         movie = Movie.query.filter_by(id=mov_id).first()
+        print('_____________________________________________________________ movie:', movie)
         if not movie:
-            movie_data = {'title' : 'Movie not found',
+            movie_data = {'title' : 'Movie ot found',
                 'poster' : 'static/img/red.jpg'}
         else: 
             s = movie.applications
@@ -878,6 +878,7 @@ def payment():
 
         seats_raw = request.args.get('seats')
         seats = json.loads(seats_raw) if seats_raw else []
+        total_cost = sum(seat['cost'] for seat in seats)
 
         return render_template(
                 'online-pay.html',
@@ -885,7 +886,8 @@ def payment():
                 movie_session=None,
                 occupied_seats=[],
                 is_mobile = is_mobile,
-                seats=seats
+                seats=seats,
+                total_cost=total_cost
             )
     except:
         return jsonify({'status' : 'error'})
