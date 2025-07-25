@@ -1,0 +1,59 @@
+.payment{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 15px;
+    overflow: hidden;
+}
+
+.payment-menu{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.payment-menu .client-info input{
+  width: 130px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid white;
+  border-radius: 8px;
+  padding: 5px;
+  color: white;
+  font-size: 16px;
+}
+
+.payment-menu button{
+    background: #E1CB84;
+    border: none;
+    border-radius: 8px;
+    color: #291666;
+    cursor: pointer;
+    padding: 10px;
+    min-width: 120px;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.tickets{
+    margin: 20px;
+    padding: 30px;
+    background: rgba(0, 0, 0, 0.6);
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.tickets h1, h2{
+    color: white;
+    font-size: 18px;
+}
+
+.tickets .ticket{
+    color: white;
+    font-size: 18px;
+}

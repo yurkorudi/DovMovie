@@ -421,11 +421,6 @@ def admin_tickets():
     tickets = redirect(url_for('api_tickets'))
     print(tickets)
 
-
-    
-
-
-
     return render_template('admin/tickets-list.html',
                         data=tickets,
                         selected_date=selected_date.strftime('%Y-%m-%d'))
@@ -747,6 +742,48 @@ def political():
     return render_template(
             'politicals.html'
         )
+
+@app.route('/payment')
+def payment():  
+    try: 
+        mov_id = request.args.get('movie_id')
+        movie = Movie.query.filter_by(id=mov_id).first()
+        if not movie:
+            movie_data = {'title' : 'Movie not found',
+                'poster' : 'static/img/red.jpg'}
+        else: 
+            s = movie.applications
+            values = re.findall(r'"value"\s*:\s*"([^"]+)"', s)
+            movie_data = {
+            'id' : movie.id,
+            'title' : movie.title,
+            'age' : movie.age,
+            'genre' : movie.genre,
+            'filmMaker' : movie.filmMaker,
+            'duration' : movie.duration,
+            'description' : movie.description,
+            'trailerLink' : movie.trailerLink,
+            'app' : app,
+            'poster' : movie.poster,
+            'price' : movie.price,
+        }
+        ua_string = request.headers.get("User-Agent", "")
+        user_agent = parse(ua_string)    
+        is_mobile = user_agent.is_mobile
+
+        seats_raw = request.args.get('seats')
+        seats = json.loads(seats_raw) if seats_raw else []
+
+        return render_template(
+                'online-pay.html',
+                movie_data = movie_data,
+                movie_session=None,
+                occupied_seats=[],
+                is_mobile = is_mobile,
+                seats=seats
+            )
+    except:
+        return jsonify({'status' : 'error'})
 
 @app.route('/success', methods=['GET'])
 def success():
