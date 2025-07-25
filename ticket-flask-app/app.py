@@ -18,6 +18,7 @@ import uuid
 from models import Movie, Showtime, Ticket
 from extensions import db
 from datetime import *
+import time
 from zoneinfo import ZoneInfo
 import pytz
 import json
@@ -51,13 +52,13 @@ from flask_apscheduler import APScheduler
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
-app.config['DM_HOST'] = '192.168.31.36'
+app.config['DM_HOST'] = '192.168.1.131'
 app.config['DM_PORT'] = 3939
 app.config['DM_DEVICE'] = 'test'
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['DM_DEVICE'] = 'test'
-app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', '1234')
+app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
 db.init_app(app)
 Session(app)
 
@@ -369,14 +370,13 @@ def admin_kasa():
 
 @app.route('/admin/reports', methods=['GET'])
 def admin_reports():
-    # Отримання дати з параметра або встановлення сьогоднішньої
     selected_date_str = request.args.get('date')
     try:
         selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date() if selected_date_str else date.today()
     except ValueError:
         selected_date = date.today()
 
-    # Отримання квитків, проданих у цю дату
+
     tickets = db.session.query(Ticket, Showtime, Movie) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
@@ -385,13 +385,12 @@ def admin_reports():
 
     print('Всього квитків:', len(tickets))
 
-    # Групування по фільму, годині і ціні
+
     report_data = {}
     for ticket, session, film in tickets:
         key = (film.title, session.dateTime.strftime('%H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
 
-    # Форматування для шаблону
     formatted_data = [{
         'title': k[0],
         'time': k[1],
@@ -428,7 +427,7 @@ def admin_tickets():
 
     return render_template('admin/tickets-list.html',
                         data=tickets,
-                        selected_date=selected_date.strftime('%Y-%m-%d'))
+                        selected_date=selected_date.strftime('%Y-%m-%d'))   
                         # total_tickets=total_tickets,
                         # total_revenue=total_revenue)
 
@@ -534,16 +533,20 @@ def cash_prod():
 @app.route('/prod_card', methods=['POST'])
 def card_prod():
     data = request.get_json()
-    
-    
     print('__________________________________________', data)
+    prod_date = date.today()
     for item in data:
         t = Ticket(
             seatRow=item['row'],
             seatNumb=item['seatNumber'],
             sessionId=item['sessionId'],
-            cost=item['cost'], 
-            payment_method='card'
+            cost=item['cost'],
+            payment_method='card',
+            date_of_purchase=prod_date,
+            email=item['email'],
+            first_name=item['firstName'],
+            last_name=item['lastName']
+            
         )
         db.session.add(t)
     db.session.commit()
@@ -556,60 +559,120 @@ def card_prod():
 
         
 
-@app.route('/print_receipt', methods=['POST', 'GET'])
-def print_receipt():
+@app.route('/rro_card', methods=['POST', 'GET'])
+def print_receipt_card():
+    # email = request.args.get('email', '')
+    # sum = request.args.get('sum', '')
+    # comments = request.args.get('comments', '')
+
+    
+    
+    email = 'yurkorudi@gmail.com'
+    sum = 200
+    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
+    price = 100
     data  = {
     "ver": 6,
     "source": "DM_API",
-    "device": current_app.config['DM_DEVICE'],
+    "device": "test",
     "tag": "",
-    "need_pf_img": "1",
-    "need_pf_pdf": "1",
-    "need_pf_txt": "1",
-    "need_pf_doccmd": "1",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
     "type": "1",
     "userinfo": {
-        "email": "",
+        "email": email,
         "phone": ""
     },
     "fiscal": {
         "task": 1,
-        "cashier": "API",
+        "cashier": "Рецепція центру Довженка",
         "receipt": {
-            "sum": 4240.16,
-            "disc": 0.00,
-            "disc_type": 0,
-            "round": 0.00,
-            "comment_up": "Приклад коментаря зверху чеку",
-            "comment_down": "Приклад коментаря \nзнизу чеку",
+            "sum": sum,
+            "comment_down": comments,
             "rows": [
                 {
+                    
                     "code": "100",
-                    "code1": "79545322",
-                    "code2": "00456",
-                    "name": 'name',
-                    "cnt": 1,
-                    "price": 4240.16,
-                    "disc": 0.00,
-                    "disc_type": 0,
-                    "cost": 0,
-                    "taxgrp": 1,
-                    "comment": "Коментар до продукту 1"
-                }
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
             ],
             "pays": [
                 {
-                    "type": 0,
-                    "sum": 4240.16,
-                    "comment": "коментар до оплати готівкою"
+                    "type": 2,
+                    "sum": sum
                 }
             ]
         }
     }
-    }
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-pkg"
+}
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
     result = rro_send(payload=data, url=url)
     return jsonify(result)
+
+
+
+@app.route('/rro_cash', methods=['POST', 'GET'])
+def print_receipt_cash():
+    # email = request.args.get('email', '')
+    # sum = request.args.get('sum', '')
+    # comments = request.args.get('comments', '')
+
+    
+    
+    email = 'yurkorudi@gmail.com'
+    sum = 200
+    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
+    price = 100
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": "test",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": email,
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": comments,
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 0,
+                    "sum": sum,
+                }
+            ]
+        }
+    }
+}
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
+    return jsonify(result)
+
 
 
 def sell_ticket():
