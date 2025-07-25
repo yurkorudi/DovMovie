@@ -5,6 +5,7 @@
     align-items: center;
     gap: 15px;
     overflow: hidden;
+    color: white;
 }
 
 .payment-menu{
@@ -12,15 +13,22 @@
     flex-direction: column;
     justify-content: flex-start;
     gap: 10px;
+    max-width: 40%;
+}
+
+.payment-menu .client-info{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
 }
 
 .payment-menu .client-info input{
-  width: 130px;
+  min-width: 130px;
   background: rgba(0, 0, 0, 0.6);
   border: 2px solid white;
   border-radius: 8px;
   padding: 5px;
-  color: white;
   font-size: 16px;
 }
 
@@ -34,6 +42,10 @@
     min-width: 120px;
     font-size: 18px;
     font-weight: 500;
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+    touch-action: none;
 }
 
 .tickets{
@@ -49,11 +61,15 @@
 }
 
 .tickets h1, h2{
-    color: white;
     font-size: 18px;
 }
 
 .tickets .ticket{
-    color: white;
     font-size: 18px;
+}
+
+.error-message p{
+    text-align: center;
+    margin: 10px;
+    font-size: 14px;
 }
