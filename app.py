@@ -744,7 +744,7 @@ def sell_ticket():
 @app.route('/')
 def red():
     a = sell_ticket()
-    return jsonify(str(a))
+    return render_template('admin/Home.html')
 
 
 
