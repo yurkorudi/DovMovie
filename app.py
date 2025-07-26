@@ -64,7 +64,7 @@ Session(app)
 
 
 UTC = pytz.UTC
-KYIV = pytz.timezone('Europe/Kiev')
+KYIV = pytz.timezone('Europe/Kyiv')
 # _____________________ admin panel ________________________# 
 
 
@@ -899,7 +899,7 @@ def success():
 
 class Config:
     SCHEDULER_API_ENABLED = True
-    SCHEDULER_TIMEZONE = 'Europe/Kiev'
+    SCHEDULER_TIMEZONE = 'Europe/Kyiv'
     
     JOBS = [{
         'id' : 'close_shift_job',
