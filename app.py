@@ -744,7 +744,7 @@ def sell_ticket():
 @app.route('/')
 def red():
     a = sell_ticket()
-    return render_template('admin/Home.html')
+    return redirect(url_for('admin_login'))
 
 
 
