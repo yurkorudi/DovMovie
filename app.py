@@ -743,7 +743,7 @@ def sell_ticket():
 
 @app.route('/')
 def red():
-    return redirect(url_for('admin_login'))
+    return jsonify({'status': 'ok', 'message': 'Welcome to Dovzhenko Cinema API'})
 
 
 
@@ -888,8 +888,8 @@ def payment(movie_data=None, selected_seats=None):
                 seats=seats,
                 total_cost=total_cost
             )
-    except:
-        return jsonify({'status' : 'error'})
+    except Exception as e:
+        return jsonify({'status' : e}), 500
 
 @app.route('/success', methods=['GET'])
 def success():
