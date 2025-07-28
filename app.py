@@ -836,8 +836,8 @@ def buy_ticket():
             is_mobile = is_mobile
         )
         
-    except:
-        return jsonify({'status' : 'error'})
+    except Exception as e:
+        return jsonify({'status' : e}), 500
     
 @app.route('/political')
 def political():  
