@@ -743,7 +743,6 @@ def sell_ticket():
 
 @app.route('/')
 def red():
-    a = sell_ticket()
     return redirect(url_for('admin_login'))
 
 
