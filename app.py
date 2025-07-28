@@ -122,7 +122,12 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
     
-
+@app.errorhandler(500)
+def internal_error(error):
+    import traceback
+    print("=== 500 ERROR ===")
+    traceback.print_exc()
+    return "Internal Server Error", 500
     
 
 
