@@ -743,7 +743,7 @@ def sell_ticket():
 
 @app.route('/')
 def red():
-    return jsonify({'status': 'ok', 'message': 'Welcome to Dovzhenko Cinema API'})
+    return redirect(url_for('admin_login'))
 
 
 
