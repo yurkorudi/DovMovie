@@ -45,7 +45,10 @@
       <a href="{{ movie_data['trailerLink'] }}" target="_blank" class="btn-trailer">
         Дивитись трейлер
       </a>
+      {% if not is_mobile %}
       <div id="selected-seats-info"></div>
+      {% endif %}
+
 
     </div>
     <section class="film-info">
@@ -75,6 +78,9 @@
         <div id="seats"></div>
       </div>
     </section>
+    {% if is_mobile %}
+      <div id="selected-seats-info"></div>
+      {% endif %}
     </section>
 
     
