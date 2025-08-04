@@ -19,13 +19,21 @@ html, body {
   font-family: 'Montserrat', sans-serif;
 }
 body {
-  background: url("/static/img/background.webp") no-repeat center/cover;
+  background: linear-gradient(
+  90deg,
+  rgba(41, 22, 102, 0.8),
+  rgba(41, 22, 102, 0.8) 77.6%,
+  rgba(43, 29, 112, 0.8) 89.06%,
+  rgba(41, 22, 102, 0.8)
+  ), url("/static/img/background.webp") no-repeat center/cover;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   overflow-x: hidden;
 }
-main { flex: 1; }
+main { 
+  flex: 1; 
+}
 
 .hide-scrollbar {
   overflow-y: scroll;    
