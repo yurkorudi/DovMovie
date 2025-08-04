@@ -286,14 +286,20 @@
       arr.forEach((s,i) => info.innerHTML += `<p>Квиток <br> Ряд ${s.row+1}, Місце ${s.seatNumber+1}, ${s.cost}₴</p>`);
       
       const buttonExists = hallSection.querySelector('button') !== null;
-      console.log(buttonExists);
       if(!buttonExists){
         const btn = document.createElement('button');
         btn.textContent = 'Pay';
+        console.log("button");
+        console.log(arr);
         btn.addEventListener('click', () => buyTicket(arr));
         hallSection.appendChild(btn);
       }
-      
+      else{
+        const btn = hallSection.querySelector('button');
+        btn.addEventListener('click', () => buyTicket(arr));
+        hallSection.appendChild(btn, btn);
+
+      }
     }
   });
   </script>
