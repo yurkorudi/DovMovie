@@ -35,7 +35,7 @@
       margin-top: 1.5rem;
     }
   </style>
-</head>
+</head> 
 <body>
   {% include 'header.html' %}
 
@@ -285,10 +285,15 @@
       const info = document.getElementById('selected-seats-info'); info.innerHTML = '';
       arr.forEach((s,i) => info.innerHTML += `<p>Квиток <br> Ряд ${s.row+1}, Місце ${s.seatNumber+1}, ${s.cost}₴</p>`);
       
-      const btn = document.createElement('button');
-      btn.textContent = 'Pay';
-      btn.addEventListener('click', () => buyTicket(arr));
-      info.appendChild(btn);
+      const buttonExists = hallSection.querySelector('button') !== null;
+      console.log(buttonExists);
+      if(!buttonExists){
+        const btn = document.createElement('button');
+        btn.textContent = 'Pay';
+        btn.addEventListener('click', () => buyTicket(arr));
+        hallSection.appendChild(btn);
+      }
+      
     }
   });
   </script>

@@ -169,16 +169,17 @@ main {
   text-align: center;
 }
 
-#selected-seats-info button{
+#hall-section button{
   border: 3px solid #6b21a8;
   background: transparent;
   border-radius: 8px;
-  width: 100%;
+  width: 200px;
   text-align: center;
   color: white;
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
+  margin-top: 15px;
 }
 
 .btn-trailer {
