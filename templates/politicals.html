@@ -304,6 +304,7 @@
             const all = document.querySelectorAll('h1');
             all.forEach(h1 => h1.classList.remove('active'));
             el.classList.add('active');
+            el.scrollIntoView({ behavior: 'smooth' });
             console.log('h1');
         }
     </script>

@@ -151,7 +151,10 @@
     fetch(datesUrl)
       .then(r => r.json())
       .then(dates => {
+        dates.sort((a, b) => new Date(a) - new Date(b));
         dates.forEach(date => {
+          today = new Date();
+          if (new Date(date)<today) return;
           const block = document.createElement('div');
           block.className = 'session-block';
           block.textContent = new Date(date)

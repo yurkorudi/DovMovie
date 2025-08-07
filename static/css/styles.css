@@ -51,6 +51,7 @@ main {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
+  justify-content: center;
   padding: 2rem;
   gap: 3rem;
   overflow-x: hidden;
