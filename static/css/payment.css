@@ -77,3 +77,18 @@
     margin: 10px;
     font-size: 14px;
 }
+
+@media (max-width: 768px){
+    .payment{
+        flex-direction: column;
+    }
+
+    .payment-menu .client-info{
+        flex-direction: column;
+    }
+
+    .tickets{
+        width: 80%;
+        text-align: center;
+    }
+}

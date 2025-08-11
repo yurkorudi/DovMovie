@@ -36,20 +36,6 @@ from reportlab.lib.units import mm
 import re
 from flask_apscheduler import APScheduler
 
-
-# pdfmetrics.registerFont(
-#     TTFont('DejaVuSans', 'static/fonts/DejaVuSans.ttf'),
-# )
-# pdfmetrics.registerFont(
-#     TTFont('DejaVuSans-Bold', 'static/fonts/DejaVuSans-Bold.ttf')
-# )
-# pdfmetrics.registerFont(
-#     TTFont('DejaVuSans-BoldOblique', 'static/fonts/DejaVuSans-BoldOblique.ttf')
-# )
-# pdfmetrics.registerFont(
-#     TTFont('DejaVuSans-ExtraLight', 'static/fonts/DejaVuSans-ExtraLight.ttf') 
-# )
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
 app.config['DM_HOST'] = '178.62.106.58'
@@ -146,6 +132,9 @@ def api_tickets():
             'seatNumber': col
         })
     return jsonify(result)
+
+
+
 
 
 @app.route('/api/sessions')
@@ -927,5 +916,5 @@ scheduler.init_app(app)
 scheduler.start()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host="192.168.245.143")
 
