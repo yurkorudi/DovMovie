@@ -47,7 +47,7 @@
     <div class="tickets">
         <h1>{{ movie_data['title'] }}</h1>
         {% for seat in seats %}
-            <div class="ticket">Row: {{ seat.row + 1}}, Seat: {{ seat.seatNumber + 1}}, Price: {{ seat.cost }}</div>
+            <div class="ticket">Ряд: {{ seat.row + 1}}, Місце: {{ seat.seatNumber + 1}}, Вартість: {{ seat.cost }}</div>
         {% endfor %}
         <h2>{{ total_cost }}$</h2>
     </div>

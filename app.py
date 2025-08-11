@@ -916,5 +916,5 @@ scheduler.init_app(app)
 scheduler.start()
 
 if __name__ == '__main__':
-    app.run(debug=True, host="192.168.245.143")
+    app.run(debug=True)
 
