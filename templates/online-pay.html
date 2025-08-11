@@ -57,11 +57,9 @@
             <input type="text" id="client-lastname" placeholder="Прізвище клієнта">
             <input type="email" id="client-email" placeholder="Email клієнта">
         </div>
-        <button id='buy-button' disabled>Buy</button>
-        <div class="error-message">
-          <p>На сайті ведуться технічні роботи</p>
-          <p>Онлайн оплата наразі неможлива</p>
-          <p>За інформацією по фільмах звертатися по номеру 096-825-83-60</p>
+        <button id='buy-button' class="disabled">Buy</button>
+        <div id="error-message">
+          <p>Для продовження необхідно заповнити всі поля</p>
         </div>        
     </div>
   </main>
@@ -70,13 +68,25 @@
   const lastNameInput  = document.getElementById('client-lastname');
   const emailInput     = document.getElementById('client-email');
   const buyButton      = document.getElementById('buy-button');
+  const errorMsg       = document.getElementById('error-message');
+  
 
   function validateInputs() {
+    let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     const allFilled = firstNameInput.value.trim() &&
                       lastNameInput.value.trim() &&
-                      emailInput.value.trim();
+                      emailInput.value.trim() &&
+                      emailPattern.test(emailInput.value);
 
-    buyButton.disabled = !allFilled;
+    if(allFilled){
+      buyButton.classList.remove("disabled");
+      errorMsg.style.display = "none";
+    }
+    else{
+      buyButton.classList.add("disabled");
+      errorMsg.style.display = "block";
+    }    
   }
 
   [firstNameInput, lastNameInput, emailInput].forEach(input => {
