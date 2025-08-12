@@ -33,6 +33,13 @@
   color: white;
 }
 
+.payment-menu .liqpay-button{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .payment-menu button{
     background: #E1CB84;
     border: none;

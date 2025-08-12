@@ -952,7 +952,11 @@ def payment(movie_data=None, selected_seats=None):
 
 @app.route('/success', methods=['GET'])
 def success():
-    return render_template('success.html')
+    success_pay = True
+    return render_template(
+        'success.html',
+        is_success = success_pay
+    )
 
 
 class Config:

@@ -1,5 +1,6 @@
 .sucsess{
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100vw;
@@ -13,4 +14,16 @@
 
 .h1 {
     color: white;
+}
+
+.sucsess button{
+    background: #E1CB84;
+    border: none;
+    border-radius: 8px;
+    color: #291666;
+    cursor: pointer;
+    padding: 10px;
+    min-width: 120px;
+    font-size: 18px;
+    font-weight: 500;
 }

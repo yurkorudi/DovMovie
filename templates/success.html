@@ -11,14 +11,26 @@
   {% include 'header.html' %}
 
   <main class="sucsess">
-    <h1 class='h1'>Sucsess buy</h1>
+    {% if is_success %}
+    <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf"></div>
+    {% else %}
+    <h1 class='h1'>Не вдалося провести транзакцію</h1>
+    {% endif %}
     <div class="sucsess-button">
-        <button class="btn btn-load" onclick="">Download</button>
-        <button class="btn btn-return" onclick="">Return home</button>
+        {% if is_success %}
+        <button class="btn btn-load" onclick="">Завантажити квиток</button>
+        {% endif %}
+        <button class="btn btn-return" onclick="home()">Повернутися на головну</button>
     </div>
   </main>
 
   {% include 'footer.html' %}
+
+  <script>
+    function home(){ 
+      window.location.href = 'https://www.dovzhenko-center.lviv.ua/en/movies';
+    }
+  </script>
 </body>
 </html>
