@@ -15,7 +15,7 @@ import os
 from user_agents import *
 import requests
 import uuid
-from models import Movie, Showtime, Ticket
+from models import Movie, Showtime, Ticket, Payment
 from extensions import db
 from datetime import *
 import time
@@ -25,6 +25,11 @@ import json
 from sqlalchemy import func
 import traceback
 from flask import send_file, session as flask_session
+
+
+
+import uuid, json, base64, hashlib
+from liqpay import LiqPay
 
 
 from reportlab.lib.pagesizes import A6
@@ -45,6 +50,11 @@ app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['DM_DEVICE'] = 'test'
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
+LIQPAY_PUBLIC_KEY = 'sandbox_i65007373353'
+LIQPAY_PRIVATE_KEY = 'sandbox_PiK0U7MpSJ69BAmzqIDS38ypRYJYNbDK9Oi2tt4M'
+
+lp = LiqPay(LIQPAY_PUBLIC_KEY, LIQPAY_PRIVATE_KEY)
+
 db.init_app(app)
 Session(app)
 
@@ -838,6 +848,61 @@ def political():
     return render_template(
             'politicals.html'
         )
+    
+    
+    
+    
+@app.route('/start_payment', methods=['GET', 'POST'])
+def start_payment():
+    session_id = request.form['session_id']
+    email = request.form['email']
+    amount = request.form['amount'] 
+    sess = Showtime.query.filter_by(id=session_id).first()
+    if not sess:
+        return jsonify({'status': 'error', 'message': 'Session not found'}), 404
+    
+    pid = str(uuid.uuid4())
+    
+    payment = Payment(
+        id=pid,
+        orderId=str(uuid.uuid4()),
+        sessionId=session_id,
+        email=email,
+        amount=amount,
+        currency='UAH',
+        status='pending'
+    )
+    db.session.add(payment)
+    db.session.commit()
+    
+    
+
+    
+    data = lp.cnb_form(
+        {
+            "version": 3,
+            "public_key": LIQPAY_PUBLIC_KEY,
+            "action": "pay",
+            "amount": str(amount),
+            "currency": "UAH",
+            "description": f"Payment for {sess.movie.title}",
+            "order_id": payment.orderId,
+            "sandbox": 1,  
+            "server_url": url_for('payment_callback', _external=True)
+        })
+
+    
+    
+@app.route('/payment_callback', methods=['POST'])
+def payment_callback():
+    sing = lp.string_to_sign(request.form['data'])
+    print(sing)
+    if sing != request.form['signature']:
+        return jsonify({'status': 'error', 'message': 'Invalid signature'}), 400
+    else:
+        return jsonify({'status': 'success', 'message': sing}), 200
+    
+    
 
 @app.route('/payment', methods=['GET', 'POST'])
 def payment(movie_data=None, selected_seats=None):  

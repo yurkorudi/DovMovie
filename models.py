@@ -2,6 +2,7 @@ from extensions import db
 from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, Enum, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from sqlalchemy.dialects.mysql import DECIMAL
 
 
 
@@ -180,6 +181,25 @@ class Ticket(db.Model):
     sessionId  = Column(String(80), ForeignKey('Showtime.id'), nullable=False)
     sessionId  = Column('sessionId', String(80), ForeignKey('Showtime.id'), nullable=False)
     date_of_purchase = Column(Date, default=datetime.utcnow().date)
+    
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+
+    id = Column('id', String(36), primary_key=True)
+    orderId = Column('orderId', String(255), nullable=False, unique=True)
+    sessionId = Column('sessionId', String(191), ForeignKey('Showtime.id'), nullable=False)
+    email = Column('email', String(255), nullable=False)
+    amount = Column('amount', DECIMAL(10, 2), nullable=False)
+
+
+    currency = Column('currency', String(10), nullable=False, default='UAH')
+    status = Column('status', String(20), nullable=False, default='pending')
+    liqpay_response = Column('liqpay_response', Text, nullable=True)
+    createdAt = Column('createdAt', DateTime, default=datetime.utcnow)
+    updatedAt = Column('updatedAt', DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    
 
 
 
