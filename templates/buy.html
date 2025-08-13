@@ -139,16 +139,16 @@
         const data = await res.json();
         console.log('Отримані сесії:', data);
 
-        if(todaySessionTime != NaN){
-          console.log("try");
-          console.log("st: " +todaySessionTime);
-          console.log("sd: " +todaySessionDate);
-          console.log("dtid: " + data.id);
+        if(todaySessionTime != undefined){
+          const matchingSessions = data.filter(session => {
+            let [hours, minutes] = session.time.split(":").map(Number);
+            hours = (hours + 3) % 24;
+            const sessionTimeAdjusted = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+            return sessionTimeAdjusted === todaySessionTime;
+          });
 
-          if(data.time === todaySessionTime){
-            selectedSessionID = data.id;
-            console.log("selected: " + selectedSessionID);
-          }
+          selectedSessionID = matchingSessions.map(s => s.id);
+          console.log("selected sessio id: " + selectedSessionID);
         }
         renderSessions(data);
       } catch (err) {
@@ -304,7 +304,8 @@
 
     function buyTicket(tickets){
       const dataParam = encodeURIComponent(JSON.stringify(tickets));
-      window.location.href = `/payment?seats=${dataParam}&movie_id={{ movie_data['id'] }}`;
+      const sessionParam = encodeURIComponent(selectedSessionID);
+      window.location.href = `/payment?seats=${dataParam}&movie_id={{ movie_data['id'] }}&session_id=${sessionParam}`;
     }
 
     function updateSelectedSeats() {

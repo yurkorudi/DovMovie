@@ -108,7 +108,8 @@
           email: emailInput.value,
           title: "{{ movie_data.title }}",
           movie_id: "{{ movie_data.id }}",
-          seats: "{{ seats }}"
+          seats: "{{ seats }}",
+          session_id: "{{ session }}"
         })
     })
     .then(response => response.text())
