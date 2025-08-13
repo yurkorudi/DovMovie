@@ -157,9 +157,6 @@
           today = today.toISOString().split('T')[0];
           sessionDate = new Date(date);
           sessionDate = sessionDate.toISOString().split('T')[0];
-          console.log("today: " + today);
-          console.log("date: " + sessionDate);
-          console.log("res: " + sessionDate<today)
           if (sessionDate<today) return;
           const block = document.createElement('div');
           block.className = 'session-block';
