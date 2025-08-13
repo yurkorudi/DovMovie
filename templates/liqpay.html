@@ -46,6 +46,7 @@
   <main class="booking-layout payment">
     <div class="tickets">
         <h1>{{ user_inf['title'] }}</h1>
+        <p>{{ session }}</p>
         {% for seat in seats %}
             <div class="ticket">Ряд: {{ seat.row + 1}}, Місце: {{ seat.seatNumber + 1}}, Вартість: {{ seat.cost }}</div>
         {% endfor %}
