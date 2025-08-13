@@ -154,7 +154,13 @@
         dates.sort((a, b) => new Date(a) - new Date(b));
         dates.forEach(date => {
           today = new Date();
-          if (new Date(date)<today) return;
+          today = today.toISOString().split('T')[0];
+          sessionDate = new Date(date);
+          sessionDate = sessionDate.toISOString().split('T')[0];
+          console.log("today: " + today);
+          console.log("date: " + sessionDate);
+          console.log("res: " + sessionDate<today)
+          if (sessionDate<today) return;
           const block = document.createElement('div');
           block.className = 'session-block';
           block.textContent = new Date(date)
