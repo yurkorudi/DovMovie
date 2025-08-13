@@ -89,6 +89,7 @@
   {% include 'footer.html' %}
 
   <script>
+
   window.addEventListener('DOMContentLoaded', () => {
     size = 0;
     if ("{{ is_mobile }}" === "False"){
@@ -97,6 +98,11 @@
     else {
       size = 20;
     }
+
+    let todaySessionDate;
+    let todaySessionTime;
+    let selectedSessionID;
+
     const movieId    = "{{ movie_data['id'] }}";
     const dateBlocks = document.getElementById('date-blocks');
     const timeContainer = document.getElementById('time-container');
@@ -132,6 +138,18 @@
         console.log('Статус відповіді:', res.status);
         const data = await res.json();
         console.log('Отримані сесії:', data);
+
+        if(todaySessionTime != NaN){
+          console.log("try");
+          console.log("st: " +todaySessionTime);
+          console.log("sd: " +todaySessionDate);
+          console.log("dtid: " + data.id);
+
+          if(data.time === todaySessionTime){
+            selectedSessionID = data.id;
+            console.log("selected: " + selectedSessionID);
+          }
+        }
         renderSessions(data);
       } catch (err) {
         console.error('Помилка fetchSessions:', err);
@@ -139,7 +157,6 @@
     }
 
     function renderSessions(sessions) {  
-      console.log(sessions);    
       sessions.forEach(s => {
         window.currentSessionId = s.id;
         occupiedBySession = bookedBySession[s.id] || [];
@@ -181,6 +198,7 @@
 
       loadAllTickets();
 
+      todaySessionDate = block.dataset.value;
       fetchSessions(block.dataset.value);
 
       fetch(timesUrl(block.dataset.value))
@@ -191,6 +209,7 @@
             tblock.className = 'session-block';
             tblock.textContent = time;
             tblock.dataset.value = time;
+
             tblock.addEventListener('click', () => onTimeSelect(tblock));
             timeBlocks.appendChild(tblock);
           });
@@ -200,9 +219,13 @@
     function onTimeSelect(block) {
       Array.from(timeBlocks.children).forEach(b => b.classList.remove('active'));
       block.classList.add('active');
+      todaySessionTime = block.textContent;  
+      fetchSessions(todaySessionDate);
       hallSection.classList.remove('hidden');
       drawHall();
     }
+
+    
 
     // Структура залу
     const hallStructure = [
