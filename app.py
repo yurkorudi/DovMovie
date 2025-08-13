@@ -55,11 +55,14 @@ LIQPAY_PRIVATE_KEY = 'sandbox_PiK0U7MpSJ69BAmzqIDS38ypRYJYNbDK9Oi2tt4M'
 
 lp = LiqPay(LIQPAY_PUBLIC_KEY, LIQPAY_PRIVATE_KEY)
 
+
+
 db.init_app(app)
 Session(app)
 
 
 UTC = pytz.UTC
+
 KYIV = pytz.timezone('Europe/Kyiv')
 # _____________________ admin panel ________________________# 
 
@@ -115,6 +118,14 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
 # _____________________________ api ___________________________________#
+def lp_encode(params: dict) -> str:
+    return base64.b64encode(json.dumps(params, ensure_ascii=False).encode("utf-8")).decode("utf-8")
+
+
+
+def lp_signature(data_b64: str) -> str:
+    digest = hashlib.sha1((LIQPAY_PRIVATE_KEY + data_b64 + LIQPAY_PRIVATE_KEY).encode("utf-8")).digest()
+    return base64.b64encode(digest).decode("utf-8")
 
 
     
@@ -862,6 +873,7 @@ def start_payment():
         return jsonify({'status': 'error', 'message': 'Session not found'}), 404
     
     pid = str(uuid.uuid4())
+    order_id = str(uuid.uuid4())
     
     payment = Payment(
         id=pid,
@@ -878,19 +890,22 @@ def start_payment():
     
 
     
-    data = lp.cnb_form(
-        {
-            "version": 3,
-            "public_key": LIQPAY_PUBLIC_KEY,
-            "action": "pay",
-            "amount": str(amount),
-            "currency": "UAH",
-            "description": f"Payment for {sess.movie.title}",
-            "order_id": payment.orderId,
-            "sandbox": 1,  
-            "server_url": url_for('payment_callback', _external=True)
-        })
+    params = {
+    "public_key": LIQPAY_PUBLIC_KEY,
+    "version": "3",
+    "action": "pay",
+    "amount": str(amount),
+    "currency": "UAH",
+    "description": f"Оплата квитка (сеанс {session_id})",
+    "order_id": order_id,
+    "result_url": f"https://yourdomain.com/payment-result?order_id={order_id}",
+    "server_url": "https://yourdomain.com/payment-callback",
+    "sandbox": "1"
 
+}
+    data_b64 = lp_encode(params)
+    sign = lp_signature(data_b64)
+    return render_template("liqpay_form.html", data=data_b64, signature=sign)
     
     
 @app.route('/payment_callback', methods=['POST'])
