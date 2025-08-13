@@ -41,6 +41,9 @@ from reportlab.lib.units import mm
 import re
 from flask_apscheduler import APScheduler
 
+import html
+import ast
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
 app.config['DM_HOST'] = '178.62.106.58'
@@ -917,10 +920,9 @@ def payment_callback():
     else:
         return jsonify({'status': 'success', 'message': sing}), 200
     
-    
 
 @app.route('/payment', methods=['GET', 'POST'])
-def payment(movie_data=None, selected_seats=None):  
+def payment(movie_data=None, selected_seats=None, user_inf=None):  
     try: 
         mov_id = request.args.get('movie_id')
         print('_____________________________________________________________ mov_id:', mov_id)
@@ -953,6 +955,8 @@ def payment(movie_data=None, selected_seats=None):
         seats = json.loads(seats_raw) if seats_raw else []
         total_cost = sum(seat['cost'] for seat in seats)
 
+        user_data = user_inf
+
         return render_template(
                 'online-pay.html',
                 movie_data = movie_data,
@@ -960,6 +964,31 @@ def payment(movie_data=None, selected_seats=None):
                 occupied_seats=[],
                 is_mobile = is_mobile,
                 seats=seats,
+                total_cost=total_cost
+            )
+    except Exception as e:
+        return jsonify({'status' : e}), 500
+    
+@app.route('/liqpay', methods=['GET', 'POST'])
+def liqpay(movie_data=None, selected_seats=None):  
+    try: 
+        user_inf = request.get_json()
+        ua_string = request.headers.get("User-Agent", "")
+        user_agent = parse(ua_string)    
+        is_mobile = user_agent.is_mobile
+
+        seats_raw = user_inf['seats']
+        seats_raw = html.unescape(seats_raw)
+        seats_raw = ast.literal_eval(seats_raw)
+        total_cost = sum(seat['cost'] for seat in seats_raw)
+        
+        
+
+        return render_template(
+                'liqpay.html',
+                is_mobile = is_mobile,
+                user_inf = user_inf,
+                seats=seats_raw,
                 total_cost=total_cost
             )
     except Exception as e:
