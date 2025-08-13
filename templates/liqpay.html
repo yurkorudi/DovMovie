@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ movie_data['title'] }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    .hidden { display: none; }
+    .session-blocks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .session-block {
+      padding: 0.5rem 1rem;
+      background: #f0f0f0;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    .session-block:hover {
+      background: #e0e0e0;
+    }
+    .session-block.active {
+      background: #ff416c;
+      color: #fff;
+    }
+
+    button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+    .booking-layout { padding: 1rem; }
+    .hall-wrapper { 
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  {% include 'header.html' %}
+
+  <main class="booking-layout payment">
+    <div class="tickets">
+        <h1>{{ movie_data['title'] }}</h1>
+        {% for seat in seats %}
+            <div class="ticket">Ряд: {{ seat.row + 1}}, Місце: {{ seat.seatNumber + 1}}, Вартість: {{ seat.cost }}</div>
+        {% endfor %}
+        <h2>{{ total_cost }}$</h2>
+    </div>
+        <div class="client-info">
+            <p>Ім'я клієнта: {{ user_inf['name'] }}  {{ user_inf['lastName'] }}</p>
+            <p>Email клієнта: {{ user_inf['email'] }}</p>
+            <div class="liqpay-button">
+          <form method="POST" action="https://www.liqpay.ua/api/3/checkout" 
+          accept-charset="utf-8">
+          <input type="hidden" name="data" value="eyAidmVyc2lvbiIgOiAzLCAicHVibGljX2tleSIgOiAieW91cl9wdWJsaWNfa2V5IiwgImFjdGlv
+          biIgOiAicGF5IiwgImFtb3VudCIgOiAxLCAiY3VycmVuY3kiIDogIlVTRCIsICJkZXNjcmlwdGlv
+          biIgOiAiZGVzY3JpcHRpb24gdGV4dCIsICJvcmRlcl9pZCIgOiAib3JkZXJfaWRfMSIgfQ=="/>
+          <input type="hidden" name="signature" value="QvJD5u9Fg55PCx/Hdz6lzWtYwcI="/>
+          <input type="image" 
+          src="//static.liqpay.ua/buttons/payUk.png"/>
+          </form>
+        </div>       
+        </div>
+        
+        
+  </main>
+  
+  {% include 'footer.html' %}
+
+</body>
+</html>

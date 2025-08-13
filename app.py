@@ -917,10 +917,9 @@ def payment_callback():
     else:
         return jsonify({'status': 'success', 'message': sing}), 200
     
-    
 
 @app.route('/payment', methods=['GET', 'POST'])
-def payment(movie_data=None, selected_seats=None):  
+def payment(movie_data=None, selected_seats=None, user_inf=None):  
     try: 
         mov_id = request.args.get('movie_id')
         print('_____________________________________________________________ mov_id:', mov_id)
@@ -953,12 +952,62 @@ def payment(movie_data=None, selected_seats=None):
         seats = json.loads(seats_raw) if seats_raw else []
         total_cost = sum(seat['cost'] for seat in seats)
 
+        user_data = user_inf
+
         return render_template(
                 'online-pay.html',
                 movie_data = movie_data,
                 movie_session=None,
                 occupied_seats=[],
                 is_mobile = is_mobile,
+                seats=seats,
+                total_cost=total_cost
+            )
+    except Exception as e:
+        return jsonify({'status' : e}), 500
+    
+@app.route('/liqpay', methods=['GET', 'POST'])
+def liqpay(movie_data=None, selected_seats=None):  
+    try: 
+        mov_id = request.args.get('movie_id')
+        print('_____________________________________________________________ mov_id:', mov_id)
+        movie = Movie.query.filter_by(id=mov_id).first()
+        print('_____________________________________________________________ movie:', movie)
+        if not movie:
+            movie_data = {'title' : 'Movie ot found',
+                'poster' : 'static/img/red.jpg'}
+        else: 
+            s = movie.applications
+            values = re.findall(r'"value"\s*:\s*"([^"]+)"', s)
+            movie_data = {
+            'id' : movie.id,
+            'title' : movie.title,
+            'age' : movie.age,
+            'genre' : movie.genre,
+            'filmMaker' : movie.filmMaker,
+            'duration' : movie.duration,
+            'description' : movie.description,
+            'trailerLink' : movie.trailerLink,
+            'app' : app,
+            'poster' : movie.poster,
+            'price' : movie.price,
+        }
+        user_inf = request.get_json()
+        ua_string = request.headers.get("User-Agent", "")
+        user_agent = parse(ua_string)    
+        is_mobile = user_agent.is_mobile
+
+        seats_raw = request.args.get('seats')
+        seats = json.loads(seats_raw) if seats_raw else []
+        total_cost = sum(seat['cost'] for seat in seats)
+
+        return render_template(
+                'liqpay.html',
+                movie_data = movie_data,
+                movie_session=None,
+                occupied_seats=[],
+                is_mobile = is_mobile,
+                user_inf = user_inf,
                 seats=seats,
                 total_cost=total_cost
             )
