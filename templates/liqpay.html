@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>{{ movie_data['title'] }}</title>
+  <title>{{ user_inf['title'] }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
@@ -45,7 +45,7 @@
 
   <main class="booking-layout payment">
     <div class="tickets">
-        <h1>{{ movie_data['title'] }}</h1>
+        <h1>{{ user_inf['title'] }}</h1>
         {% for seat in seats %}
             <div class="ticket">Ряд: {{ seat.row + 1}}, Місце: {{ seat.seatNumber + 1}}, Вартість: {{ seat.cost }}</div>
         {% endfor %}
@@ -71,6 +71,9 @@
   </main>
   
   {% include 'footer.html' %}
-
+<script>
+    console.log("{{ user_inf['title'] }}")
+    console.log("{{ user_inf['seats'] }}")
+</script>
 </body>
 </html>

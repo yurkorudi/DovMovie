@@ -98,7 +98,6 @@
   });
 
   validateInputs();
-
   function send_inf(){
     fetch("/liqpay", {
         method: "POST",
@@ -106,7 +105,10 @@
         body: JSON.stringify({
           name: firstNameInput.value, 
           lastName: lastNameInput.value, 
-          email: emailInput.value
+          email: emailInput.value,
+          title: "{{ movie_data.title }}",
+          movie_id: "{{ movie_data.id }}",
+          seats: "{{ seats }}"
         })
     })
     .then(response => response.text())
