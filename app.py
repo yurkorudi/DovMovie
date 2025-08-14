@@ -123,14 +123,14 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
 # _____________________________ api ___________________________________#
-def lp_encode(params: dict) -> str:
-    return base64.b64encode(json.dumps(params, ensure_ascii=False).encode("utf-8")).decode("utf-8")
+def lp_encode(params: dict):
+    return str(base64.b64encode(json.dumps(params, ensure_ascii=False).encode("utf-8")).decode("utf-8"))
 
 
 
-def lp_signature(data_b64: str) -> str:
+def lp_signature(data_b64: str):
     digest = hashlib.sha1((LIQPAY_PRIVATE_KEY + data_b64 + LIQPAY_PRIVATE_KEY).encode("utf-8")).digest()
-    return base64.b64encode(digest).decode("utf-8")
+    return str(base64.b64encode(digest).decode("utf-8"))
 
 
     
@@ -866,11 +866,11 @@ def red():
 
 
 
-@app.route('/payment', methods=['POST'])
-def pay():
-    #_____ For LiqPay ____#
+# @app.route('/payment', methods=['POST'])
+# def pay():
+#     #_____ For LiqPay ____#
     
-    return jsonify({'status': 'ok', 'massage': 'LiqPay'})
+#     return jsonify({'status': 'ok', 'massage': 'LiqPay'})
 
 
 @app.route('/receipt')
@@ -914,7 +914,6 @@ def checkout():
 def buy_ticket():
     try: 
         mov_id = request.args.get('movie_id')
-        print('_____________________________________________________________ mov_id:', mov_id)
         movie = Movie.query.filter_by(id=mov_id).first()
         if not movie:
             movie_data = {'title' : 'Movie not found',
@@ -922,8 +921,6 @@ def buy_ticket():
         else: 
             s = movie.applications
             values = re.findall(r'"value"\s*:\s*"([^"]+)"', s)
-            print('_____________________________________________________________ apps!!!!!!!!!:')
-            print(values)
             movie_data = {
             'id' : movie.id,
             'title' : movie.title,
@@ -937,13 +934,12 @@ def buy_ticket():
             'poster' : movie.poster,
             'price' : movie.price,
         }
-        print('_____________________________________________________________ apps:')
-        print('app', movie_data['app'])
+
         ua_string = request.headers.get("User-Agent", "")
         user_agent = parse(ua_string)    
         is_mobile = user_agent.is_mobile
 
-        print(movie_data)
+
         
         
 
@@ -966,101 +962,17 @@ def political():
     
     
     
-    
-@app.route('/start_payment', methods=['GET', 'POST'])
-def start_payment():
-    session_id = request.form['session_id']
-    email = request.form['email']
-    amount = request.form['amount'] 
-    sess = Showtime.query.filter_by(id=session_id).first()
-    if not sess:
-        return jsonify({'status': 'error', 'message': 'Session not found'}), 404
-    
-    pid, order_id = str(uuid.uuid4())
-    
-    payment = Payment(
-        id=pid,
-        orderId=str(uuid.uuid4()),
-        sessionId=session_id,
-        email=email,
-        amount=amount,
-        currency='UAH',
-        status='pending'
-    )
-    db.session.add(payment)
-    db.session.commit()
-    
-    
 
     
-    params = {
-    "public_key": LIQPAY_PUBLIC_KEY,
-    "version": "3",
-    "action": "pay",
-    "amount": str(amount),
-    "currency": "UAH",
-    "description": f"Оплата квитка (сеанс {session_id})",
-    "order_id": order_id,
-    "result_url": f"https://yourdomain.com/payment-result?order_id={order_id}",
-    "server_url": "https://yourdomain.com/payment-callback",
-    "sandbox": "1"
-
-}
-    data_b64 = lp_encode(params)
-    sign = lp_signature(data_b64)
-    return render_template("liqpay_form.html", data=data_b64, signature=sign, session_id=session_id, email=email, amount=amount)
-    
-    
-@app.route('/payment_callback', methods=['POST'])
-def payment_callback():
-<<<<<<< Updated upstream
-    sing = lp.string_to_sign(request.form['data'])
-    print(sing)
-    if sing != request.form['signature']:
-        return jsonify({'status': 'error', 'message': 'Invalid signature'}), 400
-    else:
-        return jsonify({'status': 'success', 'message': sing}), 200
-=======
-    data_b64 = request.form.get("data", "")
-    signature = request.form.get("signature", "")
 
 
-    expected = lp_signature(data_b64)
-    if signature != expected:
-        return "Invalid signature, 403"
-
-    payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
-    order_id = payload.get("order_id")
-    status = payload.get("status")
-
-    payment = Payment.query.filter_by(orderId=order_id).first()
-    if not payment:
-        return "Order not found, 404"
-
-
-    if payment.status != "success":
-        payment.status = status
-        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
-        db.session.commit()
-
-        # TODO: тут твоя бізнес-логіка після успіху:
-        # if status == "success":
-        #     create_ticket_for_payment(payment)
-        #     send_ticket_email(payment.email, ticket_url)
-
-    return "OK"
->>>>>>> Stashed changes
-    
 
 @app.route('/payment', methods=['GET', 'POST'])
 def payment(movie_data=None, selected_seats=None):  
     try: 
         mov_id = request.args.get('movie_id')
         session_id = request.args.get('session_id')
-        print(session_id)
-        print('_____________________________________________________________ mov_id:', mov_id)
         movie = Movie.query.filter_by(id=mov_id).first()
-        print('_____________________________________________________________ movie:', movie)
         if not movie:
             movie_data = {'title' : 'Movie ot found',
                 'poster' : 'static/img/red.jpg'}
@@ -1102,20 +1014,105 @@ def payment(movie_data=None, selected_seats=None):
     except Exception as e:
         return jsonify({'status' : e}), 500
     
+    
+
+    
+    #___________________________________________ LIQPAY __________________________________________________________#
+    
+
+
+    
+@app.route('/payment_callback', methods=['POST'])
+def payment_callback():
+    sing = lp.str_to_sign(request.form['data'])
+    data_b64 = request.form.get("data", "")
+    signature = request.form.get("signature", "")   
+    print(sing)
+    print("_________________________________________ACTIVATE_________________________________________")
+    expected_sign = base64.b64encode(
+    hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
+    ).decode()
+
+    if signature != expected_sign:
+        print(f"Expected: {expected_sign}, got: {signature}")
+        return "Invalid signature", 403
+    
+
+    payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
+    order_id = payload.get("order_id")
+    status = payload.get("status")
+    print("__________________________________> STATUS:: ")
+    print(status)
+
+    payment = Payment.query.filter_by(id=order_id).first()
+    if not payment:
+        return "Order not found, 404"
+
+
+    if payment.status != "success":
+        payment.status = status
+        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+        db.session.commit()
+
+    if status == "success":
+        print("Payment successful ")
+
+    return "OK"
+    
+    
+    
+    
+
+    
+    
+    
+    
 @app.route('/liqpay', methods=['GET', 'POST'])
 def liqpay(movie_data=None, selected_seats=None):  
+    data_b64 = ''
     try: 
         user_inf = request.get_json()
         ua_string = request.headers.get("User-Agent", "")
         user_agent = parse(ua_string)    
         is_mobile = user_agent.is_mobile
+        pid = order_id = str(uuid.uuid4())
 
         seats_raw = user_inf['seats']
         seats_raw = html.unescape(seats_raw)
         seats_raw = ast.literal_eval(seats_raw)
         total_cost = sum(seat['cost'] for seat in seats_raw)
-        
         session = user_inf['session_id']
+        
+        payment = Payment(
+        id=pid,
+        orderId=pid,
+        sessionId=session,
+        email=user_inf['email'],
+        amount=total_cost,
+        currency='UAH',
+        status='pending'
+        )
+        db.session.add(payment)
+        db.session.commit()
+        
+        params = {
+        "public_key": LIQPAY_PUBLIC_KEY,
+        "version": "3",
+        "action": "pay",
+        "amount": str(total_cost),
+        "currency": "UAH",
+        "description": f"Оплата квитка (сеанс {user_inf['title']})",
+        "order_id": order_id,
+        "result_url": f"http://127.0.0.1:5000/success?order_id={order_id}",
+        "server_url": "https://e6102951c0c8.ngrok-free.app/payment_callback",
+        "sandbox": "1"
+    }
+        
+        
+        data_b64 = lp_encode(params)
+        print('data_b64: ', data_b64)
+        sign = lp_signature(data_b64)
+            
 
         return render_template(
                 'liqpay.html',
@@ -1123,30 +1120,48 @@ def liqpay(movie_data=None, selected_seats=None):
                 user_inf = user_inf,
                 seats=seats_raw,
                 total_cost=total_cost,
-                session=session
-            )
+                session=session,
+                data=data_b64,
+                signature=sign
+            )   
+        
     except Exception as e:
-        return jsonify({'status' : e}), 500
+        print("Error in liqpay:", e)
+        return jsonify({'status' : 'error', 'message': str(e)}), 500
+    
+
+    
+
+
+
+
+
+
+
+
+
 
 @app.route('/success', methods=['GET'])
 def success():
     order_id = request.args.get('order_id')
     if not order_id:
-        return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
-    payment = Payment.query.filter_by(orderId=order_id).first()
-    if not payment:
-        return jsonify({'status': 'error', 'message': 'Payment not found'}), 404
-    if payment.status != 'success':
-        return render_template(
-            'success.html',
-            is_success = True
-        )
+        return "Order ID not provided", 400
+    return render_template('success_loading.html', order_id=order_id)
 
-    else:
-        return render_template(
-            'success.html',
-            is_success = True
-        )
+
+@app.route('/check_payment_status', methods=['GET'])
+def check_payment_status():
+    order_id = request.args.get('order_id')
+    payment = Payment.query.filter_by(id=order_id).first()
+    try: 
+        print(payment)
+    except:
+        pass
+    if not payment:
+        print("payment not found")
+        return jsonify({'status': 'not_found'})
+    return jsonify({'status': payment.status})
+
 
 
 class Config:
