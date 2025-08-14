@@ -30,6 +30,8 @@ from flask import send_file, session as flask_session
 
 import uuid, json, base64, hashlib
 from liqpay import LiqPay
+import pyfiglet
+from pyfiglet import figlet_format
 
 
 from reportlab.lib.pagesizes import A6
@@ -188,6 +190,49 @@ def get_sessions():
     return jsonify(result)
 
 
+
+def build_comment_for_receipt(items, session_dt_str):
+    def fig(num: str, font="big") -> str:
+        return figlet_format(str(num), font=font).rstrip()
+
+    lines = []
+    lines.append(f"СЕАНС: {session_dt_str}")
+    lines.append("-" * 42)
+
+    for idx, it in enumerate(items, start=1):
+        row = it['row']
+        seat = it['seatNumber']
+
+        row_ascii = fig(row, font="banner")
+        seat_ascii = fig(seat, font="banner")
+
+        row_lines = row_ascii.splitlines()
+        seat_lines = seat_ascii.splitlines()
+        max_height = max(len(row_lines), len(seat_lines))
+
+        lines.append("+" + "-" * 40 + "+")
+        lines.append(f"| КВИТОК {idx:<33} |")
+        lines.append("|" + " " * 40 + "|")
+
+
+        label = f"РЯД:        МІСЦЕ:"
+        lines.append(f"| {label:<39}|")
+        lines.append("|" + " " * 40 + "|")
+
+
+        for i in range(max_height):
+            row_part = row_lines[i] if i < len(row_lines) else " " * len(row_lines[0])
+            seat_part = seat_lines[i] if i < len(seat_lines) else " " * len(seat_lines[0])
+            combined = row_part + "   " + seat_part
+            combined = combined[:40].ljust(40)
+            lines.append(f"|{combined}|")
+
+        lines.append("|" + " " * 40 + "|")
+        lines.append("+" + "-" * 40 + "+")
+        lines.append("-" * 42)
+
+    return "\n".join(lines)
+
 @app.route('/api/sessions/dates')
 def get_session_dates():
     print("STATE: ___________________________________ DATES _______________________________________")
@@ -280,29 +325,27 @@ def ticket_pdf():
     from reportlab.lib.units import mm
     from models import Session as DBSess, Film as DBFilm, User as DBUser
 
-
     data = flask_session.get('confirmation_data')
     if not data:
         return "Немає даних квитка", 400
-
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A6)
     width, height = A6
 
-
+    # Верхній банер синього кольору
     banner_h = 8 * mm
-    p.setFillColorRGB(129, 0, 0)
+    p.setFillColorRGB(0, 0.2, 0.6)  # темно-синій
     p.rect(0, height - banner_h, width, banner_h, fill=1, stroke=0)
 
     margin_x = 6 * mm
     header_bottom = height - banner_h - 2 * mm
 
-
+    # Постер фільму
     film = DBFilm.query.filter_by(name=data['movie_name']).first()
     poster_path = film.image.path if film and film.image else 'static/img/default_poster.png'
-    poster_w = 30 * mm
-    poster_h = 40 * mm
+    poster_w = 28 * mm
+    poster_h = 38 * mm
     p.drawImage(
         poster_path,
         margin_x,
@@ -313,43 +356,46 @@ def ticket_pdf():
     )
 
 
-    title_x = margin_x + poster_w + 3 * mm
-    title_y = header_bottom - 3 * mm
+    title_x = margin_x + poster_w + 4 * mm
+    title_y = header_bottom - 4 * mm
     p.setFillColorRGB(0, 0, 0)
-    p.setFont("DejaVuSans-Bold", 10)
+    p.setFont("DejaVuSans-Bold", 11)
     p.drawString(title_x, title_y, data['movie_name'])
 
-    y = header_bottom - poster_h - 6 * mm
-    p.setFont("DejaVuSans", 6)
-    p.drawString(margin_x, y, f"Куплено користувачем: {DBUser.query.filter_by(login=data.get('user', '')).first().first_name} {DBUser.query.filter_by(login=data.get('user', '')).first().last_name}")
-    y -= 6 * mm
+
+    y = header_bottom - poster_h - 4 * mm
+    p.setFont("DejaVuSans", 7)
+    user = DBUser.query.filter_by(login=data.get('user', '')).first()
+    if user:
+        p.drawString(margin_x, y, f"Куплено: {user.first_name} {user.last_name}")
+        y -= 5 * mm
+
 
     sess = DBSess.query.filter_by(session_id=data['session_id']).first()
-    dt_str = sess.session_datetime.strftime('%Y-%m-%d %H:%M')
-    p.drawString(margin_x, y, f"Сеанс: {dt_str}")
-    y -= 8 * mm
+    if sess:
+        dt_str = sess.session_datetime.strftime('%Y-%m-%d %H:%M')
+        p.drawString(margin_x, y, f"Сеанс: {dt_str}")
+        y -= 6 * mm
+
 
     for t in data['tickets']:
         p.drawString(
             margin_x,
             y,
-            f"Місце: {t['seatNumber']}   Ряд: {t['row']}   Ціна: {t['cost']} грн"
+            f"Ряд: {t['row']}  Місце: {t['seatNumber']}  Ціна: {t['cost']} грн"
         )
-        y -= 6 * mm
+        y -= 5 * mm
 
 
-    footer_y = 8 * mm
-    p.setStrokeColorRGB(128, 0, 0)
-    p.setLineWidth(0.5)
+    footer_y = 10 * mm
+    p.setStrokeColorRGB(0, 0.2, 0.6)
+    p.setLineWidth(0.8)
     p.line(margin_x, footer_y + 4 * mm, width - margin_x, footer_y + 4 * mm)
 
+
     p.setFont("DejaVuSans", 6)
-    footer = (
-        "Телефон: +38 (044) 123-45-67   •   "
-        "Місто: Львів   •   "
-        "Адреса: Червоної калини 81 "
-    )
-    p.drawString(margin_x + 4, footer_y, footer)
+    footer = "Тел.: +38 (044) 123-45-67   •   Львів   •   Червоної Калини 81"
+    p.drawCentredString(width / 2, footer_y, footer)
 
     p.showPage()
     p.save()
@@ -361,7 +407,6 @@ def ticket_pdf():
         download_name='ticket.pdf',
         mimetype='application/pdf'
     )
-
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -586,8 +631,10 @@ def cash_prod():
 @app.route('/prod_card', methods=['POST'])
 def card_prod():
     data = request.get_json()
+    sum = 0
     print('__________________________________________', data)
     prod_date = date.today()
+    items_for_banner = []
     for item in data:
         t = Ticket(
             seatRow=item['row'],
@@ -598,11 +645,65 @@ def card_prod():
             date_of_purchase=prod_date,
             email=item['email'],
             first_name=item['firstName'],
-            last_name=item['lastName']
-            
-        )
+            last_name=item['lastName'])
+        sum += item['cost']
+        items_for_banner.append({
+            "row": item['row'],
+            "seatNumber": item['seatNumber']
+        })
         db.session.add(t)
     db.session.commit()
+    
+    email = item['email']
+    price = 100
+    row = item['row']
+    seat = item['seatNumber']
+    time_str = '15:30'
+    comments = build_comment_for_receipt(items_for_banner, time_str)
+    print(comments)
+
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": "test",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": email,
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": comments,
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 2,
+                    "sum": sum
+                }
+            ]
+        }
+    }
+}
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
     
     return jsonify({'status':'ok'})
 
@@ -875,8 +976,7 @@ def start_payment():
     if not sess:
         return jsonify({'status': 'error', 'message': 'Session not found'}), 404
     
-    pid = str(uuid.uuid4())
-    order_id = str(uuid.uuid4())
+    pid, order_id = str(uuid.uuid4())
     
     payment = Payment(
         id=pid,
@@ -908,17 +1008,48 @@ def start_payment():
 }
     data_b64 = lp_encode(params)
     sign = lp_signature(data_b64)
-    return render_template("liqpay_form.html", data=data_b64, signature=sign)
+    return render_template("liqpay_form.html", data=data_b64, signature=sign, session_id=session_id, email=email, amount=amount)
     
     
 @app.route('/payment_callback', methods=['POST'])
 def payment_callback():
+<<<<<<< Updated upstream
     sing = lp.string_to_sign(request.form['data'])
     print(sing)
     if sing != request.form['signature']:
         return jsonify({'status': 'error', 'message': 'Invalid signature'}), 400
     else:
         return jsonify({'status': 'success', 'message': sing}), 200
+=======
+    data_b64 = request.form.get("data", "")
+    signature = request.form.get("signature", "")
+
+
+    expected = lp_signature(data_b64)
+    if signature != expected:
+        return "Invalid signature, 403"
+
+    payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
+    order_id = payload.get("order_id")
+    status = payload.get("status")
+
+    payment = Payment.query.filter_by(orderId=order_id).first()
+    if not payment:
+        return "Order not found, 404"
+
+
+    if payment.status != "success":
+        payment.status = status
+        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+        db.session.commit()
+
+        # TODO: тут твоя бізнес-логіка після успіху:
+        # if status == "success":
+        #     create_ticket_for_payment(payment)
+        #     send_ticket_email(payment.email, ticket_url)
+
+    return "OK"
+>>>>>>> Stashed changes
     
 
 @app.route('/payment', methods=['GET', 'POST'])
@@ -996,11 +1127,23 @@ def liqpay(movie_data=None, selected_seats=None):
 
 @app.route('/success', methods=['GET'])
 def success():
-    success_pay = True
-    return render_template(
-        'success.html',
-        is_success = success_pay
-    )
+    order_id = request.args.get('order_id')
+    if not order_id:
+        return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
+    payment = Payment.query.filter_by(orderId=order_id).first()
+    if not payment:
+        return jsonify({'status': 'error', 'message': 'Payment not found'}), 404
+    if payment.status != 'success':
+        return render_template(
+            'success.html',
+            is_success = True
+        )
+
+    else:
+        return render_template(
+            'success.html',
+            is_success = True
+        )
 
 
 class Config:
