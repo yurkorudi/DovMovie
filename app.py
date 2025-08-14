@@ -1053,9 +1053,11 @@ def payment_callback():
     
 
 @app.route('/payment', methods=['GET', 'POST'])
-def payment(movie_data=None, selected_seats=None, user_inf=None):  
+def payment(movie_data=None, selected_seats=None):  
     try: 
         mov_id = request.args.get('movie_id')
+        session_id = request.args.get('session_id')
+        print(session_id)
         print('_____________________________________________________________ mov_id:', mov_id)
         movie = Movie.query.filter_by(id=mov_id).first()
         print('_____________________________________________________________ movie:', movie)
@@ -1086,7 +1088,6 @@ def payment(movie_data=None, selected_seats=None, user_inf=None):
         seats = json.loads(seats_raw) if seats_raw else []
         total_cost = sum(seat['cost'] for seat in seats)
 
-        user_data = user_inf
 
         return render_template(
                 'online-pay.html',
@@ -1095,7 +1096,8 @@ def payment(movie_data=None, selected_seats=None, user_inf=None):
                 occupied_seats=[],
                 is_mobile = is_mobile,
                 seats=seats,
-                total_cost=total_cost
+                total_cost=total_cost,
+                session = session_id
             )
     except Exception as e:
         return jsonify({'status' : e}), 500
@@ -1113,14 +1115,15 @@ def liqpay(movie_data=None, selected_seats=None):
         seats_raw = ast.literal_eval(seats_raw)
         total_cost = sum(seat['cost'] for seat in seats_raw)
         
-        
+        session = user_inf['session_id']
 
         return render_template(
                 'liqpay.html',
                 is_mobile = is_mobile,
                 user_inf = user_inf,
                 seats=seats_raw,
-                total_cost=total_cost
+                total_cost=total_cost,
+                session=session
             )
     except Exception as e:
         return jsonify({'status' : e}), 500
