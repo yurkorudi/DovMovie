@@ -38,6 +38,12 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 
+font_path = os.path.join(os.path.dirname(__file__), "static", "fonts", "DejaVuSans-Bold.ttf")
+pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", font_path))
+
+font_path = os.path.join(os.path.dirname(__file__), "static", "fonts", "DejaVuSans.ttf")
+pdfmetrics.registerFont(TTFont("DejaVuSans", font_path))
+
 import re
 from flask_apscheduler import APScheduler
 
@@ -271,15 +277,13 @@ def api_tickets_list():
 
 
 
-
-@app.route('/ticket_pdf', methods=['GET'])
+@app.route('/ticket_pdf')
 def ticket_pdf():
     from io import BytesIO
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
-    from models import Session as DBSess, Film as DBFilm, User as DBUser
-
+    
 
     data = flask_session.get('confirmation_data')
     if not data:
@@ -299,8 +303,8 @@ def ticket_pdf():
     header_bottom = height - banner_h - 2 * mm
 
 
-    film = DBFilm.query.filter_by(name=data['movie_name']).first()
-    poster_path = film.image.path if film and film.image else 'static/img/default_poster.png'
+    film = Movie.query.filter_by(title=data['movie']).first()
+    poster_path = film.poster if film and film.poster else 'static/img/default_poster.png'
     poster_w = 30 * mm
     poster_h = 40 * mm
     p.drawImage(
@@ -317,19 +321,19 @@ def ticket_pdf():
     title_y = header_bottom - 3 * mm
     p.setFillColorRGB(0, 0, 0)
     p.setFont("DejaVuSans-Bold", 10)
-    p.drawString(title_x, title_y, data['movie_name'])
+    p.drawString(title_x, title_y, data['movie'])
 
     y = header_bottom - poster_h - 6 * mm
     p.setFont("DejaVuSans", 6)
-    p.drawString(margin_x, y, f"Куплено користувачем: {DBUser.query.filter_by(login=data.get('user', '')).first().first_name} {DBUser.query.filter_by(login=data.get('user', '')).first().last_name}")
+    p.drawString(margin_x, y, f"Куплено користувачем: {Ticket.query.filter_by(email=data.get('email')).first()} {Ticket.query.filter_by(first_name=data.get('first_name')).first()} {Ticket.query.filter_by(last_name=data.get('last_name')).first()}")
     y -= 6 * mm
 
-    sess = DBSess.query.filter_by(session_id=data['session_id']).first()
-    dt_str = sess.session_datetime.strftime('%Y-%m-%d %H:%M')
+    sess = Showtime.query.filter_by(id=data['session_id']).first()
+    dt_str = sess.dateTime.strftime('%Y-%m-%d %H:%M')
     p.drawString(margin_x, y, f"Сеанс: {dt_str}")
     y -= 8 * mm
 
-    for t in data['tickets']:
+    for t in data['seats']:
         p.drawString(
             margin_x,
             y,
@@ -355,9 +359,11 @@ def ticket_pdf():
     p.save()
     buffer.seek(0)
 
+    download = request.args.get("download", "false").lower() == "true"
+
     return send_file(
         buffer,
-        as_attachment=True,
+        as_attachment=download,
         download_name='ticket.pdf',
         mimetype='application/pdf'
     )
@@ -956,7 +962,13 @@ def payment(movie_data=None, selected_seats=None):
         seats_raw = request.args.get('seats')
         seats = json.loads(seats_raw) if seats_raw else []
         total_cost = sum(seat['cost'] for seat in seats)
-
+        
+        flask_session['confirmation_data'] = {
+            'movie': movie.title,
+            'poster': movie.poster,
+            'session_id': session_id,
+            'seats': seats
+        }
 
         return render_template(
                 'online-pay.html',
@@ -986,6 +998,16 @@ def liqpay(movie_data=None, selected_seats=None):
         
         session = user_inf['session_id']
 
+        sessio_data = flask_session.get('confirmation_data', {})
+        sessio_data.update({
+            'first_name': user_inf['name'],
+            'last_name': user_inf['lastName'],
+            'email': user_inf['email']
+        })
+        flask_session['confirmation_data'] = sessio_data
+        print("+++++++++CHack+++++++++++=")
+        print(str(flask_session.get('confirmation_data')))
+
         return render_template(
                 'liqpay.html',
                 is_mobile = is_mobile,
@@ -1000,9 +1022,11 @@ def liqpay(movie_data=None, selected_seats=None):
 @app.route('/success', methods=['GET'])
 def success():
     success_pay = True
+    pdf = ticket_pdf()
     return render_template(
         'success.html',
-        is_success = success_pay
+        is_success = success_pay,
+        pdf = pdf
     )
 
 

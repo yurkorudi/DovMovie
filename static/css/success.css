@@ -5,7 +5,10 @@
     align-items: center;
     width: 100vw;
     height: auto;
+    margin-bottom: 15px;
+
 }
+
 
 .sucsess h1{
     text-align: center;
@@ -26,4 +29,11 @@
     min-width: 120px;
     font-size: 18px;
     font-weight: 500;
+}
+
+.sucsess embed{
+    width: 400px;
+    height: 598px;
+    object-fit: contain;
+    padding: 0;
 }
