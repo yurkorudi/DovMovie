@@ -13,13 +13,15 @@
   <main class="sucsess">
     {% if is_success %}
     <h1 class='h1'>Операція успіщна</h1>
-    <div class="ticket-pdf"></div>
+    <div class="ticket-pdf">
+      <embed src="{{ url_for('ticket_pdf', download='false') }}" type="application/pdf">
+    </div>
     {% else %}
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
     {% endif %}
     <div class="sucsess-button">
         {% if is_success %}
-        <button class="btn btn-load" onclick="">Завантажити квиток</button>
+        <button class="btn btn-load" onclick="load()">Завантажити квиток</button>
         {% endif %}
         <button class="btn btn-return" onclick="home()">Повернутися на головну</button>
     </div>
@@ -28,8 +30,16 @@
   {% include 'footer.html' %}
 
   <script>
+    window.onload = function() {
+        load();
+    };
+
     function home(){ 
       window.location.href = 'https://www.dovzhenko-center.lviv.ua/en/movies';
+    }
+
+     function load(){ 
+      window.location.href = '{{ url_for("ticket_pdf", download="true") }}';
     }
   </script>
 </body>

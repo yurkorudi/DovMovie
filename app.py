@@ -39,6 +39,7 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
+import textwrap
 
 font_path = os.path.join(os.path.dirname(__file__), "static", "fonts", "DejaVuSans-Bold.ttf")
 pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", font_path))
@@ -370,7 +371,31 @@ def ticket_pdf():
     p.setFont("DejaVuSans-Bold", 10)
     p.drawString(title_x, title_y, data['movie'])
 
-    y = header_bottom - poster_h - 6 * mm
+    p.setFont("DejaVuSans", 6)
+    p.drawString(title_x, title_y - 15, f"Вік: {film.age}")
+
+    p.setFont("DejaVuSans", 6)
+    p.drawString(title_x, title_y -25, f"Тривалість: {film.duration}")
+
+    description = textwrap.wrap(film.description, width=50)
+    text_obj = p.beginText(title_x, title_y - 40)
+    text_obj.setFont("DejaVuSans", 6)
+    for line in description:
+        text_obj.textLine(line)
+
+    p.drawText(text_obj)
+
+    lines_count = len(description)
+    line_height = 6 * 1.2
+    description_height = lines_count * line_height
+    space = 26
+
+    if(poster_h >= description_height):
+        description_height = poster_h
+        space -= 20
+    
+
+    y = title_y - description_height - space
     p.setFont("DejaVuSans", 6)
     p.drawString(margin_x, y, f"Куплено користувачем: {Ticket.query.filter_by(email=data.get('email')).first()} {Ticket.query.filter_by(first_name=data.get('first_name')).first()} {Ticket.query.filter_by(last_name=data.get('last_name')).first()}")
     y -= 6 * mm
