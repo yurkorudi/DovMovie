@@ -150,18 +150,15 @@
           selectedSessionID = matchingSessions.map(s => s.id);
           console.log("selected sessio id: " + selectedSessionID);
         }
-        renderSessions(data);
+        renderSessions(selectedSessionID);
       } catch (err) {
         console.error('Помилка fetchSessions:', err);
       }
     }
 
-    function renderSessions(sessions) {  
-      sessions.forEach(s => {
-        window.currentSessionId = s.id;
-        occupiedBySession = bookedBySession[s.id] || [];
-        console.log('Обрано сесію:', s.id, 'Зайняті місця:', occupiedBySession);
-        });
+    function renderSessions(session) {  
+      occupiedBySession = bookedBySession[session] || [];
+      console.log('Обрано сесію:', session, 'Зайняті місця:', occupiedBySession);
     }
 
     // Отримати дати
@@ -199,7 +196,7 @@
       loadAllTickets();
 
       todaySessionDate = block.dataset.value;
-      fetchSessions(block.dataset.value);
+      // fetchSessions(block.dataset.value);
 
       fetch(timesUrl(block.dataset.value))
         .then(r => r.json())
@@ -210,7 +207,9 @@
             tblock.textContent = time;
             tblock.dataset.value = time;
 
-            tblock.addEventListener('click', () => onTimeSelect(tblock));
+            tblock.addEventListener('click', () => {
+              onTimeSelect(tblock);
+            });
             timeBlocks.appendChild(tblock);
           });
         });
@@ -220,9 +219,8 @@
       Array.from(timeBlocks.children).forEach(b => b.classList.remove('active'));
       block.classList.add('active');
       todaySessionTime = block.textContent;  
-      fetchSessions(todaySessionDate);
       hallSection.classList.remove('hidden');
-      drawHall();
+      fetchSessions(todaySessionTime).then(() =>drawHall());
     }
 
     
@@ -291,6 +289,7 @@
           div.dataset.price = priceMap[cell];
           div.textContent = c + 1;
           const occupied = occupiedBySession.some(o => o.row===r && o.seatNumber===c);
+          console.log("occupied: "+occupied);
           if (occupied) div.classList.add('occupied');
           else {
             div.addEventListener('mouseover', () => priceDisplay.textContent = `${div.dataset.price} ₴`);
