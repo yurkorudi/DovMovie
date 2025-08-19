@@ -29,7 +29,7 @@ from flask import send_file, session as flask_session
 
 
 import uuid, json, base64, hashlib
-from liqpay import LiqPay
+from liqpay.liqpay import LiqPay
 import pyfiglet
 from pyfiglet import figlet_format
 
