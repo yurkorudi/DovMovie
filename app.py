@@ -198,48 +198,130 @@ def get_sessions():
     print(result)
     return jsonify(result)
 
-
+def double_char_fig(num: str) -> list[str]:
+    """Ручна таблиця жирних ASCII-цифр з 'x' замість #"""
+    ascii_digits = {
+        '0': [
+            "xxxxxx",
+            "xx  xx",
+            "xx  xx",
+            "xx  xx",
+            "xxxxxx"
+        ],
+        '1': [
+            "  xx  ",
+            "xxxx  ",
+            "  xx  ",
+            "  xx  ",
+            "xxxxxx"
+        ],
+        '2': [
+            "xxxxxx",
+            "    xx",
+            "xxxxxx",
+            "xx    ",
+            "xxxxxx"
+        ],
+        '3': [
+            "xxxxxx",
+            "    xx",
+            " xxxxx",
+            "    xx",
+            "xxxxxx"
+        ],
+        '4': [
+            "xx  xx",
+            "xx  xx",
+            "xxxxxx",
+            "    xx",
+            "    xx"
+        ],
+        '5': [
+            "xxxxxx",
+            "xx    ",
+            "xxxxxx",
+            "    xx",
+            "xxxxxx"
+        ],
+        '6': [
+            "xxxxxx",
+            "xx    ",
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx"
+        ],
+        '7': [
+            "xxxxxx",
+            "    xx",
+            "   xx ",
+            "  xx  ",
+            " xx   "
+        ],
+        '8': [
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx"
+        ],
+        '9': [
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx",
+            "    xx",
+            "xxxxxx"
+        ]
+    }
+    result = [""] * 5
+    for digit in str(num):
+        for i in range(5):
+            result[i] += ascii_digits[digit][i] + "  "
+    return result
 
 def build_comment_for_receipt(items, session_dt_str):
-    def fig(num: str, font="big") -> str:
-        return figlet_format(str(num), font=font).rstrip()
-
     lines = []
     lines.append(f"СЕАНС: {session_dt_str}")
-    lines.append("-" * 42)
-
+    lines.append("-" * 32)
     for idx, it in enumerate(items, start=1):
-        row = it['row']
-        seat = it['seatNumber']
+        row = str(it['row'])
+        seat = str(it['seatNumber'])
 
-        row_ascii = fig(row, font="banner")
-        seat_ascii = fig(seat, font="banner")
+        row_ascii = double_char_fig(row)
+        seat_ascii = double_char_fig(seat)
 
-        row_lines = row_ascii.splitlines()
-        seat_lines = seat_ascii.splitlines()
-        max_height = max(len(row_lines), len(seat_lines))
+        # Вирівнюємо по висоті
+        max_height = max(len(row_ascii), len(seat_ascii))
+        row_ascii += [''] * (max_height - len(row_ascii))
+        seat_ascii += [''] * (max_height - len(seat_ascii))
 
-        lines.append("+" + "-" * 40 + "+")
-        lines.append(f"| КВИТОК {idx:<33} |")
-        lines.append("|" + " " * 40 + "|")
+        # Підрахунок ширин
+        row_width = max(len(line) for line in row_ascii)
+        print(row_width)
+        seat_width = max(len(line) for line in seat_ascii)
+        print(seat_width)
+        space_between = 10
 
+        total_width = row_width + seat_width + space_between
+        if total_width > 30:
+            space_between = 0
+            #max(2, 30 - row_width - seat_width)
+            print("__________________________SPACEBEETWEEN>> ")
+            print(space_between)
 
-        label = f"РЯД:        МІСЦЕ:"
-        lines.append(f"| {label:<39}|")
-        lines.append("|" + " " * 40 + "|")
-
-
+        lines.append("+" + "-" * 29 + "+")
+        lines.append(f"| КВИТОК {idx:<20}")
+        lines.append(" " * 30)
+        lines.append(f"| РЯД:              МІСЦЕ: \n")
+        lines.append(" " * 30)
         for i in range(max_height):
-            row_part = row_lines[i] if i < len(row_lines) else " " * len(row_lines[0])
-            seat_part = seat_lines[i] if i < len(seat_lines) else " " * len(seat_lines[0])
-            combined = row_part + "   " + seat_part
-            combined = combined[:40].ljust(40)
-            lines.append(f"|{combined}|")
-
-        lines.append("|" + " " * 40 + "|")
-        lines.append("+" + "-" * 40 + "+")
-        lines.append("-" * 42)
-
+            row_line = row_ascii[i].ljust(row_width)
+            print(row_line)
+            seat_line = seat_ascii[i].ljust(seat_width)
+            print(seat_line)
+            combined = row_line + (" " * space_between) + seat_line
+            lines.append(f"|{combined[:29]:<29}")
+        lines.append("+" + "-" * 29 + "+")
+        lines.append("-" * 30)
     return "\n".join(lines)
 
 @app.route('/api/sessions/dates')
@@ -403,7 +485,8 @@ def ticket_pdf():
     y -= 6 * mm
 
     sess = Showtime.query.filter_by(id=data['session_id']).first()
-    dt_str = sess.dateTime.strftime('%Y-%m-%d %H:%M')
+    dt_plus3 = sess.dateTime + timedelta(hours=3)
+    dt_str = dt_plus3.strftime('%Y-%m-%d %H:%M')
     p.drawString(margin_x, y, f"Сеанс: {dt_str}")
     y -= 8 * mm
 
@@ -412,7 +495,7 @@ def ticket_pdf():
         p.drawString(
             margin_x,
             y,
-            f"Ряд: {t['row']}  Місце: {t['seatNumber']}  Ціна: {t['cost']} грн"
+            f"Ряд: {t['row'] + 1}  Місце: {t['seatNumber'] + 1}  Ціна: {t['cost']} грн"
         )
         y -= 5 * mm
 
