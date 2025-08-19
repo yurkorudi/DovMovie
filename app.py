@@ -640,6 +640,8 @@ def cash_prod():
     
     print('__________________________________________', data)
     prod_date = date.today()
+    sum = 0
+    items_for_banner = []
     for item in data:
         t = Ticket(
             seatRow=item['row'],
@@ -653,7 +655,60 @@ def cash_prod():
             last_name=item['lastName']
         )
         db.session.add(t)
+        sum += item['cost']
+        items_for_banner.append({
+            "row": item['row'],
+            "seatNumber": item['seatNumber']
+        })
     db.session.commit()
+    
+    
+    time_str = '15:30'  
+    email = item['email']
+    comments = build_comment_for_receipt(items_for_banner, time_str)
+    price = sum/len(data)
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": "test",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": email,
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": comments,
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 0,
+                    "sum": sum,
+                }
+            ]
+        }
+    }
+}
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
     
     return jsonify({'status':'ok'})
 
@@ -743,149 +798,13 @@ def card_prod():
 
         
 
-@app.route('/rro_card', methods=['POST', 'GET'])
-def print_receipt_card():
-    # email = request.args.get('email', '')
-    # sum = request.args.get('sum', '')
-    # comments = request.args.get('comments', '')
-
-    
-    
-    email = 'yurkorudi@gmail.com'
-    sum = 200
-    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
-    price = 100
-    data  = {
-    "ver": 6,
-    "source": "DM_API",
-    "device": "test",
-    "tag": "",
-    "need_pf_img": "0",
-    "need_pf_pdf": "0",
-    "need_pf_txt": "0",
-    "need_pf_doccmd": "0",
-    "type": "1",
-    "userinfo": {
-        "email": email,
-        "phone": ""
-    },
-    "fiscal": {
-        "task": 1,
-        "cashier": "Рецепція центру Довженка",
-        "receipt": {
-            "sum": sum,
-            "comment_down": comments,
-            "rows": [
-                {
-                    
-                    "code": "100",
-                    "code2": "",
-                    "name": "Квиток",
-                    "cnt": sum/price,
-                    "price":price,
-                    "taxgrp": 5,
-                },
-            ],
-            "pays": [
-                {
-                    "type": 2,
-                    "sum": sum
-                }
-            ]
-        }
-    }
-}
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    result = rro_send(payload=data, url=url)
-    return jsonify(result)
 
 
 
-@app.route('/rro_cash', methods=['POST', 'GET'])
-def print_receipt_cash():
-    # email = request.args.get('email', '')
-    # sum = request.args.get('sum', '')
-    # comments = request.args.get('comments', '')
-
-    
-    
-    email = 'yurkorudi@gmail.com'
-    sum = 200
-    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
-    price = 100
-    data  = {
-    "ver": 6,
-    "source": "DM_API",
-    "device": "test",
-    "tag": "",
-    "need_pf_img": "0",
-    "need_pf_pdf": "0",
-    "need_pf_txt": "0",
-    "need_pf_doccmd": "0",
-    "type": "1",
-    "userinfo": {
-        "email": email,
-        "phone": ""
-    },
-    "fiscal": {
-        "task": 1,
-        "cashier": "Рецепція центру Довженка",
-        "receipt": {
-            "sum": sum,
-            "comment_down": comments,
-            "rows": [
-                {
-                    
-                    "code": "100",
-                    "code2": "",
-                    "name": "Квиток",
-                    "cnt": sum/price,
-                    "price":price,
-                    "taxgrp": 5,
-                },
-            ],
-            "pays": [
-                {
-                    "type": 0,
-                    "sum": sum,
-                }
-            ]
-        }
-    }
-}
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    result = rro_send(payload=data, url=url)
-    return jsonify(result)
 
 
 
-def sell_ticket():
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn"
-    url += "?dev_id=MyPrinterName"
 
-    payload = {
-      "ver": 6,
-      "source": "MyCinemaPOS",
-      "device": app.config['DM_DEVICE'],
-      "tag": f"print_{uuid4()}",
-      "type": 1,
-      "fiscal": {
-        "task": 1,
-        "receipt": {
-          "sum": 1000,
-          "rows": [
-            {"code":"T1","name":"Квиток","cnt":1,"price":1000,"cost":1000,"disc":0,"taxgrp":2}
-          ],
-          "pays":[{"type":2,"sum":1000}]
-        }
-      }
-    }
-
-    r = requests.post(url, json=payload)
-    r.raise_for_status()
-    result = r.json()
-    print("isprint:", result.get("info",{}).get("isprint"))
-    return jsonify(result)
 
 
 
@@ -896,49 +815,7 @@ def red():
 
 
 
-# @app.route('/payment', methods=['POST'])
-# def pay():
-#     #_____ For LiqPay ____#
-    
-#     return jsonify({'status': 'ok', 'massage': 'LiqPay'})
 
-
-@app.route('/receipt')
-def receipt():
-    print('____receipt_____')
-    data = request.args.get('data_for_rro')
-    if not data:
-        ticket_items = [
-        {"name": "Квиток: Avatar", "price": 1000, "quantity":1, "tax":0}
-        ]
-        payments = [
-        {"type": 1, "sum": 1000}  
-        ]
-        fiscal = {
-        "task": 1,
-        "goods": ticket_items,
-        "payments": payments
-        }
-        data = {
-            "ver": 6,
-            "source": 'CenterDovzhenkoCinema',
-            "device": current_app.config['DM_DEVICE'],
-            "tag": f"sale_{uuid4()}",
-            "type": 1,
-            "fiscal": fiscal
-        }
-    
-    
-    a = rro_send(payload=data)
-    return jsonify({'massage': a})
-    
-
-
-@app.route('/checkout', methods=['POST'])
-def checkout():
-
-    print("GoodJob")
-    return jsonify({'status' : 'accepted'}), 200
 
 @app.route('/buy')
 def buy_ticket():
@@ -1057,43 +934,7 @@ def payment(movie_data=None, selected_seats=None):
     
 
 
-    
-@app.route('/payment_callback', methods=['POST'])
-def payment_callback():
-    sing = lp.str_to_sign(request.form['data'])
-    data_b64 = request.form.get("data", "")
-    signature = request.form.get("signature", "")   
-    print(sing)
-    print("_________________________________________ACTIVATE_________________________________________")
-    expected_sign = base64.b64encode(
-    hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
-    ).decode()
 
-    if signature != expected_sign:
-        print(f"Expected: {expected_sign}, got: {signature}")
-        return "Invalid signature", 403
-    
-
-    payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
-    order_id = payload.get("order_id")
-    status = payload.get("status")
-    print("__________________________________> STATUS:: ")
-    print(status)
-
-    payment = Payment.query.filter_by(id=order_id).first()
-    if not payment:
-        return "Order not found, 404"
-
-
-    if payment.status != "success":
-        payment.status = status
-        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
-        db.session.commit()
-
-    if status == "success":
-        print("Payment successful ")
-
-    return "OK"
     
     
     
@@ -1139,7 +980,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": f"http://127.0.0.1:5000/success?order_id={order_id}",
+        "result_url": f"http://127.0.0.1:5000/success_loading?order_id={order_id}",
         "server_url": "https://e6102951c0c8.ngrok-free.app/payment_callback",
         "sandbox": "1"
     }
@@ -1157,9 +998,8 @@ def liqpay(movie_data=None, selected_seats=None):
             'email': user_inf['email']
         })
         flask_session['confirmation_data'] = sessio_data
-        print("+++++++++CHack+++++++++++=")
-        print(str(flask_session.get('confirmation_data')))
-
+        flask_session['user_info'] = user_inf
+        
         return render_template(
                 'liqpay.html',
                 is_mobile = is_mobile,
@@ -1169,7 +1009,7 @@ def liqpay(movie_data=None, selected_seats=None):
                 session=session,
                 data=data_b64,
                 signature=sign
-            )   
+        )   
         
     except Exception as e:
         print("Error in liqpay:", e)
@@ -1177,17 +1017,152 @@ def liqpay(movie_data=None, selected_seats=None):
     
 
     
+@app.route('/success_loading', methods=['GET'])
+def success_loading():
+    data = request.args.get('order_id')
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
+    
+    return render_template(
+        'success_loading.html', order_id=data
+    )
+    
+
+
+@app.route('/check_payment_status', methods=['GET'])
+def check_payment_status():
+    order_id = request.args.get('order_id')
+    payment = Payment.query.filter_by(id=order_id).first()
+    try: 
+        print(payment.status)
+    except:
+        pass
+    if not payment:
+        print("payment not found")
+        return jsonify({'status': 'not_found'}), 404
+    return jsonify({'status': payment.status})
+
+
+
+
+    
+@app.route('/payment_callback', methods=['POST'])
+def payment_callback():
+    sing = lp.str_to_sign(request.form['data'])
+    data_b64 = request.form.get("data", "")
+    signature = request.form.get("signature", "")   
+    print(sing)
+    print("_________________________________________ACTIVATE_________________________________________")
+    expected_sign = base64.b64encode(
+    hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
+    ).decode()
+
+    if signature != expected_sign:
+        print(f"Expected: {expected_sign}, got: {signature}")
+        return "Invalid signature", 403
+    
+
+    payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
+    order_id = payload.get("order_id")
+    status = payload.get("status")
+    print("__________________________________> STATUS:: ")
+    print(status)
+
+    payment = Payment.query.filter_by(id=order_id).first()
+    if not payment:
+        return "Order not found, 404"
+
+
+    if payment.status != "success":
+        payment.status = status
+        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+        db.session.commit()
+
+    if status == "success":
+        payment.status = status
+        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+        db.session.commit() 
+        sum = 0 
+        items_for_banner = []   
+        user_inf = flask_session.get('user_info', {})
+        for i in flask_session.get('confirmation_data')['seats']:
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'],
+                seatNumb=i['seatNumber'],
+                sessionId=session,
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf['name'],
+                last_name=user_inf['lastName'],
+                email=user_inf['email'])
+            sum += i['cost']
+            items_for_banner.append({
+                "row": i['row'],
+                "seatNumber": i['seatNumber']
+            })
+            db.session.add(tk)
+        db.session.commit()
+        
+        
+        email = user_inf['email']
+        price = i['cost']
+        time_str = '15:30'
+        comments = build_comment_for_receipt(items_for_banner, time_str)
+        print(comments)
+
+        data  = {
+        "ver": 6,
+        "source": "DM_API",
+        "device": "test",
+        "tag": "",
+        "need_pf_img": "0",
+        "need_pf_pdf": "0",
+        "need_pf_txt": "0",
+        "need_pf_doccmd": "0",
+        "type": "1",
+        "userinfo": {
+            "email": email,
+            "phone": ""
+        },
+        "fiscal": {
+            "task": 1,
+            "cashier": "Рецепція центру Довженка",
+            "receipt": {
+                "sum": sum,
+                "comment_down": comments,
+                "rows": [
+                    {
+                        
+                        "code": "100",
+                        "code2": "",
+                        "name": "Квиток",
+                        "cnt": sum/price,
+                        "price":price,
+                        "taxgrp": 5,
+                    },
+                ],
+                "pays": [
+                    {
+                        "type": 2,
+                        "sum": sum
+                    }
+                ]
+            }
+        }
+    }
+        url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+        result = rro_send(payload=data, url=url)
+       
+    return "OK"
 
 
 
 
 
 
-
-
-
-
-@app.route('/success', methods=['GET'])
+@app.route('/final_success', methods=['GET'])
 def success():
     success_pay = True
     pdf = ticket_pdf()
