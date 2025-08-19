@@ -65,6 +65,8 @@ app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminP
 LIQPAY_PUBLIC_KEY = 'sandbox_i65007373353'
 LIQPAY_PRIVATE_KEY = 'sandbox_PiK0U7MpSJ69BAmzqIDS38ypRYJYNbDK9Oi2tt4M'
 
+
+
 lp = LiqPay(LIQPAY_PUBLIC_KEY, LIQPAY_PRIVATE_KEY)
 
 
@@ -980,8 +982,8 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": f"http://127.0.0.1:5000/success_loading?order_id={order_id}",
-        "server_url": "https://e6102951c0c8.ngrok-free.app/payment_callback",
+        "result_url": f"https://movie.dovzhenko-center.lviv.ua/success_loading?order_id={order_id}",
+        "server_url": "https://movie.dovzhenko-center.lviv.ua/payment_callback",
         "sandbox": "1"
     }
         
