@@ -133,8 +133,14 @@
 
     async function fetchSessions(date) {
       console.log('Запит сесій на дату:', date);
+      const timeOnly = /^\d{2}:\d{2}$/;
       try {
-        const res = await fetch(`/api/sessions?date=${date}`);
+        if(timeOnly.test(date)){
+          res = await fetch(`/api/sessions?date=${todaySessionDate}`);
+        }
+        else{
+          res = await fetch(`/api/sessions?date=${date}`);
+        }
         console.log('Статус відповіді:', res.status);
         const data = await res.json();
         console.log('Отримані сесії:', data);
@@ -196,7 +202,7 @@
       loadAllTickets();
 
       todaySessionDate = block.dataset.value;
-      // fetchSessions(block.dataset.value);
+      fetchSessions(block.dataset.value);
 
       fetch(timesUrl(block.dataset.value))
         .then(r => r.json())

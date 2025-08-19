@@ -12,7 +12,7 @@ import base64
 from copy import deepcopy
 import hashlib
 import json
-from urlparse import urljoin
+# from urlparse import urljoin
 
 import requests
 
