@@ -30,6 +30,8 @@ from flask import send_file, session as flask_session
 
 import uuid, json, base64, hashlib
 from liqpay import LiqPay
+import pyfiglet
+from pyfiglet import figlet_format
 
 
 from reportlab.lib.pagesizes import A6
@@ -127,14 +129,14 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
 # _____________________________ api ___________________________________#
-def lp_encode(params: dict) -> str:
-    return base64.b64encode(json.dumps(params, ensure_ascii=False).encode("utf-8")).decode("utf-8")
+def lp_encode(params: dict):
+    return str(base64.b64encode(json.dumps(params, ensure_ascii=False).encode("utf-8")).decode("utf-8"))
 
 
 
-def lp_signature(data_b64: str) -> str:
+def lp_signature(data_b64: str):
     digest = hashlib.sha1((LIQPAY_PRIVATE_KEY + data_b64 + LIQPAY_PRIVATE_KEY).encode("utf-8")).digest()
-    return base64.b64encode(digest).decode("utf-8")
+    return str(base64.b64encode(digest).decode("utf-8"))
 
 
     
@@ -193,6 +195,49 @@ def get_sessions():
     print(result)
     return jsonify(result)
 
+
+
+def build_comment_for_receipt(items, session_dt_str):
+    def fig(num: str, font="big") -> str:
+        return figlet_format(str(num), font=font).rstrip()
+
+    lines = []
+    lines.append(f"СЕАНС: {session_dt_str}")
+    lines.append("-" * 42)
+
+    for idx, it in enumerate(items, start=1):
+        row = it['row']
+        seat = it['seatNumber']
+
+        row_ascii = fig(row, font="banner")
+        seat_ascii = fig(seat, font="banner")
+
+        row_lines = row_ascii.splitlines()
+        seat_lines = seat_ascii.splitlines()
+        max_height = max(len(row_lines), len(seat_lines))
+
+        lines.append("+" + "-" * 40 + "+")
+        lines.append(f"| КВИТОК {idx:<33} |")
+        lines.append("|" + " " * 40 + "|")
+
+
+        label = f"РЯД:        МІСЦЕ:"
+        lines.append(f"| {label:<39}|")
+        lines.append("|" + " " * 40 + "|")
+
+
+        for i in range(max_height):
+            row_part = row_lines[i] if i < len(row_lines) else " " * len(row_lines[0])
+            seat_part = seat_lines[i] if i < len(seat_lines) else " " * len(seat_lines[0])
+            combined = row_part + "   " + seat_part
+            combined = combined[:40].ljust(40)
+            lines.append(f"|{combined}|")
+
+        lines.append("|" + " " * 40 + "|")
+        lines.append("+" + "-" * 40 + "+")
+        lines.append("-" * 42)
+
+    return "\n".join(lines)
 
 @app.route('/api/sessions/dates')
 def get_session_dates():
@@ -283,30 +328,31 @@ def ticket_pdf():
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
-    
+
 
     data = flask_session.get('confirmation_data')
     if not data:
         return "Немає даних квитка", 400
 
-
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A6)
     width, height = A6
 
-
+    # Верхній банер синього кольору
     banner_h = 8 * mm
-    p.setFillColorRGB(129, 0, 0)
+    p.setFillColorRGB(0, 0.2, 0.6)  # темно-синій
     p.rect(0, height - banner_h, width, banner_h, fill=1, stroke=0)
 
     margin_x = 6 * mm
     header_bottom = height - banner_h - 2 * mm
 
 
+
     film = Movie.query.filter_by(title=data['movie']).first()
     poster_path = film.poster if film and film.poster else 'static/img/default_poster.png'
     poster_w = 30 * mm
     poster_h = 40 * mm
+
     p.drawImage(
         poster_path,
         margin_x,
@@ -317,9 +363,10 @@ def ticket_pdf():
     )
 
 
-    title_x = margin_x + poster_w + 3 * mm
-    title_y = header_bottom - 3 * mm
+    title_x = margin_x + poster_w + 4 * mm
+    title_y = header_bottom - 4 * mm
     p.setFillColorRGB(0, 0, 0)
+
     p.setFont("DejaVuSans-Bold", 10)
     p.drawString(title_x, title_y, data['movie'])
 
@@ -333,27 +380,25 @@ def ticket_pdf():
     p.drawString(margin_x, y, f"Сеанс: {dt_str}")
     y -= 8 * mm
 
+
     for t in data['seats']:
         p.drawString(
             margin_x,
             y,
-            f"Місце: {t['seatNumber']}   Ряд: {t['row']}   Ціна: {t['cost']} грн"
+            f"Ряд: {t['row']}  Місце: {t['seatNumber']}  Ціна: {t['cost']} грн"
         )
-        y -= 6 * mm
+        y -= 5 * mm
 
 
-    footer_y = 8 * mm
-    p.setStrokeColorRGB(128, 0, 0)
-    p.setLineWidth(0.5)
+    footer_y = 10 * mm
+    p.setStrokeColorRGB(0, 0.2, 0.6)
+    p.setLineWidth(0.8)
     p.line(margin_x, footer_y + 4 * mm, width - margin_x, footer_y + 4 * mm)
 
+
     p.setFont("DejaVuSans", 6)
-    footer = (
-        "Телефон: +38 (044) 123-45-67   •   "
-        "Місто: Львів   •   "
-        "Адреса: Червоної калини 81 "
-    )
-    p.drawString(margin_x + 4, footer_y, footer)
+    footer = "Тел.: +38 (044) 123-45-67   •   Львів   •   Червоної Калини 81"
+    p.drawCentredString(width / 2, footer_y, footer)
 
     p.showPage()
     p.save()
@@ -367,7 +412,6 @@ def ticket_pdf():
         download_name='ticket.pdf',
         mimetype='application/pdf'
     )
-
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -592,8 +636,10 @@ def cash_prod():
 @app.route('/prod_card', methods=['POST'])
 def card_prod():
     data = request.get_json()
+    sum = 0
     print('__________________________________________', data)
     prod_date = date.today()
+    items_for_banner = []
     for item in data:
         t = Ticket(
             seatRow=item['row'],
@@ -604,11 +650,65 @@ def card_prod():
             date_of_purchase=prod_date,
             email=item['email'],
             first_name=item['firstName'],
-            last_name=item['lastName']
-            
-        )
+            last_name=item['lastName'])
+        sum += item['cost']
+        items_for_banner.append({
+            "row": item['row'],
+            "seatNumber": item['seatNumber']
+        })
         db.session.add(t)
     db.session.commit()
+    
+    email = item['email']
+    price = 100
+    row = item['row']
+    seat = item['seatNumber']
+    time_str = '15:30'
+    comments = build_comment_for_receipt(items_for_banner, time_str)
+    print(comments)
+
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": "test",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": email,
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": comments,
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 2,
+                    "sum": sum
+                }
+            ]
+        }
+    }
+}
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
     
     return jsonify({'status':'ok'})
 
@@ -771,11 +871,11 @@ def red():
 
 
 
-@app.route('/payment', methods=['POST'])
-def pay():
-    #_____ For LiqPay ____#
+# @app.route('/payment', methods=['POST'])
+# def pay():
+#     #_____ For LiqPay ____#
     
-    return jsonify({'status': 'ok', 'massage': 'LiqPay'})
+#     return jsonify({'status': 'ok', 'massage': 'LiqPay'})
 
 
 @app.route('/receipt')
@@ -819,7 +919,6 @@ def checkout():
 def buy_ticket():
     try: 
         mov_id = request.args.get('movie_id')
-        print('_____________________________________________________________ mov_id:', mov_id)
         movie = Movie.query.filter_by(id=mov_id).first()
         if not movie:
             movie_data = {'title' : 'Movie not found',
@@ -827,8 +926,6 @@ def buy_ticket():
         else: 
             s = movie.applications
             values = re.findall(r'"value"\s*:\s*"([^"]+)"', s)
-            print('_____________________________________________________________ apps!!!!!!!!!:')
-            print(values)
             movie_data = {
             'id' : movie.id,
             'title' : movie.title,
@@ -842,13 +939,12 @@ def buy_ticket():
             'poster' : movie.poster,
             'price' : movie.price,
         }
-        print('_____________________________________________________________ apps:')
-        print('app', movie_data['app'])
+
         ua_string = request.headers.get("User-Agent", "")
         user_agent = parse(ua_string)    
         is_mobile = user_agent.is_mobile
 
-        print(movie_data)
+
         
         
 
@@ -871,71 +967,17 @@ def political():
     
     
     
-    
-@app.route('/start_payment', methods=['GET', 'POST'])
-def start_payment():
-    session_id = request.form['session_id']
-    email = request.form['email']
-    amount = request.form['amount'] 
-    sess = Showtime.query.filter_by(id=session_id).first()
-    if not sess:
-        return jsonify({'status': 'error', 'message': 'Session not found'}), 404
-    
-    pid = str(uuid.uuid4())
-    order_id = str(uuid.uuid4())
-    
-    payment = Payment(
-        id=pid,
-        orderId=str(uuid.uuid4()),
-        sessionId=session_id,
-        email=email,
-        amount=amount,
-        currency='UAH',
-        status='pending'
-    )
-    db.session.add(payment)
-    db.session.commit()
-    
-    
 
     
-    params = {
-    "public_key": LIQPAY_PUBLIC_KEY,
-    "version": "3",
-    "action": "pay",
-    "amount": str(amount),
-    "currency": "UAH",
-    "description": f"Оплата квитка (сеанс {session_id})",
-    "order_id": order_id,
-    "result_url": f"https://yourdomain.com/payment-result?order_id={order_id}",
-    "server_url": "https://yourdomain.com/payment-callback",
-    "sandbox": "1"
 
-}
-    data_b64 = lp_encode(params)
-    sign = lp_signature(data_b64)
-    return render_template("liqpay_form.html", data=data_b64, signature=sign)
-    
-    
-@app.route('/payment_callback', methods=['POST'])
-def payment_callback():
-    sing = lp.string_to_sign(request.form['data'])
-    print(sing)
-    if sing != request.form['signature']:
-        return jsonify({'status': 'error', 'message': 'Invalid signature'}), 400
-    else:
-        return jsonify({'status': 'success', 'message': sing}), 200
-    
+
 
 @app.route('/payment', methods=['GET', 'POST'])
 def payment(movie_data=None, selected_seats=None):  
     try: 
         mov_id = request.args.get('movie_id')
         session_id = request.args.get('session_id')
-        print(session_id)
-        print('_____________________________________________________________ mov_id:', mov_id)
         movie = Movie.query.filter_by(id=mov_id).first()
-        print('_____________________________________________________________ movie:', movie)
         if not movie:
             movie_data = {'title' : 'Movie ot found',
                 'poster' : 'static/img/red.jpg'}
@@ -983,20 +1025,105 @@ def payment(movie_data=None, selected_seats=None):
     except Exception as e:
         return jsonify({'status' : e}), 500
     
+    
+
+    
+    #___________________________________________ LIQPAY __________________________________________________________#
+    
+
+
+    
+@app.route('/payment_callback', methods=['POST'])
+def payment_callback():
+    sing = lp.str_to_sign(request.form['data'])
+    data_b64 = request.form.get("data", "")
+    signature = request.form.get("signature", "")   
+    print(sing)
+    print("_________________________________________ACTIVATE_________________________________________")
+    expected_sign = base64.b64encode(
+    hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
+    ).decode()
+
+    if signature != expected_sign:
+        print(f"Expected: {expected_sign}, got: {signature}")
+        return "Invalid signature", 403
+    
+
+    payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
+    order_id = payload.get("order_id")
+    status = payload.get("status")
+    print("__________________________________> STATUS:: ")
+    print(status)
+
+    payment = Payment.query.filter_by(id=order_id).first()
+    if not payment:
+        return "Order not found, 404"
+
+
+    if payment.status != "success":
+        payment.status = status
+        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+        db.session.commit()
+
+    if status == "success":
+        print("Payment successful ")
+
+    return "OK"
+    
+    
+    
+    
+
+    
+    
+    
+    
 @app.route('/liqpay', methods=['GET', 'POST'])
 def liqpay(movie_data=None, selected_seats=None):  
+    data_b64 = ''
     try: 
         user_inf = request.get_json()
         ua_string = request.headers.get("User-Agent", "")
         user_agent = parse(ua_string)    
         is_mobile = user_agent.is_mobile
+        pid = order_id = str(uuid.uuid4())
 
         seats_raw = user_inf['seats']
         seats_raw = html.unescape(seats_raw)
         seats_raw = ast.literal_eval(seats_raw)
         total_cost = sum(seat['cost'] for seat in seats_raw)
-        
         session = user_inf['session_id']
+        
+        payment = Payment(
+        id=pid,
+        orderId=pid,
+        sessionId=session,
+        email=user_inf['email'],
+        amount=total_cost,
+        currency='UAH',
+        status='pending'
+        )
+        db.session.add(payment)
+        db.session.commit()
+        
+        params = {
+        "public_key": LIQPAY_PUBLIC_KEY,
+        "version": "3",
+        "action": "pay",
+        "amount": str(total_cost),
+        "currency": "UAH",
+        "description": f"Оплата квитка (сеанс {user_inf['title']})",
+        "order_id": order_id,
+        "result_url": f"http://127.0.0.1:5000/success?order_id={order_id}",
+        "server_url": "https://e6102951c0c8.ngrok-free.app/payment_callback",
+        "sandbox": "1"
+    }
+        
+        
+        data_b64 = lp_encode(params)
+        print('data_b64: ', data_b64)
+        sign = lp_signature(data_b64)
+            
 
         sessio_data = flask_session.get('confirmation_data', {})
         sessio_data.update({
@@ -1014,10 +1141,26 @@ def liqpay(movie_data=None, selected_seats=None):
                 user_inf = user_inf,
                 seats=seats_raw,
                 total_cost=total_cost,
-                session=session
-            )
+                session=session,
+                data=data_b64,
+                signature=sign
+            )   
+        
     except Exception as e:
-        return jsonify({'status' : e}), 500
+        print("Error in liqpay:", e)
+        return jsonify({'status' : 'error', 'message': str(e)}), 500
+    
+
+    
+
+
+
+
+
+
+
+
+
 
 @app.route('/success', methods=['GET'])
 def success():
@@ -1028,6 +1171,7 @@ def success():
         is_success = success_pay,
         pdf = pdf
     )
+
 
 
 class Config:
