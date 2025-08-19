@@ -46,9 +46,13 @@ from flask_apscheduler import APScheduler
 import html
 import ast
 
+import sys
+import io
+from art import tprint
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
-app.config['DM_HOST'] = '178.62.106.58'
+app.config['DM_HOST'] = '192.168.0.28'
 app.config['DM_PORT'] = 3939
 app.config['DM_DEVICE'] = 'test'
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
@@ -191,47 +195,140 @@ def get_sessions():
 
 
 
-def build_comment_for_receipt(items, session_dt_str):
-    def fig(num: str, font="big") -> str:
-        return figlet_format(str(num), font=font).rstrip()
+def double_char_fig(num: str) -> list[str]:
+    """Ручна таблиця жирних ASCII-цифр з 'x' замість #"""
+    ascii_digits = {
+        '0': [
+            "xxxxxx",
+            "xx  xx",
+            "xx  xx",
+            "xx  xx",
+            "xxxxxx"
+        ],
+        '1': [
+            "  xx  ",
+            "xxxx  ",
+            "  xx  ",
+            "  xx  ",
+            "xxxxxx"
+        ],
+        '2': [
+            "xxxxxx",
+            "    xx",
+            "xxxxxx",
+            "xx    ",
+            "xxxxxx"
+        ],
+        '3': [
+            "xxxxxx",
+            "    xx",
+            " xxxxx",
+            "    xx",
+            "xxxxxx"
+        ],
+        '4': [
+            "xx  xx",
+            "xx  xx",
+            "xxxxxx",
+            "    xx",
+            "    xx"
+        ],
+        '5': [
+            "xxxxxx",
+            "xx    ",
+            "xxxxxx",
+            "    xx",
+            "xxxxxx"
+        ],
+        '6': [
+            "xxxxxx",
+            "xx    ",
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx"
+        ],
+        '7': [
+            "xxxxxx",
+            "    xx",
+            "   xx ",
+            "  xx  ",
+            " xx   "
+        ],
+        '8': [
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx"
+        ],
+        '9': [
+            "xxxxxx",
+            "xx  xx",
+            "xxxxxx",
+            "    xx",
+            "xxxxxx"
+        ]
+    }
 
+    result = [""] * 5
+    for digit in str(num):
+        for i in range(5):
+            result[i] += ascii_digits[digit][i] + "  "
+    return result
+
+
+
+
+def build_comment_for_receipt(items, session_dt_str):
     lines = []
     lines.append(f"СЕАНС: {session_dt_str}")
-    lines.append("-" * 42)
+    lines.append("-" * 32)
 
     for idx, it in enumerate(items, start=1):
-        row = it['row']
-        seat = it['seatNumber']
+        row = str(it['row'])
+        seat = str(it['seatNumber'])
 
-        row_ascii = fig(row, font="banner")
-        seat_ascii = fig(seat, font="banner")
+        row_ascii = double_char_fig(row)
+        seat_ascii = double_char_fig(seat)
 
-        row_lines = row_ascii.splitlines()
-        seat_lines = seat_ascii.splitlines()
-        max_height = max(len(row_lines), len(seat_lines))
+        # Вирівнюємо по висоті
+        max_height = max(len(row_ascii), len(seat_ascii))
+        row_ascii += [''] * (max_height - len(row_ascii))
+        seat_ascii += [''] * (max_height - len(seat_ascii))
 
-        lines.append("+" + "-" * 40 + "+")
-        lines.append(f"| КВИТОК {idx:<33} |")
-        lines.append("|" + " " * 40 + "|")
+        # Підрахунок ширин
+        row_width = max(len(line) for line in row_ascii)
+        print(row_width)
+        seat_width = max(len(line) for line in seat_ascii)
+        print(seat_width)
+        space_between = 10
 
+        total_width = row_width + seat_width + space_between
+        if total_width > 30:
+            space_between = 0
+            #max(2, 30 - row_width - seat_width)
+            print("__________________________SPACEBEETWEEN>> ")
+            print(space_between)
 
-        label = f"РЯД:        МІСЦЕ:"
-        lines.append(f"| {label:<39}|")
-        lines.append("|" + " " * 40 + "|")
-
+        lines.append("+" + "-" * 29 + "+")
+        lines.append(f"| КВИТОК {idx:<20}")
+        lines.append(" " * 30)
+        lines.append(f"| РЯД:              МІСЦЕ: \n")
+        lines.append(" " * 30)
 
         for i in range(max_height):
-            row_part = row_lines[i] if i < len(row_lines) else " " * len(row_lines[0])
-            seat_part = seat_lines[i] if i < len(seat_lines) else " " * len(seat_lines[0])
-            combined = row_part + "   " + seat_part
-            combined = combined[:40].ljust(40)
-            lines.append(f"|{combined}|")
+            row_line = row_ascii[i].ljust(row_width)
+            print(row_line)
+            seat_line = seat_ascii[i].ljust(seat_width)
+            print(seat_line)
+            combined = row_line + (" " * space_between) + seat_line
+            lines.append(f"|{combined[:29]:<29}")
 
-        lines.append("|" + " " * 40 + "|")
-        lines.append("+" + "-" * 40 + "+")
-        lines.append("-" * 42)
+        lines.append("+" + "-" * 29 + "+")
+        lines.append("-" * 30)
 
     return "\n".join(lines)
+
 
 @app.route('/api/sessions/dates')
 def get_session_dates():
@@ -608,7 +705,7 @@ def cash_prod():
     data = request.get_json()
     
     
-    print('__________________________________________', data)
+    sum = 0
     prod_date = date.today()
     for item in data:
         t = Ticket(
@@ -623,7 +720,53 @@ def cash_prod():
             last_name=item['lastName']
         )
         db.session.add(t)
+        sum += item['cost']
     db.session.commit()
+    
+    
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": "test",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": item['email'],
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": '',
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/item['cost'],
+                    "price":item['cost'],
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 0,
+                    "sum": sum,
+                }
+            ]
+        }
+    }
+}
+    
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
     
     return jsonify({'status':'ok'})
 
@@ -632,7 +775,6 @@ def cash_prod():
 def card_prod():
     data = request.get_json()
     sum = 0
-    print('__________________________________________', data)
     prod_date = date.today()
     items_for_banner = []
     for item in data:
@@ -655,7 +797,7 @@ def card_prod():
     db.session.commit()
     
     email = item['email']
-    price = 100
+    price = item['cost']
     row = item['row']
     seat = item['seatNumber']
     time_str = '15:30'
@@ -713,119 +855,6 @@ def card_prod():
 
         
 
-@app.route('/rro_card', methods=['POST', 'GET'])
-def print_receipt_card():
-    # email = request.args.get('email', '')
-    # sum = request.args.get('sum', '')
-    # comments = request.args.get('comments', '')
-
-    
-    
-    email = 'yurkorudi@gmail.com'
-    sum = 200
-    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
-    price = 100
-    data  = {
-    "ver": 6,
-    "source": "DM_API",
-    "device": "test",
-    "tag": "",
-    "need_pf_img": "0",
-    "need_pf_pdf": "0",
-    "need_pf_txt": "0",
-    "need_pf_doccmd": "0",
-    "type": "1",
-    "userinfo": {
-        "email": email,
-        "phone": ""
-    },
-    "fiscal": {
-        "task": 1,
-        "cashier": "Рецепція центру Довженка",
-        "receipt": {
-            "sum": sum,
-            "comment_down": comments,
-            "rows": [
-                {
-                    
-                    "code": "100",
-                    "code2": "",
-                    "name": "Квиток",
-                    "cnt": sum/price,
-                    "price":price,
-                    "taxgrp": 5,
-                },
-            ],
-            "pays": [
-                {
-                    "type": 2,
-                    "sum": sum
-                }
-            ]
-        }
-    }
-}
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    result = rro_send(payload=data, url=url)
-    return jsonify(result)
-
-
-
-@app.route('/rro_cash', methods=['POST', 'GET'])
-def print_receipt_cash():
-    # email = request.args.get('email', '')
-    # sum = request.args.get('sum', '')
-    # comments = request.args.get('comments', '')
-
-    
-    
-    email = 'yurkorudi@gmail.com'
-    sum = 200
-    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
-    price = 100
-    data  = {
-    "ver": 6,
-    "source": "DM_API",
-    "device": "test",
-    "tag": "",
-    "need_pf_img": "0",
-    "need_pf_pdf": "0",
-    "need_pf_txt": "0",
-    "need_pf_doccmd": "0",
-    "type": "1",
-    "userinfo": {
-        "email": email,
-        "phone": ""
-    },
-    "fiscal": {
-        "task": 1,
-        "cashier": "Рецепція центру Довженка",
-        "receipt": {
-            "sum": sum,
-            "comment_down": comments,
-            "rows": [
-                {
-                    
-                    "code": "100",
-                    "code2": "",
-                    "name": "Квиток",
-                    "cnt": sum/price,
-                    "price":price,
-                    "taxgrp": 5,
-                },
-            ],
-            "pays": [
-                {
-                    "type": 0,
-                    "sum": sum,
-                }
-            ]
-        }
-    }
-}
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    result = rro_send(payload=data, url=url)
-    return jsonify(result)
 
 
 
