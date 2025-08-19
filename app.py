@@ -485,7 +485,8 @@ def ticket_pdf():
     y -= 6 * mm
 
     sess = Showtime.query.filter_by(id=data['session_id']).first()
-    dt_str = sess.dateTime.strftime('%Y-%m-%d %H:%M')
+    dt_plus3 = sess.dateTime + timedelta(hours=3)
+    dt_str = dt_plus3.strftime('%Y-%m-%d %H:%M')
     p.drawString(margin_x, y, f"Сеанс: {dt_str}")
     y -= 8 * mm
 
@@ -494,7 +495,7 @@ def ticket_pdf():
         p.drawString(
             margin_x,
             y,
-            f"Ряд: {t['row']}  Місце: {t['seatNumber']}  Ціна: {t['cost']} грн"
+            f"Ряд: {t['row'] + 1}  Місце: {t['seatNumber'] + 1}  Ціна: {t['cost']} грн"
         )
         y -= 5 * mm
 
