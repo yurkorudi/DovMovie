@@ -40,19 +40,21 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 
+font_path = os.path.join(os.path.dirname(__file__), "static", "fonts", "DejaVuSans-Bold.ttf")
+pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", font_path))
+
+font_path = os.path.join(os.path.dirname(__file__), "static", "fonts", "DejaVuSans.ttf")
+pdfmetrics.registerFont(TTFont("DejaVuSans", font_path))
+
 import re
 from flask_apscheduler import APScheduler
 
 import html
 import ast
 
-import sys
-import io
-from art import tprint
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
-app.config['DM_HOST'] = '192.168.0.28'
+app.config['DM_HOST'] = '178.62.106.58'
 app.config['DM_PORT'] = 3939
 app.config['DM_DEVICE'] = 'test'
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
@@ -195,140 +197,47 @@ def get_sessions():
 
 
 
-def double_char_fig(num: str) -> list[str]:
-    """Ручна таблиця жирних ASCII-цифр з 'x' замість #"""
-    ascii_digits = {
-        '0': [
-            "xxxxxx",
-            "xx  xx",
-            "xx  xx",
-            "xx  xx",
-            "xxxxxx"
-        ],
-        '1': [
-            "  xx  ",
-            "xxxx  ",
-            "  xx  ",
-            "  xx  ",
-            "xxxxxx"
-        ],
-        '2': [
-            "xxxxxx",
-            "    xx",
-            "xxxxxx",
-            "xx    ",
-            "xxxxxx"
-        ],
-        '3': [
-            "xxxxxx",
-            "    xx",
-            " xxxxx",
-            "    xx",
-            "xxxxxx"
-        ],
-        '4': [
-            "xx  xx",
-            "xx  xx",
-            "xxxxxx",
-            "    xx",
-            "    xx"
-        ],
-        '5': [
-            "xxxxxx",
-            "xx    ",
-            "xxxxxx",
-            "    xx",
-            "xxxxxx"
-        ],
-        '6': [
-            "xxxxxx",
-            "xx    ",
-            "xxxxxx",
-            "xx  xx",
-            "xxxxxx"
-        ],
-        '7': [
-            "xxxxxx",
-            "    xx",
-            "   xx ",
-            "  xx  ",
-            " xx   "
-        ],
-        '8': [
-            "xxxxxx",
-            "xx  xx",
-            "xxxxxx",
-            "xx  xx",
-            "xxxxxx"
-        ],
-        '9': [
-            "xxxxxx",
-            "xx  xx",
-            "xxxxxx",
-            "    xx",
-            "xxxxxx"
-        ]
-    }
-
-    result = [""] * 5
-    for digit in str(num):
-        for i in range(5):
-            result[i] += ascii_digits[digit][i] + "  "
-    return result
-
-
-
-
 def build_comment_for_receipt(items, session_dt_str):
+    def fig(num: str, font="big") -> str:
+        return figlet_format(str(num), font=font).rstrip()
+
     lines = []
     lines.append(f"СЕАНС: {session_dt_str}")
-    lines.append("-" * 32)
+    lines.append("-" * 42)
 
     for idx, it in enumerate(items, start=1):
-        row = str(it['row'])
-        seat = str(it['seatNumber'])
+        row = it['row']
+        seat = it['seatNumber']
 
-        row_ascii = double_char_fig(row)
-        seat_ascii = double_char_fig(seat)
+        row_ascii = fig(row, font="banner")
+        seat_ascii = fig(seat, font="banner")
 
-        # Вирівнюємо по висоті
-        max_height = max(len(row_ascii), len(seat_ascii))
-        row_ascii += [''] * (max_height - len(row_ascii))
-        seat_ascii += [''] * (max_height - len(seat_ascii))
+        row_lines = row_ascii.splitlines()
+        seat_lines = seat_ascii.splitlines()
+        max_height = max(len(row_lines), len(seat_lines))
 
-        # Підрахунок ширин
-        row_width = max(len(line) for line in row_ascii)
-        print(row_width)
-        seat_width = max(len(line) for line in seat_ascii)
-        print(seat_width)
-        space_between = 10
+        lines.append("+" + "-" * 40 + "+")
+        lines.append(f"| КВИТОК {idx:<33} |")
+        lines.append("|" + " " * 40 + "|")
 
-        total_width = row_width + seat_width + space_between
-        if total_width > 30:
-            space_between = 0
-            #max(2, 30 - row_width - seat_width)
-            print("__________________________SPACEBEETWEEN>> ")
-            print(space_between)
 
-        lines.append("+" + "-" * 29 + "+")
-        lines.append(f"| КВИТОК {idx:<20}")
-        lines.append(" " * 30)
-        lines.append(f"| РЯД:              МІСЦЕ: \n")
-        lines.append(" " * 30)
+        label = f"РЯД:        МІСЦЕ:"
+        lines.append(f"| {label:<39}|")
+        lines.append("|" + " " * 40 + "|")
+
 
         for i in range(max_height):
-            row_line = row_ascii[i].ljust(row_width)
-            print(row_line)
-            seat_line = seat_ascii[i].ljust(seat_width)
-            print(seat_line)
-            combined = row_line + (" " * space_between) + seat_line
-            lines.append(f"|{combined[:29]:<29}")
+            row_part = row_lines[i] if i < len(row_lines) else " " * len(row_lines[0])
+            seat_part = seat_lines[i] if i < len(seat_lines) else " " * len(seat_lines[0])
+            combined = row_part + "   " + seat_part
+            combined = combined[:40].ljust(40)
+            lines.append(f"|{combined}|")
 
-        lines.append("+" + "-" * 29 + "+")
-        lines.append("-" * 30)
+        lines.append("|" + " " * 40 + "|")
+        lines.append("+" + "-" * 40 + "+")
+        lines.append("-" * 42)
 
     return "\n".join(lines)
-
 
 @app.route('/api/sessions/dates')
 def get_session_dates():
@@ -413,14 +322,13 @@ def api_tickets_list():
 
 
 
-
-@app.route('/ticket_pdf', methods=['GET'])
+@app.route('/ticket_pdf')
 def ticket_pdf():
     from io import BytesIO
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
-    from models import Session as DBSess, Film as DBFilm, User as DBUser
+
 
     data = flask_session.get('confirmation_data')
     if not data:
@@ -438,11 +346,13 @@ def ticket_pdf():
     margin_x = 6 * mm
     header_bottom = height - banner_h - 2 * mm
 
-    # Постер фільму
-    film = DBFilm.query.filter_by(name=data['movie_name']).first()
-    poster_path = film.image.path if film and film.image else 'static/img/default_poster.png'
-    poster_w = 28 * mm
-    poster_h = 38 * mm
+
+
+    film = Movie.query.filter_by(title=data['movie']).first()
+    poster_path = film.poster if film and film.poster else 'static/img/default_poster.png'
+    poster_w = 30 * mm
+    poster_h = 40 * mm
+
     p.drawImage(
         poster_path,
         margin_x,
@@ -456,26 +366,22 @@ def ticket_pdf():
     title_x = margin_x + poster_w + 4 * mm
     title_y = header_bottom - 4 * mm
     p.setFillColorRGB(0, 0, 0)
-    p.setFont("DejaVuSans-Bold", 11)
-    p.drawString(title_x, title_y, data['movie_name'])
+
+    p.setFont("DejaVuSans-Bold", 10)
+    p.drawString(title_x, title_y, data['movie'])
+
+    y = header_bottom - poster_h - 6 * mm
+    p.setFont("DejaVuSans", 6)
+    p.drawString(margin_x, y, f"Куплено користувачем: {Ticket.query.filter_by(email=data.get('email')).first()} {Ticket.query.filter_by(first_name=data.get('first_name')).first()} {Ticket.query.filter_by(last_name=data.get('last_name')).first()}")
+    y -= 6 * mm
+
+    sess = Showtime.query.filter_by(id=data['session_id']).first()
+    dt_str = sess.dateTime.strftime('%Y-%m-%d %H:%M')
+    p.drawString(margin_x, y, f"Сеанс: {dt_str}")
+    y -= 8 * mm
 
 
-    y = header_bottom - poster_h - 4 * mm
-    p.setFont("DejaVuSans", 7)
-    user = DBUser.query.filter_by(login=data.get('user', '')).first()
-    if user:
-        p.drawString(margin_x, y, f"Куплено: {user.first_name} {user.last_name}")
-        y -= 5 * mm
-
-
-    sess = DBSess.query.filter_by(session_id=data['session_id']).first()
-    if sess:
-        dt_str = sess.session_datetime.strftime('%Y-%m-%d %H:%M')
-        p.drawString(margin_x, y, f"Сеанс: {dt_str}")
-        y -= 6 * mm
-
-
-    for t in data['tickets']:
+    for t in data['seats']:
         p.drawString(
             margin_x,
             y,
@@ -498,9 +404,11 @@ def ticket_pdf():
     p.save()
     buffer.seek(0)
 
+    download = request.args.get("download", "false").lower() == "true"
+
     return send_file(
         buffer,
-        as_attachment=True,
+        as_attachment=download,
         download_name='ticket.pdf',
         mimetype='application/pdf'
     )
@@ -705,7 +613,7 @@ def cash_prod():
     data = request.get_json()
     
     
-    sum = 0
+    print('__________________________________________', data)
     prod_date = date.today()
     for item in data:
         t = Ticket(
@@ -720,53 +628,7 @@ def cash_prod():
             last_name=item['lastName']
         )
         db.session.add(t)
-        sum += item['cost']
     db.session.commit()
-    
-    
-    data  = {
-    "ver": 6,
-    "source": "DM_API",
-    "device": "test",
-    "tag": "",
-    "need_pf_img": "0",
-    "need_pf_pdf": "0",
-    "need_pf_txt": "0",
-    "need_pf_doccmd": "0",
-    "type": "1",
-    "userinfo": {
-        "email": item['email'],
-        "phone": ""
-    },
-    "fiscal": {
-        "task": 1,
-        "cashier": "Рецепція центру Довженка",
-        "receipt": {
-            "sum": sum,
-            "comment_down": '',
-            "rows": [
-                {
-                    
-                    "code": "100",
-                    "code2": "",
-                    "name": "Квиток",
-                    "cnt": sum/item['cost'],
-                    "price":item['cost'],
-                    "taxgrp": 5,
-                },
-            ],
-            "pays": [
-                {
-                    "type": 0,
-                    "sum": sum,
-                }
-            ]
-        }
-    }
-}
-    
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    result = rro_send(payload=data, url=url)
     
     return jsonify({'status':'ok'})
 
@@ -775,6 +637,7 @@ def cash_prod():
 def card_prod():
     data = request.get_json()
     sum = 0
+    print('__________________________________________', data)
     prod_date = date.today()
     items_for_banner = []
     for item in data:
@@ -797,7 +660,7 @@ def card_prod():
     db.session.commit()
     
     email = item['email']
-    price = item['cost']
+    price = 100
     row = item['row']
     seat = item['seatNumber']
     time_str = '15:30'
@@ -855,6 +718,119 @@ def card_prod():
 
         
 
+@app.route('/rro_card', methods=['POST', 'GET'])
+def print_receipt_card():
+    # email = request.args.get('email', '')
+    # sum = request.args.get('sum', '')
+    # comments = request.args.get('comments', '')
+
+    
+    
+    email = 'yurkorudi@gmail.com'
+    sum = 200
+    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
+    price = 100
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": "test",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": email,
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": comments,
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 2,
+                    "sum": sum
+                }
+            ]
+        }
+    }
+}
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
+    return jsonify(result)
+
+
+
+@app.route('/rro_cash', methods=['POST', 'GET'])
+def print_receipt_cash():
+    # email = request.args.get('email', '')
+    # sum = request.args.get('sum', '')
+    # comments = request.args.get('comments', '')
+
+    
+    
+    email = 'yurkorudi@gmail.com'
+    sum = 200
+    comments = 'Трансформери в 3д \n 25.07.2025 \n ряд: 3 \n місце 7'
+    price = 100
+    data  = {
+    "ver": 6,
+    "source": "DM_API",
+    "device": "test",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": email,
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": comments,
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 0,
+                    "sum": sum,
+                }
+            ]
+        }
+    }
+}
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
+    return jsonify(result)
 
 
 
@@ -1028,7 +1004,13 @@ def payment(movie_data=None, selected_seats=None):
         seats_raw = request.args.get('seats')
         seats = json.loads(seats_raw) if seats_raw else []
         total_cost = sum(seat['cost'] for seat in seats)
-
+        
+        flask_session['confirmation_data'] = {
+            'movie': movie.title,
+            'poster': movie.poster,
+            'session_id': session_id,
+            'seats': seats
+        }
 
         return render_template(
                 'online-pay.html',
@@ -1143,6 +1125,16 @@ def liqpay(movie_data=None, selected_seats=None):
         sign = lp_signature(data_b64)
             
 
+        sessio_data = flask_session.get('confirmation_data', {})
+        sessio_data.update({
+            'first_name': user_inf['name'],
+            'last_name': user_inf['lastName'],
+            'email': user_inf['email']
+        })
+        flask_session['confirmation_data'] = sessio_data
+        print("+++++++++CHack+++++++++++=")
+        print(str(flask_session.get('confirmation_data')))
+
         return render_template(
                 'liqpay.html',
                 is_mobile = is_mobile,
@@ -1172,24 +1164,13 @@ def liqpay(movie_data=None, selected_seats=None):
 
 @app.route('/success', methods=['GET'])
 def success():
-    order_id = request.args.get('order_id')
-    if not order_id:
-        return "Order ID not provided", 400
-    return render_template('success_loading.html', order_id=order_id)
-
-
-@app.route('/check_payment_status', methods=['GET'])
-def check_payment_status():
-    order_id = request.args.get('order_id')
-    payment = Payment.query.filter_by(id=order_id).first()
-    try: 
-        print(payment)
-    except:
-        pass
-    if not payment:
-        print("payment not found")
-        return jsonify({'status': 'not_found'})
-    return jsonify({'status': payment.status})
+    success_pay = True
+    pdf = ticket_pdf()
+    return render_template(
+        'final_success.html',
+        is_success = success_pay,
+        pdf = pdf
+    )
 
 
 
