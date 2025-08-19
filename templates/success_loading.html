@@ -34,10 +34,13 @@
                 .then(data => {
                     console.log( 'data> ' + data.status )
                     if (data.status === 'success') {
-                        window.location.href = `/final_success?order_id=${orderId}`;
+                        window.location.href = `/final_success?order_id=${orderId}&?is_success=true`;
                     }
-                    if (data.status === 'sandbox') {
-                        window.location.href = `/final_success?order_id=${orderId}`;
+                    else if (data.status === 'error' || data.status === 'failure') {
+                        window.location.href = `/final_success?order_id=${orderId}&?is_success=false`;
+                    }
+                    else {
+                        console.log(data.status);
                     }
                 })
                 .catch(console.error);
