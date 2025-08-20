@@ -1065,7 +1065,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": "http://178.62.106.58/success_loading?order_id={order_id}",
+        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
         "server_url": "http://178.62.106.58/payment_callback",
         "sandbox": "1"
     }
