@@ -1066,7 +1066,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
         "result_url": f"https://movie.dovzhenko-center.lviv.ua/success_loading?order_id={order_id}",
-        "server_url": "https://movie.dovzhenko-center.lviv.ua/payment_callback",
+        "server_url": "http://178.62.106.58/payment_callback",
         "sandbox": "1"
     }
         
@@ -1131,7 +1131,7 @@ def check_payment_status():
 
 
     
-@app.route('/payment_callback', methods=['POST'])
+@app.route('/payment_callback', methods=['POST', 'GET'])
 def payment_callback():
     sing = lp.str_to_sign(request.form['data'])
     data_b64 = request.form.get("data", "")
@@ -1237,10 +1237,15 @@ def payment_callback():
             }
         }
     }
-        url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-        result = rro_send(payload=data, url=url)
+        # url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+        # result = rro_send(payload=data, url=url)
        
-    return "OK"
+    return jsonify({
+        'status': 'success',
+        'message': 'Payment successful',
+        'order_id': order_id,
+        'payment_status': payment.status
+    })   
 
 
 
