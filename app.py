@@ -1105,6 +1105,8 @@ def liqpay(movie_data=None, selected_seats=None):
 @app.route('/success_loading', methods=['GET'])
 def success_loading():
     data = request.args.get('order_id')
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!++++++++++++++++++++++++++++++++++++++++++++!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(">>> /success_loading HIT", data)
     if not data:
         return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
     
