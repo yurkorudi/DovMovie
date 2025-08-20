@@ -1019,7 +1019,9 @@ def payment(movie_data=None, selected_seats=None):
     
 
 
-
+@app.route('/proba', methods=['GET'])
+def proba():
+    return render_template('liqpay.html', data='', signature='')
     
     
     
@@ -1066,7 +1068,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
         "result_url": f"https://movie.dovzhenko-center.lviv.ua/success_loading?order_id={order_id}",
-        "server_url": "http://178.62.106.58/payment_callback",
+        "server_url": "https://movie.dovzhenko-center.lviv.ua/proba",
         "sandbox": "1"
     }
         
