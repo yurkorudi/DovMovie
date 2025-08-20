@@ -1019,9 +1019,7 @@ def payment(movie_data=None, selected_seats=None):
     
 
 
-@app.route('/proba', methods=['GET'])
-def proba():
-    return render_template('liqpay.html', data='', signature='')
+
     
     
     
@@ -1067,8 +1065,8 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": f"https://movie.dovzhenko-center.lviv.ua/success_loading?order_id={order_id}",
-        "server_url": "https://movie.dovzhenko-center.lviv.ua/proba",
+        "result_url": "http://178.62.106.58/success_loading?order_id={order_id}",
+        "server_url": "http://178.62.106.58/payment_callback",
         "sandbox": "1"
     }
         
@@ -1119,15 +1117,52 @@ def success_loading():
 @app.route('/check_payment_status', methods=['GET'])
 def check_payment_status():
     order_id = request.args.get('order_id')
+    if not order_id:
+        return jsonify({'status': 'error', 'message': 'order_id required'}), 400
+
     payment = Payment.query.filter_by(id=order_id).first()
-    try: 
-        print(payment.status)
-    except:
-        pass
     if not payment:
-        print("payment not found")
         return jsonify({'status': 'not_found'}), 404
-    return jsonify({'status': payment.status})
+
+
+    if payment.status == 'success':
+        return jsonify({'status': 'success'})
+
+
+    params = {
+        "public_key": LIQPAY_PUBLIC_KEY,
+        "version": "3",
+        "action": "status",
+        "order_id": order_id,
+        "sandbox": "1"
+    }
+    data_b64 = lp_encode(params)
+    sign = lp_signature(data_b64)
+
+    try:
+        resp = requests.post(
+            "https://www.liqpay.ua/api/request",
+            data={"data": data_b64, "signature": sign},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        payload = resp.json()
+        lp_status = payload.get("status", "").lower()
+
+
+        if lp_status in ("success",):
+            payment.status = "success"
+        elif lp_status in ("failure", "error"):
+            payment.status = "error"
+        else:
+            payment.status = lp_status or payment.status
+
+        db.session.commit()
+        return jsonify({'status': payment.status})
+    except Exception as e:
+        print("check_payment_status error:", e)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 
 
@@ -1135,6 +1170,7 @@ def check_payment_status():
     
 @app.route('/payment_callback', methods=['POST', 'GET'])
 def payment_callback():
+    print(">>> /payment_callback HIT", request.method, request.form or request.args)
     sing = lp.str_to_sign(request.form['data'])
     data_b64 = request.form.get("data", "")
     signature = request.form.get("signature", "")   
@@ -1152,13 +1188,15 @@ def payment_callback():
     payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
     order_id = payload.get("order_id")
     status = payload.get("status")
+    
     print("__________________________________> STATUS:: ")
     print(status)
 
     payment = Payment.query.filter_by(id=order_id).first()
     if not payment:
         return "Order not found, 404"
-
+    
+    session = payment.sessionId
 
     if payment.status != "success":
         payment.status = status
