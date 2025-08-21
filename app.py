@@ -1297,7 +1297,7 @@ def payment_callback():
         db.session.commit() 
         sum = 0 
         items_for_banner = []   
-        user_inf = confirmation_data
+        user_inf = coerce_to_dict(confirmation_data)
 
         for i in user_inf['seats']:
             print(i)
