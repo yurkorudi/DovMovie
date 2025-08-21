@@ -1112,7 +1112,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
-        "server_url": f"http://178.62.106.58/payment_callback&confirmation_data={flask_session['confirmation_data']}",
+        "server_url": f"http://178.62.106.58/payment_callback&confirmation_data={flask_session.get('confirmation_data', {})}",
         "sandbox": "1"
     }
         
@@ -1271,6 +1271,31 @@ def payment_callback():
     session = payment.sessionId
 
     if payment.status != "success":
+        sum = 0 
+        user_inf = confirmation_data
+
+        for i in user_inf['seats']:
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'] +1 ,
+                seatNumb=i['seatNumber'] + 1,
+                sessionId=session,
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf['first_name'],
+                last_name=user_inf['last_name'],
+                email=user_inf['email'])
+            print("Adding ticket:", tk)
+            
+            sum += i['cost']
+            items_for_banner.append({
+                "row": i['row'],
+                "seatNumber": i['seatNumber']
+            })
+            db.session.add(tk)
+        db.session.commit()
+        
         payment.status = status
         payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
         db.session.commit()
@@ -1297,7 +1322,7 @@ def payment_callback():
                 email=user_inf['email'])
             print("Adding ticket:", tk)
             
-            sum_t += i['cost']
+            sum += i['cost']
             items_for_banner.append({
                 "row": i['row'],
                 "seatNumber": i['seatNumber']
