@@ -11,7 +11,7 @@
   {% include 'header.html' %}
 
   <main class="sucsess">
-    {% if is_success %}
+    {% if success_pay %}
     <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf">
       <embed src="{{ pdf }}" type="application/pdf">
@@ -20,7 +20,7 @@
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
     {% endif %}
     <div class="sucsess-button">
-        {% if is_success %}
+        {% if success_pay %}
         <button class="btn btn-load" onclick="load()">Завантажити квиток</button>
         {% endif %}
         <button class="btn btn-return" onclick="home()">Повернутися на головну</button>
