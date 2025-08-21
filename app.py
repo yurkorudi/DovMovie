@@ -416,7 +416,6 @@ def ticket_pdf():
 
 
     data = flask_session.get('confirmation_data')
-    data2 = flask_session.get()
     if not data:
         return "Немає даних квитка", 400
 
@@ -521,8 +520,7 @@ def ticket_pdf():
         buffer,
         as_attachment=download,
         download_name='ticket.pdf',
-        mimetype='application/pdf',
-        flask_session = data2
+        mimetype='application/pdf'
     )
 
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -1301,11 +1299,9 @@ def success():
     success_pay = request.args.get('is_success')
     if success_pay is None:
         success_pay = False
-    pdf = ticket_pdf()
     return render_template(
         'final_success.html',
-        success_pay = success_pay,
-        pdf = pdf
+        success_pay = success_pay
     )
 
 
