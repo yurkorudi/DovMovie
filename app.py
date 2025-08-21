@@ -1271,6 +1271,10 @@ def payment_callback():
     session = payment.sessionId
 
     if payment.status != "success":
+        payment.status = status
+        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+        db.session.commit()
+    if status == "sandbox":
         sum = 0 
         user_inf = confirmation_data
 
@@ -1296,10 +1300,6 @@ def payment_callback():
             db.session.add(tk)
         db.session.commit()
         
-        payment.status = status
-        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
-        db.session.commit()
-
     if status == "success":
         payment.status = status
         payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
