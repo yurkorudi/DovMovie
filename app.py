@@ -1305,8 +1305,7 @@ def payment_callback():
 @app.route('/final_success', methods=['GET'])
 def success():
     success_pay = request.args.get('is_success')
-
-    datar =  request.args.get('info')
+    datar = request.args.get('info')
     print('DATA FOR FINAL SUCCESS: ', datar)
     if not datar:
         datar = 'hello'
@@ -1314,10 +1313,9 @@ def success():
         success_pay = False
     return render_template(
         'final_success.html',
-        success_pay = success_pay,
+        success_pay=success_pay,
         info=datar
     )
-
 
 
 class Config:

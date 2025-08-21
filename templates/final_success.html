@@ -14,8 +14,7 @@
     {% if success_pay %}
     <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf">
-      <embed src="{{ url_for('ticket_pdf') }}?data_={{ info|tojson|urlencode }}" type="application/pdf" width="100%" height="600">
-
+      <embed src="{{ url_for('ticket_pdf') }}?data_={{ info|tojson|urlencode }}">
     </div>
     {% else %}
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
