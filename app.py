@@ -1305,7 +1305,8 @@ def payment_callback():
 @app.route('/final_success', methods=['GET'])
 def success():
     success_pay = request.args.get('is_success')
-    datar = flask_session.get('confirmation_data', {})
+
+    datar =  request.args.get('confirmation_data')
     if not datar:
         datar = 'hello'
     if success_pay is None:
