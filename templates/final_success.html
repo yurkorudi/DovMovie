@@ -30,11 +30,14 @@
   {% include 'footer.html' %}
 
   <script>
-    {% if is_success %}
-    window.onload = function() {
-        load();
-    };
-    {% endif %}
+    const success = {{ is_success|tojson }};
+    console.log("success: " + success);
+    if( success) {
+        window.onload = function() {
+            load();
+        };
+    }
+    
 
 
     function home(){ 
