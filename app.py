@@ -1246,6 +1246,7 @@ def payment_callback():
     data_b64 = request.form.get("data", "")
     signature = request.form.get("signature", "")   
     confirmation_data = request.args.get('confirmation_data')
+    confirmation_data = coerce_to_dict(confirmation_data)
     print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
