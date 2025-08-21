@@ -29,18 +29,19 @@
     <script>
         const orderId = "{{ order_id }}";
         function checkStatus() {
+            console.log("start function")
             fetch(`/check_payment_status?order_id=${orderId}`)
                 .then(res => res.json())
                 .then(data => {
                     console.log( 'data> ' + data.status )
+                    console.log("before if")
                     if (data.status === 'success') {
+                        console.log("first if")
                         window.location.href = `/final_success?order_id=${orderId}&?is_success=true`;
                     }
-                    else if (data.status === 'error' || data.status === 'failure') {
-                        window.location.href = `/final_success?order_id=${orderId}&?is_success=false`;
-                    }
                     else {
-                        console.log(data.status);
+                        console.log("else")
+                        window.location.href = `/final_success?order_id=${orderId}&?is_success=false`;
                     }
                 })
                 .catch(console.error);
