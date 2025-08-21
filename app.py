@@ -413,11 +413,13 @@ def ticket_pdf():
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
-
+    print("STATE: ___________________________________ PDF _______________________________________")
 
     data = flask_session.get('confirmation_data')
     if not data:
         return "Немає даних квитка", 400
+    
+    print('DATA FOR PDF: ', data)
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A6)
