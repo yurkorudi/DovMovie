@@ -1245,8 +1245,8 @@ def payment_callback():
     sing = lp.str_to_sign(request.form['data'])
     data_b64 = request.form.get("data", "")
     signature = request.form.get("signature", "")   
-    confirmation_data_ = request.args.get('confirmation_data')
-    confirmation_data = coerce_to_dict(confirmation_data_)
+    confirmation_data = request.args.get('confirmation_data')
+    user_cinf = coerce_to_dict(confirmation_data)
     print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
@@ -1274,6 +1274,21 @@ def payment_callback():
     if payment.status != "success":
         payment.status = status
         payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+
+        for i in user_cinf.get('seats'):
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'] +1 ,
+                seatNumb=i['seatNumber'] + 1,
+                sessionId=user_inf.get('session_id'),
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf.get('first_name'),
+                last_name=user_inf.get('last_name'),
+                email=user_inf.get('email'))
+            print("Adding ticket:", tk)
+            db.session.add(tk)
         db.session.commit()
     
     if status == "success":
