@@ -1257,7 +1257,7 @@ def payment_callback():
         except Exception as e:
             return f"Data decode error: {e}", 400
         
-        for i in user_inf['seats']:
+        for i in user_inf:
             print(i)
             tk = Ticket(
                 seatRow=i['row'],
