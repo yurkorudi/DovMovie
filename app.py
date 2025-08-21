@@ -408,7 +408,7 @@ def api_tickets_list():
 
 
 @app.route('/ticket_pdf')
-def ticket_pdf():
+def ticket_pdf(data):
     from io import BytesIO
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
@@ -416,9 +416,9 @@ def ticket_pdf():
     import os
 
     # 1) Дані з сесії
-    data = flask_session.get('confirmation_data')
+    # data = flask_session.get('confirmation_data')
     if not data:
-        return "Немає даних квитка у сесії", 400
+        return "    ", 400
 
     buf = BytesIO()
     p = canvas.Canvas(buf, pagesize=A6)
@@ -1314,11 +1314,15 @@ def payment_callback():
 @app.route('/final_success', methods=['GET'])
 def success():
     success_pay = request.args.get('is_success')
+    info = flask_session.get('confirmation_data', {})
+    if not info:
+        return 400
     if success_pay is None:
         success_pay = False
     return render_template(
         'final_success.html',
-        success_pay = success_pay
+        success_pay = success_pay,
+        info=info
     )
 
 
