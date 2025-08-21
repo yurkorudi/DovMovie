@@ -1111,7 +1111,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
-        "server_url": "http://178.62.106.58/payment_callback",
+        "server_url": "http://178.62.106.58/payment_callback&confirmation_data={flask_session.get('confirmation_data', {})}",
         "sandbox": "1"
     }
         
@@ -1215,6 +1215,7 @@ def payment_callback():
     sing = lp.str_to_sign(request.form['data'])
     data_b64 = request.form.get("data", "")
     signature = request.form.get("signature", "")   
+    confirmation_data = request.form.get("confirmation_data", "")
     print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
@@ -1250,8 +1251,13 @@ def payment_callback():
         db.session.commit() 
         sum = 0 
         items_for_banner = []   
-        user_inf = flask_session.get('user_info', {})
-        for i in flask_session.get('confirmation_data')['seats']:
+        user_inf = confirmation_data
+        try:
+            user_inf = coerce_to_dict(user_inf)
+        except Exception as e:
+            return f"Data decode error: {e}", 400
+        
+        for i in user_inf['seats']:
             print(i)
             tk = Ticket(
                 seatRow=i['row'],
