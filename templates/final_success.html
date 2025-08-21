@@ -14,7 +14,8 @@
     {% if success_pay %}
     <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf">
-      <embed src="{{ url_for('ticket_pdf', data='{{info}}')}}" >
+      <embed src="{{ url_for('ticket_pdf') }}?data_={{ info|tojson|urlencode }}" type="application/pdf" width="100%" height="600">
+
     </div>
     {% else %}
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
@@ -32,6 +33,7 @@
   <script>
     
     console.log("success: " + '{{ success_pay }}' );
+    console.log("info: " + '{{ info }}' );
     
 
 
@@ -40,7 +42,7 @@
     }
 
      function load(){ 
-      window.location.href = '{{ url_for("ticket_pdf", download="true") }}';
+      window.location.href = "{{ url_for('ticket_pdf') }}?download=true&data_={{ info|tojson|urlencode }}";
     }
   </script>
 </body>

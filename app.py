@@ -408,15 +408,31 @@ def api_tickets_list():
 
 
 @app.route('/ticket_pdf')
-def ticket_pdf(data):
+def ticket_pdf():
     from io import BytesIO
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
     import os
+    
+    
+    data_param = request.args.get('data_')
+    if not data_param:
+        return "Missing data_", 400
 
-    # 1) Дані з сесії
-    # data = flask_session.get('confirmation_data')
+    # 2) Парсимо як JSON (надійно)
+    try:
+        data = json.loads(data_param)
+    except Exception:
+        # Фолбек на випадок старих викликів
+        import html, ast
+        try:
+            data = ast.literal_eval(html.unescape(data_param))
+        except Exception as e:
+            return f"Bad data_: {e}", 400
+
+    print('DATA FOR PDF:', data)
+    
     if not data:
         return "    ", 400
 
@@ -424,7 +440,6 @@ def ticket_pdf(data):
     p = canvas.Canvas(buf, pagesize=A6)
     width, height = A6
 
-    # Шапка
     banner_h = 8 * mm
     p.setFillColorRGB(0, 0.2, 0.6)
     p.rect(0, height - banner_h, width, banner_h, fill=1, stroke=0)
@@ -432,42 +447,22 @@ def ticket_pdf(data):
     margin_x = 6 * mm
     header_bottom = height - banner_h - 2 * mm
 
-    # 2) Фільм і постер (безпечний шлях)
-    film = Movie.query.filter_by(title=data.get('movie')).first()
-    poster_path = (film.poster if (film and film.poster) else 'static/img/default_poster.png') or ''
+    film = Movie.query.filter_by(title=data['movie']).first()
+    poster_path = film.poster if film and film.poster else 'static/img/default_poster.png'
     poster_w = 30 * mm
     poster_h = 40 * mm
-
-    # абсолютний шлях у ФС; якщо URL — пропускаємо
-    poster_fs = None
-    if poster_path and not poster_path.startswith(('http://', 'https://')):
-        poster_fs = poster_path
-        if not os.path.isabs(poster_fs):
-            poster_fs = os.path.join(current_app.root_path, poster_path.lstrip('/'))
-
-    if poster_fs and os.path.exists(poster_fs):
-        try:
-            p.drawImage(
-                poster_fs,
-                margin_x,
-                header_bottom - poster_h,
-                width=poster_w,
-                height=poster_h,
-                mask='auto'
-            )
-        except Exception:
-            # якщо раптом не намалювалося — просто ігноруємо
-            poster_w = 0
-            poster_h = 0
-    else:
-        poster_w = 0
-        poster_h = 0
-
+    p.drawImage(
+        poster_path,
+        margin_x,
+        header_bottom - poster_h,
+        width=poster_w,
+        height=poster_h,
+        mask='auto'
+    )
     title_x = margin_x + poster_w + (4 * mm if poster_w else 0)
     title_y = header_bottom - 4 * mm
     p.setFillColorRGB(0, 0, 0)
 
-    # Текст по фільму з фолбеками
     title = (film.title if film else data.get('movie', ''))
     age = getattr(film, 'age', '') or ''
     duration = getattr(film, 'duration', '') or ''
@@ -494,14 +489,11 @@ def ticket_pdf(data):
     description_height = max(poster_h, lines_count * line_height)
     y = title_y - description_height - (26 if poster_w else 8)
 
-    # Покупець
     buyer_name = f"{data.get('first_name','') or ''} {data.get('last_name','') or ''}".strip()
     buyer_email = data.get('email') or ''
-    p.setFont("DejaVuSans", 6)
     p.drawString(margin_x, y, f"Куплено: {buyer_name or '-'} {buyer_email}")
     y -= 6 * mm
 
-    # Сеанс (фолбек, якщо не знайдено)
     sess = Showtime.query.filter_by(id=data.get('session_id')).first() if data.get('session_id') else None
     if sess and getattr(sess, 'dateTime', None):
         dt_str = (sess.dateTime + timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
@@ -510,7 +502,6 @@ def ticket_pdf(data):
     p.drawString(margin_x, y, f"Сеанс: {dt_str}")
     y -= 8 * mm
 
-    # Місця
     for t in (data.get('seats') or []):
         try:
             r = int(t.get('row')) + 1
@@ -519,16 +510,14 @@ def ticket_pdf(data):
             p.drawString(margin_x, y, f"Ряд: {r}  Місце: {s}  Ціна: {c} грн")
             y -= 5 * mm
             if y < 20 * mm:
-                break  # щоб не вилізти за сторінку
+                break
         except Exception:
             continue
 
-    # Футер
     footer_y = 10 * mm
     p.setStrokeColorRGB(0, 0.2, 0.6)
     p.setLineWidth(0.8)
     p.line(margin_x, footer_y + 4 * mm, width - margin_x, footer_y + 4 * mm)
-
     p.setFont("DejaVuSans", 6)
     p.drawCentredString(width / 2, footer_y, "Тел.: +38 (044) 123-45-67   •   Львів   •   Червоної Калини 81")
 
@@ -538,7 +527,6 @@ def ticket_pdf(data):
 
     download = request.args.get("download", "false").lower() == "true"
     return send_file(buf, as_attachment=download, download_name='ticket.pdf', mimetype='application/pdf')
-
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -1314,15 +1302,15 @@ def payment_callback():
 @app.route('/final_success', methods=['GET'])
 def success():
     success_pay = request.args.get('is_success')
-    info = flask_session.get('confirmation_data', {})
-    if not info:
-        return 400
+    datar = flask_session.get('confirmation_data', {})
+    if not datar:
+        datar = 'hello'
     if success_pay is None:
         success_pay = False
     return render_template(
         'final_success.html',
         success_pay = success_pay,
-        info=info
+        info=datar
     )
 
 
