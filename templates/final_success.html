@@ -30,9 +30,12 @@
   {% include 'footer.html' %}
 
   <script>
+    {% if is_success %}
     window.onload = function() {
         load();
     };
+    {% endif %}
+
 
     function home(){ 
       window.location.href = 'https://www.dovzhenko-center.lviv.ua/en/movies';

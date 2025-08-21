@@ -1296,7 +1296,7 @@ def payment_callback():
 
 @app.route('/final_success', methods=['GET'])
 def success():
-    success_pay = True
+    success_pay = request.args.get('is_success')
     pdf = ticket_pdf()
     return render_template(
         'final_success.html',
