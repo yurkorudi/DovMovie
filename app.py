@@ -1245,8 +1245,8 @@ def payment_callback():
     sing = lp.str_to_sign(request.form['data'])
     data_b64 = request.form.get("data", "")
     signature = request.form.get("signature", "")   
-    confirmation_data = request.args.get('confirmation_data')
-    confirmation_data = coerce_to_dict(confirmation_data)
+    confirmation_data_ = request.args.get('confirmation_data')
+    confirmation_data = coerce_to_dict(confirmation_data_)
     print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
@@ -1279,7 +1279,7 @@ def payment_callback():
         sum = 0 
         user_inf = confirmation_data
 
-        for i in user_inf['seats']:
+        for i in user_inf.get('seats'):
             print(i)
             tk = Ticket(
                 seatRow=i['row'] +1 ,
@@ -1288,9 +1288,9 @@ def payment_callback():
                 cost=i['cost'],
                 payment_method='online',
                 date_of_purchase=datetime.now(),
-                first_name=user_inf['first_name'],
-                last_name=user_inf['last_name'],
-                email=user_inf['email'])
+                first_name=user_inf.get('first_name'),
+                last_name=user_inf.get('last_name'),
+                email=user_inf.get('email'))
             print("Adding ticket:", tk)
             
             sum += i['cost']
