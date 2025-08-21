@@ -1297,10 +1297,12 @@ def payment_callback():
 @app.route('/final_success', methods=['GET'])
 def success():
     success_pay = request.args.get('is_success')
+    if success_pay is None:
+        success_pay = False
     pdf = ticket_pdf()
     return render_template(
         'final_success.html',
-        is_success = success_pay,
+        success_pay = success_pay,
         pdf = pdf
     )
 

@@ -31,8 +31,8 @@
 
   <script>
     
-    console.log("success: " + {{ is_success }});
-    if( {{ is_success }}) {
+    console.log("success: " + '{{ success_pay }}' );
+    if( '{{ is_success }}' ) {
         window.onload = function() {
             load();
         };
