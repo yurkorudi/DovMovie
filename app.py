@@ -1306,7 +1306,7 @@ def payment_callback():
 def success():
     success_pay = request.args.get('is_success')
 
-    datar =  request.args.get('confirmation_data')
+    datar =  request.args.get('info')
     print('DATA FOR FINAL SUCCESS: ', datar)
     if not datar:
         datar = 'hello'
