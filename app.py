@@ -1062,6 +1062,15 @@ def liqpay(movie_data=None, selected_seats=None):
         db.session.add(payment)
         db.session.commit()
         
+        sessio_data = flask_session.get('confirmation_data', {})
+        sessio_data.update({
+            'first_name': user_inf['name'],
+            'last_name': user_inf['lastName'],
+            'email': user_inf['email']
+        })
+        flask_session['confirmation_data'] = sessio_data
+        flask_session['user_info'] = user_inf
+        
         params = {
         "public_key": LIQPAY_PUBLIC_KEY,
         "version": "3",
@@ -1070,7 +1079,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
+        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
         "server_url": "http://178.62.106.58/payment_callback",
         "sandbox": "1"
     }
@@ -1081,14 +1090,7 @@ def liqpay(movie_data=None, selected_seats=None):
         sign = lp_signature(data_b64)
             
 
-        sessio_data = flask_session.get('confirmation_data', {})
-        sessio_data.update({
-            'first_name': user_inf['name'],
-            'last_name': user_inf['lastName'],
-            'email': user_inf['email']
-        })
-        flask_session['confirmation_data'] = sessio_data
-        flask_session['user_info'] = user_inf
+
         
         return render_template(
                 'liqpay.html',
@@ -1110,13 +1112,14 @@ def liqpay(movie_data=None, selected_seats=None):
 @app.route('/success_loading', methods=['GET'])
 def success_loading():
     data = request.args.get('order_id')
+    data2 = request.args.get('confirmation_data')
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!++++++++++++++++++++++++++++++++++++++++++++!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print(">>> /success_loading HIT", data)
     if not data:
         return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
     
     return render_template(
-        'success_loading.html', order_id=data
+        'success_loading.html', order_id=data, confirmation_data=data2
     )
     
 
