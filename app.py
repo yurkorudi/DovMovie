@@ -416,6 +416,7 @@ def ticket_pdf():
 
 
     data = flask_session.get('confirmation_data')
+    data2 = flask_session.get()
     if not data:
         return "Немає даних квитка", 400
 
@@ -521,7 +522,7 @@ def ticket_pdf():
         as_attachment=download,
         download_name='ticket.pdf',
         mimetype='application/pdf',
-        flask_session = data
+        flask_session = data2
     )
 
 @app.route('/admin/login', methods=['GET', 'POST'])
