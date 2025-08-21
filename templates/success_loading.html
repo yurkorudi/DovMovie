@@ -39,6 +39,10 @@
                         console.log("first if")
                         window.location.href = `/final_success?order_id=${orderId}&?is_success=true`;
                     }
+                    if (data.status === 'sandbox') {
+                        console.log("second if")
+                        window.location.href = `/final_success?order_id=${orderId}&?is_success=true`;
+                    }
                     else {
                         console.log("else")
                         window.location.href = `/final_success?order_id=${orderId}&?is_success=false`;
