@@ -403,6 +403,43 @@ def api_tickets_list():
     return jsonify(result)
 
 
+def coerce_to_dict(raw: str):
+    # 1) розекранити URL/HTML
+    s = html.unescape(raw)
+
+    # 2) поки це валідний JSON – розпаковуємо
+    # часто перший json.loads повертає знову str (бо це був JSON-рядок)
+    for _ in range(3):  # більше й не треба, але надійно
+        try:
+            v = json.loads(s)
+            if isinstance(v, (dict, list)):
+                return v
+            if isinstance(v, str):
+                s = v
+                continue
+        except Exception:
+            break
+
+    # 3) прибрати ЗОВНІШНІ лапки, якщо є (саме лапки, не пробіли)
+    t = s.strip()
+    if len(t) >= 2 and t[0] == t[-1] and t[0] in ("'", '"'):
+        s = t[1:-1]
+    else:
+        s = t
+
+    # 4) зрідка всередині трапляються \u0027 (апостроф)
+    s = s.replace("\\u0027", "'").replace("\\u2019", "'")
+
+    # 5) безпечне перетворення python-літералу у dict
+    try:
+        return ast.literal_eval(s)
+    except Exception:
+        # остання спроба: грубо замінити одиночні лапки на подвійні і ще раз json
+        try:
+            s_jsonish = re.sub(r"'", '"', s)
+            return json.loads(s_jsonish)
+        except Exception as e:
+            raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
 
 
 
@@ -414,27 +451,21 @@ def ticket_pdf():
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
     import os
-    
-    
+    print('__________________________ TICKET PDF ___________________________ \n \n \n \n \n \n ')    
     data_param = request.args.get('data_')
     if not data_param:
         return "Missing data_", 400
 
-    # 2) Парсимо як JSON (надійно)
     try:
-        data = json.loads(data_param)
-    except Exception:
-        # Фолбек на випадок старих викликів
-        import html, ast
-        try:
-            data = ast.literal_eval(html.unescape(data_param))
-        except Exception as e:
-            return f"Bad data_: {e}", 400
+        data = coerce_to_dict(data_param)
+    except Exception as e:
+        return f"Data decode error: {e}", 400
 
-    print('DATA FOR PDF:', data)
-    
-    if not data:
-        return "    ", 400
+    print("DATA OK:", type(data), data)
+        
+
+
+
 
     buf = BytesIO()
     p = canvas.Canvas(buf, pagesize=A6)
