@@ -14,7 +14,7 @@
     {% if is_success %}
     <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf">
-      <embed src="{{ url_for('ticket_pdf', download='false') }}" type="application/pdf">
+      <embed src="{{ pdf }}" type="application/pdf">
     </div>
     {% else %}
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
