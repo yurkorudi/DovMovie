@@ -1379,15 +1379,15 @@ def success():
     if success_pay is None:
         success_pay = False
     
-    if success_pay == 'True':
-        user_inf = datar
+    if success_pay:
+        user_inf = coerce_to_dict(datar)
 
         for i in user_inf.get('seats'):
             print(i)
             tk = Ticket(
                 seatRow=i['row'] +1 ,
                 seatNumb=i['seatNumber'] + 1,
-                sessionId=session,
+                sessionId=user_inf.get('session_id'),
                 cost=i['cost'],
                 payment_method='online',
                 date_of_purchase=datetime.now(),
