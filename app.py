@@ -1275,32 +1275,7 @@ def payment_callback():
         payment.status = status
         payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
         db.session.commit()
-    if status == "sandbox":
-        sum = 0 
-        user_inf = confirmation_data
-
-        for i in user_inf.get('seats'):
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'] +1 ,
-                seatNumb=i['seatNumber'] + 1,
-                sessionId=session,
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf.get('first_name'),
-                last_name=user_inf.get('last_name'),
-                email=user_inf.get('email'))
-            print("Adding ticket:", tk)
-            
-            sum += i['cost']
-            items_for_banner.append({
-                "row": i['row'],
-                "seatNumber": i['seatNumber']
-            })
-            db.session.add(tk)
-        db.session.commit()
-        
+    
     if status == "success":
         payment.status = status
         payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
@@ -1403,6 +1378,27 @@ def success():
         datar = 'hello'
     if success_pay is None:
         success_pay = False
+    
+    if success_pay == 'True':
+        user_inf = datar
+
+        for i in user_inf.get('seats'):
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'] +1 ,
+                seatNumb=i['seatNumber'] + 1,
+                sessionId=session,
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf.get('first_name'),
+                last_name=user_inf.get('last_name'),
+                email=user_inf.get('email'))
+            print("Adding ticket:", tk)
+            db.session.add(tk)
+        db.session.commit()
+        
+    
     return render_template(
         'final_success.html',
         success_pay=success_pay,
