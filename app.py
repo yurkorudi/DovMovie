@@ -413,117 +413,132 @@ def ticket_pdf():
     from reportlab.lib.pagesizes import A6
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
-    print("STATE: ___________________________________ PDF _______________________________________")
+    import os
 
+    # 1) Дані з сесії
     data = flask_session.get('confirmation_data')
     if not data:
-        return "Немає даних квитка", 400
-    
-    print('DATA FOR PDF: ', data)
+        return "Немає даних квитка у сесії", 400
 
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A6)
+    buf = BytesIO()
+    p = canvas.Canvas(buf, pagesize=A6)
     width, height = A6
 
-    # Верхній банер синього кольору
+    # Шапка
     banner_h = 8 * mm
-    p.setFillColorRGB(0, 0.2, 0.6)  # темно-синій
+    p.setFillColorRGB(0, 0.2, 0.6)
     p.rect(0, height - banner_h, width, banner_h, fill=1, stroke=0)
 
     margin_x = 6 * mm
     header_bottom = height - banner_h - 2 * mm
 
-
-
-    film = Movie.query.filter_by(title=data['movie']).first()
-    poster_path = film.poster if film and film.poster else 'static/img/default_poster.png'
+    # 2) Фільм і постер (безпечний шлях)
+    film = Movie.query.filter_by(title=data.get('movie')).first()
+    poster_path = (film.poster if (film and film.poster) else 'static/img/default_poster.png') or ''
     poster_w = 30 * mm
     poster_h = 40 * mm
 
-    p.drawImage(
-        poster_path,
-        margin_x,
-        header_bottom - poster_h,
-        width=poster_w,
-        height=poster_h,
-        mask='auto'
-    )
+    # абсолютний шлях у ФС; якщо URL — пропускаємо
+    poster_fs = None
+    if poster_path and not poster_path.startswith(('http://', 'https://')):
+        poster_fs = poster_path
+        if not os.path.isabs(poster_fs):
+            poster_fs = os.path.join(current_app.root_path, poster_path.lstrip('/'))
 
+    if poster_fs and os.path.exists(poster_fs):
+        try:
+            p.drawImage(
+                poster_fs,
+                margin_x,
+                header_bottom - poster_h,
+                width=poster_w,
+                height=poster_h,
+                mask='auto'
+            )
+        except Exception:
+            # якщо раптом не намалювалося — просто ігноруємо
+            poster_w = 0
+            poster_h = 0
+    else:
+        poster_w = 0
+        poster_h = 0
 
-    title_x = margin_x + poster_w + 4 * mm
+    title_x = margin_x + poster_w + (4 * mm if poster_w else 0)
     title_y = header_bottom - 4 * mm
     p.setFillColorRGB(0, 0, 0)
 
+    # Текст по фільму з фолбеками
+    title = (film.title if film else data.get('movie', ''))
+    age = getattr(film, 'age', '') or ''
+    duration = getattr(film, 'duration', '') or ''
+    descr = getattr(film, 'description', '') or ''
+
     p.setFont("DejaVuSans-Bold", 10)
-    p.drawString(title_x, title_y, data['movie'])
+    p.drawString(title_x, title_y, str(title)[:60])
 
     p.setFont("DejaVuSans", 6)
-    p.drawString(title_x, title_y - 15, f"Вік: {film.age}")
+    if age:
+        p.drawString(title_x, title_y - 15, f"Вік: {age}")
+    if duration:
+        p.drawString(title_x, title_y - 25, f"Тривалість: {duration}")
 
-    p.setFont("DejaVuSans", 6)
-    p.drawString(title_x, title_y -25, f"Тривалість: {film.duration}")
-
-    description = textwrap.wrap(film.description, width=50)
+    description_lines = textwrap.wrap(descr, width=50) if descr else []
     text_obj = p.beginText(title_x, title_y - 40)
     text_obj.setFont("DejaVuSans", 6)
-    for line in description:
+    for line in description_lines[:12]:
         text_obj.textLine(line)
-
     p.drawText(text_obj)
 
-    lines_count = len(description)
+    lines_count = len(description_lines)
     line_height = 6 * 1.2
-    description_height = lines_count * line_height
-    space = 26
+    description_height = max(poster_h, lines_count * line_height)
+    y = title_y - description_height - (26 if poster_w else 8)
 
-    if(poster_h >= description_height):
-        description_height = poster_h
-        space -= 20
-    
-
-    y = title_y - description_height - space
+    # Покупець
+    buyer_name = f"{data.get('first_name','') or ''} {data.get('last_name','') or ''}".strip()
+    buyer_email = data.get('email') or ''
     p.setFont("DejaVuSans", 6)
-    p.drawString(margin_x, y, f"Куплено користувачем: {Ticket.query.filter_by(email=data.get('email')).first()} {Ticket.query.filter_by(first_name=data.get('first_name')).first()} {Ticket.query.filter_by(last_name=data.get('last_name')).first()}")
+    p.drawString(margin_x, y, f"Куплено: {buyer_name or '-'} {buyer_email}")
     y -= 6 * mm
 
-    sess = Showtime.query.filter_by(id=data['session_id']).first()
-    dt_plus3 = sess.dateTime + timedelta(hours=3)
-    dt_str = dt_plus3.strftime('%Y-%m-%d %H:%M')
+    # Сеанс (фолбек, якщо не знайдено)
+    sess = Showtime.query.filter_by(id=data.get('session_id')).first() if data.get('session_id') else None
+    if sess and getattr(sess, 'dateTime', None):
+        dt_str = (sess.dateTime + timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
+    else:
+        dt_str = "-"
     p.drawString(margin_x, y, f"Сеанс: {dt_str}")
     y -= 8 * mm
 
+    # Місця
+    for t in (data.get('seats') or []):
+        try:
+            r = int(t.get('row')) + 1
+            s = int(t.get('seatNumber')) + 1
+            c = t.get('cost')
+            p.drawString(margin_x, y, f"Ряд: {r}  Місце: {s}  Ціна: {c} грн")
+            y -= 5 * mm
+            if y < 20 * mm:
+                break  # щоб не вилізти за сторінку
+        except Exception:
+            continue
 
-    for t in data['seats']:
-        p.drawString(
-            margin_x,
-            y,
-            f"Ряд: {t['row'] + 1}  Місце: {t['seatNumber'] + 1}  Ціна: {t['cost']} грн"
-        )
-        y -= 5 * mm
-
-
+    # Футер
     footer_y = 10 * mm
     p.setStrokeColorRGB(0, 0.2, 0.6)
     p.setLineWidth(0.8)
     p.line(margin_x, footer_y + 4 * mm, width - margin_x, footer_y + 4 * mm)
 
-
     p.setFont("DejaVuSans", 6)
-    footer = "Тел.: +38 (044) 123-45-67   •   Львів   •   Червоної Калини 81"
-    p.drawCentredString(width / 2, footer_y, footer)
+    p.drawCentredString(width / 2, footer_y, "Тел.: +38 (044) 123-45-67   •   Львів   •   Червоної Калини 81")
 
     p.showPage()
     p.save()
-    buffer.seek(0)
+    buf.seek(0)
 
     download = request.args.get("download", "false").lower() == "true"
+    return send_file(buf, as_attachment=download, download_name='ticket.pdf', mimetype='application/pdf')
 
-    return send_file(
-        buffer,
-        as_attachment=download,
-        download_name='ticket.pdf',
-        mimetype='application/pdf'
-    )
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
