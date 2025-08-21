@@ -520,7 +520,8 @@ def ticket_pdf():
         buffer,
         as_attachment=download,
         download_name='ticket.pdf',
-        mimetype='application/pdf'
+        mimetype='application/pdf',
+        flask_session = data
     )
 
 @app.route('/admin/login', methods=['GET', 'POST'])
