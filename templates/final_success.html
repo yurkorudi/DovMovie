@@ -44,6 +44,7 @@
 
      function load(){ 
       window.location.href = "{{ url_for('ticket_pdf') }}?download=true&data_={{ info|tojson|urlencode }}";
+      console.log("info: " + '{{ info }}' );
     }
   </script>
 </body>
