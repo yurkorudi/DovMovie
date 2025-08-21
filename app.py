@@ -447,7 +447,7 @@ def ticket_pdf():
     margin_x = 6 * mm
     header_bottom = height - banner_h - 2 * mm
 
-    film = Movie.query.filter_by(title=data['movie']).first()
+    film = Movie.query.filter_by(title=data.get('movie')).first()
     poster_path = film.poster if film and film.poster else 'static/img/default_poster.png'
     poster_w = 30 * mm
     poster_h = 40 * mm
@@ -1307,6 +1307,7 @@ def success():
     success_pay = request.args.get('is_success')
 
     datar =  request.args.get('confirmation_data')
+    print('DATA FOR FINAL SUCCESS: ', datar)
     if not datar:
         datar = 'hello'
     if success_pay is None:
