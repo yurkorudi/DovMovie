@@ -1069,6 +1069,7 @@ def payment(movie_data=None, selected_seats=None):
 def liqpay(movie_data=None, selected_seats=None):  
     data_b64 = ''
     try: 
+        items_for_banner = []
         user_inf = request.get_json()
         ua_string = request.headers.get("User-Agent", "")
         user_agent = parse(ua_string)    
@@ -1119,6 +1120,32 @@ def liqpay(movie_data=None, selected_seats=None):
         data_b64 = lp_encode(params)
         print('data_b64: ', data_b64)
         sign = lp_signature(data_b64)
+        user_inf = flask_session.get('confirmation_data')
+        
+        try:
+            user_inf = coerce_to_dict(user_inf)
+        except Exception as e:
+            return f"Data decode error: {e}", 400
+        
+        for i in user_inf['seats']:
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'],
+                seatNumb=i['seatNumber'],
+                sessionId=session,
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf['name'],
+                last_name=user_inf['lastName'],
+                email=user_inf['email'])
+            sum += i['cost']
+            items_for_banner.append({
+                "row": i['row'],
+                "seatNumber": i['seatNumber']
+            })
+            db.session.add(tk)
+        db.session.commit()
             
 
 
@@ -1252,30 +1279,9 @@ def payment_callback():
         sum = 0 
         items_for_banner = []   
         user_inf = confirmation_data
-        try:
-            user_inf = coerce_to_dict(user_inf)
-        except Exception as e:
-            return f"Data decode error: {e}", 400
+
         
-        for i in user_inf['seats']:
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'],
-                seatNumb=i['seatNumber'],
-                sessionId=session,
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf['name'],
-                last_name=user_inf['lastName'],
-                email=user_inf['email'])
-            sum += i['cost']
-            items_for_banner.append({
-                "row": i['row'],
-                "seatNumber": i['seatNumber']
-            })
-            db.session.add(tk)
-        db.session.commit()
+        
         
         
         email = user_inf['email']
