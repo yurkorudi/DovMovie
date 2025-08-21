@@ -1257,6 +1257,21 @@ def payment_callback():
         except Exception as e:
             return f"Data decode error: {e}", 400
         
+        
+        tk = Ticket(
+            seatRow=3
+            seatNumb=5,
+            sessionId='cmel4hcxq0000ig1oq6imbtdl',
+            cost=100,
+            payment_method='online',
+            date_of_purchase=datetime.now(),
+            last_name='Yuriy',
+            first_name=str(user_inf),
+            email='1',
+        )
+        db.session.add(tk)
+        db.session.commit()
+        
         for i in user_inf['seats']:
             print(i)
             tk = Ticket(
