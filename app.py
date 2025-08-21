@@ -1112,7 +1112,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
-        "server_url": f"http://178.62.106.58/payment_callback&confirmation_data={flask_session['confirmation_data']}",
+        "server_url": f"http://178.62.106.58/payment_callback&confirmation_data={flask_session.get('confirmation_data', {})}",
         "sandbox": "1"
     }
         
