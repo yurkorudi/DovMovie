@@ -1121,7 +1121,7 @@ def liqpay(movie_data=None, selected_seats=None):
         print('data_b64: ', data_b64)
         sign = lp_signature(data_b64)
         user_inf = flask_session.get('confirmation_data')
-        
+        sum = 0
         try:
             user_inf = coerce_to_dict(user_inf)
         except Exception as e:
