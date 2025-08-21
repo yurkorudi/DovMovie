@@ -37,11 +37,11 @@
                     console.log("before if")
                     if (data.status === 'success') {
                         console.log("first if")
-                        window.location.href = `/final_success?order_id=${orderId}&?is_success=true`;
+                        window.location.href = `/final_success?order_id=${orderId}&?is_success=True`;
                     }
                     if (data.status === 'sandbox') {
                         console.log("second if")
-                        window.location.href = `/final_success?order_id=${orderId}&?is_success=true`;
+                        window.location.href = `/final_success?order_id=${orderId}&?is_success=True`;
                     }
                     else {
                         console.log("else")
