@@ -714,7 +714,7 @@ def close_shift():
       "device": device,
       "tag": f"close_shift_{uuid4()}",
       "type": 1,
-      "fiscal": {"task": 11}
+      "fiscal": {"task": 11, 'cashier': 'Рецепція центру Довженка'}
     }
     url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
     result = rro_send(payload, url)
