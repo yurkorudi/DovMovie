@@ -1119,35 +1119,35 @@ def liqpay(movie_data=None, selected_seats=None):
         data_b64 = lp_encode(params)
         print('data_b64: ', data_b64)
         sign = lp_signature(data_b64)
-        # user_inf = flask_session['confirmation_data']
-        # sum_t = 0
-        # try:
-        #     # user_inf = coerce_to_dict(user_inf)
-        #     print("User info:", user_inf)
-        # except Exception as e:
-        #     return f"Data decode error: {e}", 400
+        user_inf = flask_session['confirmation_data']
+        sum_t = 0
+        try:
+            # user_inf = coerce_to_dict(user_inf)
+            print("User info:", user_inf)
+        except Exception as e:
+            return f"Data decode error: {e}", 400
         
-        # for i in user_inf['seats']:
-        #     print(i)
-        #     tk = Ticket(
-        #         seatRow=i['row'] +1 ,
-        #         seatNumb=i['seatNumber'] + 1,
-        #         sessionId=session,
-        #         cost=i['cost'],
-        #         payment_method='online',
-        #         date_of_purchase=datetime.now(),
-        #         first_name=user_inf['first_name'],
-        #         last_name=user_inf['last_name'],
-        #         email=user_inf['email'])
-        #     print("Adding ticket:", tk)
+        for i in user_inf['seats']:
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'] +1 ,
+                seatNumb=i['seatNumber'] + 1,
+                sessionId=session,
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf['first_name'],
+                last_name=user_inf['last_name'],
+                email=user_inf['email'])
+            print("Adding ticket:", tk)
             
-        #     sum_t += i['cost']
-        #     items_for_banner.append({
-        #         "row": i['row'],
-        #         "seatNumber": i['seatNumber']
-        #     })
-        #     db.session.add(tk)
-        # db.session.commit()
+            sum_t += i['cost']
+            items_for_banner.append({
+                "row": i['row'],
+                "seatNumber": i['seatNumber']
+            })
+            db.session.add(tk)
+        db.session.commit()
             
 
 
