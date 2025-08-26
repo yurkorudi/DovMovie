@@ -28,33 +28,19 @@
 
     <script>
         const orderId = "{{ order_id }}";
+        const confirmationData = JSON.parse({{ confirmation_data | tojson | safe }});
         function checkStatus() {
-            console.log("start function")
             fetch(`/check_payment_status?order_id=${orderId}`)
-                .then(res => res.json())
-                .then(data => {
-                    console.log( 'data> ' + data.status )
-                    console.log("before if")
-                    if (data.status === 'success') {
-                        console.log("first if")
-                        const confirmationData = {{ confirmation_data | tojson | safe }};
-                        const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
-                        window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${encodedInfo}`;
-
-
-                    }
-                    if (data.status === 'sandbox') {
-                        console.log("second if")
-                        const confirmationData = {{ confirmation_data | tojson | safe }};
-                        const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
-                        window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${encodedInfo}`;
-
-
-                    }
-                })
-                .catch(console.error);
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' || data.status === 'sandbox') {
+                const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
+                window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${encodedInfo}`;
+                }
+            })
+            .catch(console.error);
         }
         setInterval(checkStatus, 1000);
-    </script>
+</script>
 </body>
 </html>

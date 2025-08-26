@@ -1245,7 +1245,7 @@ def payment_callback():
         return "Order not found, 404"
     
     # session = payment.sessionId
-    payment.status = payload
+    payment.status = str(payload)
     db.session.commit()
 
     # if payment.status != "success":
