@@ -1205,7 +1205,7 @@ def check_payment_status():
 def payment_callback():
     print("_________________________________________ACTIVATE_________________________________________")
     print(">>> /payment_callback HIT", request.method, request.form or request.args)
-    sing = lp.str_to_sign(request.form['data'])
+    # sing = request.form['data']
     print("SING GOT" )
     data_b64 = request.form.get("data", "")
     print("DATA GOT" )
@@ -1213,7 +1213,7 @@ def payment_callback():
     print("SIGNATURE GOT" ) 
     # confirmation_data = request.args.get('confirmation_data')
     # user_cinf = coerce_to_dict(confirmation_data)
-    print(sing)
+    # print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
     hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
