@@ -1211,8 +1211,11 @@ def payment_callback():
     print("DATA GOT" )
     signature = request.form.get("signature", "")  
     print("SIGNATURE GOT" ) 
-    confirmation_data = request.args.get('confirmation_data')
-    user_cinf = coerce_to_dict(confirmation_data)
+    try:
+        confirmation_data = request.args.get('confirmation_data')
+        user_cinf = coerce_to_dict(confirmation_data)
+    except Exception as e:
+        pass
     # print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
