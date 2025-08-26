@@ -1211,8 +1211,8 @@ def payment_callback():
     print("DATA GOT" )
     signature = request.form.get("signature", "")  
     print("SIGNATURE GOT" ) 
-    # confirmation_data = request.args.get('confirmation_data')
-    # user_cinf = coerce_to_dict(confirmation_data)
+    confirmation_data = request.args.get('confirmation_data')
+    user_cinf = coerce_to_dict(confirmation_data)
     # print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
@@ -1260,83 +1260,83 @@ def payment_callback():
         #     db.session.add(tk)
         # db.session.commit()
     
-    # if status == "success":
-        # sum = 0 
-        # items_for_banner = []   
-        # user_inf = coerce_to_dict(confirmation_data)
+    if status == "sandbox":
+        sum = 0 
+        items_for_banner = []   
+        user_inf = coerce_to_dict(confirmation_data)
 
-        # for i in user_inf['seats']:
-        #     print(i)
-        #     tk = Ticket(
-        #         seatRow=i['row'] +1 ,
-        #         seatNumb=i['seatNumber'] + 1,
-        #         sessionId=session,
-        #         cost=i['cost'],
-        #         payment_method='online',
-        #         date_of_purchase=datetime.now(),
-        #         first_name=user_inf['first_name'],
-        #         last_name=user_inf['last_name'],
-        #         email=user_inf['email'])
-        #     print("Adding ticket:", tk)
+        for i in user_inf['seats']:
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'] +1 ,
+                seatNumb=i['seatNumber'] + 1,
+                sessionId=session,
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf['first_name'],
+                last_name=user_inf['last_name'],
+                email=user_inf['email'])
+            print("Adding ticket:", tk)
             
-        #     sum += i['cost']
-        #     items_for_banner.append({
-        #         "row": i['row'],
-        #         "seatNumber": i['seatNumber']
-        #     })
-        #     db.session.add(tk)
-        # db.session.commit()
+            sum += i['cost']
+            items_for_banner.append({
+                "row": i['row'],
+                "seatNumber": i['seatNumber']
+            })
+            db.session.add(tk)
+        db.session.commit()
         
         
         
-    #     email = 'yurko@gmail.com'#user_inf['email']
-    #     price = '200'#i['cost']
-    #     time_str = '15:30'
-    #     comments = ''
-    #     print(comments)
+        email = 'yurko@gmail.com'#user_inf['email']
+        price = '200'#i['cost']
+        time_str = '15:30'
+        comments = ''
+        print(comments)
 
-    #     data  = {
-    #     "ver": 6,
-    #     "source": "DM_API",
-    #     "device": " kasa",
-    #     "tag": "",
-    #     "need_pf_img": "0",
-    #     "need_pf_pdf": "0",
-    #     "need_pf_txt": "0",
-    #     "need_pf_doccmd": "0",
-    #     "type": "1",
-    #     "userinfo": {
-    #         "email": email,
-    #         "phone": ""
-    #     },
-    #     "fiscal": {
-    #         "task": 1,
-    #         "cashier": "Рецепція центру Довженка",
-    #         "receipt": {
-    #             "sum": sum,
-    #             "comment_down": comments,
-    #             "rows": [
-    #                 {
+        data  = {
+        "ver": 6,
+        "source": "DM_API",
+        "device": " kasa",
+        "tag": "",
+        "need_pf_img": "0",
+        "need_pf_pdf": "0",
+        "need_pf_txt": "0",
+        "need_pf_doccmd": "0",
+        "type": "1",
+        "userinfo": {
+            "email": email,
+            "phone": ""
+        },
+        "fiscal": {
+            "task": 1,
+            "cashier": "Рецепція центру Довженка",
+            "receipt": {
+                "sum": sum,
+                "comment_down": comments,
+                "rows": [
+                    {
                         
-    #                     "code": "100",
-    #                     "code2": "",
-    #                     "name": "Квиток",
-    #                     "cnt": sum/price,
-    #                     "price":price,
-    #                     "taxgrp": 5,
-    #                 },
-    #             ],
-    #             "pays": [
-    #                 {
-    #                     "type": 2,
-    #                     "sum": sum
-    #                 }
-    #             ]
-    #         }
-    #     }
-    # }
-    #     url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    #     result = rro_send(payload=data, url=url)
+                        "code": "100",
+                        "code2": "",
+                        "name": "Квиток",
+                        "cnt": sum/price,
+                        "price":price,
+                        "taxgrp": 5,
+                    },
+                ],
+                "pays": [
+                    {
+                        "type": 2,
+                        "sum": sum
+                    }
+                ]
+            }
+        }
+    }
+        url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+        result = rro_send(payload=data, url=url)
        
     return jsonify({
         'status': 'success',
