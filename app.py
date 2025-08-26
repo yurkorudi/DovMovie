@@ -1254,9 +1254,6 @@ def payment_callback():
         # db.session.commit()
     
     if status == "success":
-        payment.status = status
-        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
-        db.session.commit() 
         # sum = 0 
         # items_for_banner = []   
         # user_inf = coerce_to_dict(confirmation_data)
@@ -1285,11 +1282,11 @@ def payment_callback():
         
         
         
-        # email = user_inf['email']
-        # price = i['cost']
-        # time_str = '15:30'
-        # comments = build_comment_for_receipt(items_for_banner, time_str)
-        # print(comments)
+        email = 'yurko@gmail.com'#user_inf['email']
+        price = '200'#i['cost']
+        time_str = '15:30'
+        comments = ''
+        print(comments)
 
         data  = {
         "ver": 6,
