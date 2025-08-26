@@ -1207,8 +1207,8 @@ def payment_callback():
     sing = lp.str_to_sign(request.form['data'])
     data_b64 = request.form.get("data", "")
     signature = request.form.get("signature", "")   
-    confirmation_data = request.args.get('confirmation_data')
-    user_cinf = coerce_to_dict(confirmation_data)
+    # confirmation_data = request.args.get('confirmation_data')
+    # user_cinf = coerce_to_dict(confirmation_data)
     print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
     expected_sign = base64.b64encode(
@@ -1231,7 +1231,7 @@ def payment_callback():
     if not payment:
         return "Order not found, 404"
     
-    session = payment.sessionId
+    # session = payment.sessionId
     payment.status = payload
     db.session.commit()
 
