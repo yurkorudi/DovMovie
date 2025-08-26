@@ -1223,7 +1223,7 @@ def check_payment_status():
         if "success" in lp_status:
             payment.status = "success"
         elif lp_status in ("failure", "error"):
-            payment.status = lp_status
+            payment.status = "EROOOOOOOOOOOOOOOOR"
         # else:
         #     payment.status = lp_status or payment.status
 
