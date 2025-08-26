@@ -1232,10 +1232,12 @@ def payment_callback():
         return "Order not found, 404"
     
     session = payment.sessionId
+    payment.status = payload
+    db.session.commit()
 
-    if payment.status != "success":
-        payment.status = status
-        payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
+    # if payment.status != "success":
+    #     payment.status = status
+    #     payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
 
         # for i in user_cinf.get('seats'):
         #     print(i)
@@ -1253,7 +1255,7 @@ def payment_callback():
         #     db.session.add(tk)
         # db.session.commit()
     
-    if status == "success":
+    # if status == "success":
         # sum = 0 
         # items_for_banner = []   
         # user_inf = coerce_to_dict(confirmation_data)
@@ -1282,54 +1284,54 @@ def payment_callback():
         
         
         
-        email = 'yurko@gmail.com'#user_inf['email']
-        price = '200'#i['cost']
-        time_str = '15:30'
-        comments = ''
-        print(comments)
+    #     email = 'yurko@gmail.com'#user_inf['email']
+    #     price = '200'#i['cost']
+    #     time_str = '15:30'
+    #     comments = ''
+    #     print(comments)
 
-        data  = {
-        "ver": 6,
-        "source": "DM_API",
-        "device": " kasa",
-        "tag": "",
-        "need_pf_img": "0",
-        "need_pf_pdf": "0",
-        "need_pf_txt": "0",
-        "need_pf_doccmd": "0",
-        "type": "1",
-        "userinfo": {
-            "email": email,
-            "phone": ""
-        },
-        "fiscal": {
-            "task": 1,
-            "cashier": "Рецепція центру Довженка",
-            "receipt": {
-                "sum": sum,
-                "comment_down": comments,
-                "rows": [
-                    {
+    #     data  = {
+    #     "ver": 6,
+    #     "source": "DM_API",
+    #     "device": " kasa",
+    #     "tag": "",
+    #     "need_pf_img": "0",
+    #     "need_pf_pdf": "0",
+    #     "need_pf_txt": "0",
+    #     "need_pf_doccmd": "0",
+    #     "type": "1",
+    #     "userinfo": {
+    #         "email": email,
+    #         "phone": ""
+    #     },
+    #     "fiscal": {
+    #         "task": 1,
+    #         "cashier": "Рецепція центру Довженка",
+    #         "receipt": {
+    #             "sum": sum,
+    #             "comment_down": comments,
+    #             "rows": [
+    #                 {
                         
-                        "code": "100",
-                        "code2": "",
-                        "name": "Квиток",
-                        "cnt": sum/price,
-                        "price":price,
-                        "taxgrp": 5,
-                    },
-                ],
-                "pays": [
-                    {
-                        "type": 2,
-                        "sum": sum
-                    }
-                ]
-            }
-        }
-    }
-        url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-        result = rro_send(payload=data, url=url)
+    #                     "code": "100",
+    #                     "code2": "",
+    #                     "name": "Квиток",
+    #                     "cnt": sum/price,
+    #                     "price":price,
+    #                     "taxgrp": 5,
+    #                 },
+    #             ],
+    #             "pays": [
+    #                 {
+    #                     "type": 2,
+    #                     "sum": sum
+    #                 }
+    #             ]
+    #         }
+    #     }
+    # }
+    #     url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    #     result = rro_send(payload=data, url=url)
        
     return jsonify({
         'status': 'success',
