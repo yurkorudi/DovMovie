@@ -1187,52 +1187,15 @@ def success_loading():
 @app.route('/check_payment_status', methods=['GET'])
 def check_payment_status():
     order_id = request.args.get('order_id')
-    if not order_id:
-        return jsonify({'status': 'error', 'message': 'order_id required'}), 400
-
     payment = Payment.query.filter_by(id=order_id).first()
+    try: 
+        print(payment.status)
+    except:
+        pass
     if not payment:
+        print("payment not found")
         return jsonify({'status': 'not_found'}), 404
-
-
-    if payment.status == 'success':
-        return jsonify({'status': 'success'})
-
-
-    params = {
-        "public_key": LIQPAY_PUBLIC_KEY,
-        "version": "3",
-        "action": "status",
-        "order_id": order_id,
-        "sandbox": "1"
-    }
-    data_b64 = lp_encode(params)
-    sign = lp_signature(data_b64)
-
-    try:
-        resp = requests.post(
-            "https://www.liqpay.ua/api/request",
-            data={"data": data_b64, "signature": sign},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        payload = resp.json()
-        lp_status = payload.get("status", "").lower()
-
-
-        if "success" in lp_status:
-            payment.status = "success"
-        elif lp_status in ("failure", "error"):
-            payment.status = payload
-        # else:
-        #     payment.status = lp_status or payment.status
-
-        db.session.commit()
-        return jsonify({'status': payment.status})
-    except Exception as e:
-        print("check_payment_status error:", e)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
+    return jsonify({'status': payment.status})
 
 
 
