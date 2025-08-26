@@ -1220,12 +1220,12 @@ def check_payment_status():
         lp_status = payload.get("status", "").lower()
 
 
-        if lp_status in ("success",):
+        if "success" in lp_status:
             payment.status = "success"
         elif lp_status in ("failure", "error"):
-            payment.status = "error"
-        else:
-            payment.status = lp_status or payment.status
+            payment.status = lp_status
+        # else:
+        #     payment.status = lp_status or payment.status
 
         db.session.commit()
         return jsonify({'status': payment.status})
