@@ -1112,7 +1112,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "order_id": order_id,
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
         "server_url": f"http://178.62.106.58/payment_callback&confirmation_data={flask_session.get('confirmation_data', {})}",
-        "sandbox": "0"
+        "sandbox": "1"
     }
         
         
@@ -1274,64 +1274,64 @@ def payment_callback():
         payment.status = status
         payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
 
-        for i in user_cinf.get('seats'):
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'] +1 ,
-                seatNumb=i['seatNumber'] + 1,
-                sessionId=user_inf.get('session_id'),
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf.get('first_name'),
-                last_name=user_inf.get('last_name'),
-                email=user_inf.get('email'))
-            print("Adding ticket:", tk)
-            db.session.add(tk)
-        db.session.commit()
+        # for i in user_cinf.get('seats'):
+        #     print(i)
+        #     tk = Ticket(
+        #         seatRow=i['row'] +1 ,
+        #         seatNumb=i['seatNumber'] + 1,
+        #         sessionId=user_inf.get('session_id'),
+        #         cost=i['cost'],
+        #         payment_method='online',
+        #         date_of_purchase=datetime.now(),
+        #         first_name=user_inf.get('first_name'),
+        #         last_name=user_inf.get('last_name'),
+        #         email=user_inf.get('email'))
+        #     print("Adding ticket:", tk)
+        #     db.session.add(tk)
+        # db.session.commit()
     
     if status == "success":
         payment.status = status
         payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
         db.session.commit() 
-        sum = 0 
-        items_for_banner = []   
-        user_inf = coerce_to_dict(confirmation_data)
+        # sum = 0 
+        # items_for_banner = []   
+        # user_inf = coerce_to_dict(confirmation_data)
 
-        for i in user_inf['seats']:
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'] +1 ,
-                seatNumb=i['seatNumber'] + 1,
-                sessionId=session,
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf['first_name'],
-                last_name=user_inf['last_name'],
-                email=user_inf['email'])
-            print("Adding ticket:", tk)
+        # for i in user_inf['seats']:
+        #     print(i)
+        #     tk = Ticket(
+        #         seatRow=i['row'] +1 ,
+        #         seatNumb=i['seatNumber'] + 1,
+        #         sessionId=session,
+        #         cost=i['cost'],
+        #         payment_method='online',
+        #         date_of_purchase=datetime.now(),
+        #         first_name=user_inf['first_name'],
+        #         last_name=user_inf['last_name'],
+        #         email=user_inf['email'])
+        #     print("Adding ticket:", tk)
             
-            sum += i['cost']
-            items_for_banner.append({
-                "row": i['row'],
-                "seatNumber": i['seatNumber']
-            })
-            db.session.add(tk)
-        db.session.commit()
+        #     sum += i['cost']
+        #     items_for_banner.append({
+        #         "row": i['row'],
+        #         "seatNumber": i['seatNumber']
+        #     })
+        #     db.session.add(tk)
+        # db.session.commit()
         
         
         
-        email = user_inf['email']
-        price = i['cost']
-        time_str = '15:30'
-        comments = build_comment_for_receipt(items_for_banner, time_str)
-        print(comments)
+        # email = user_inf['email']
+        # price = i['cost']
+        # time_str = '15:30'
+        # comments = build_comment_for_receipt(items_for_banner, time_str)
+        # print(comments)
 
         data  = {
         "ver": 6,
         "source": "DM_API",
-        "device": "test",
+        "device": " kasa",
         "tag": "",
         "need_pf_img": "0",
         "need_pf_pdf": "0",
@@ -1368,8 +1368,8 @@ def payment_callback():
             }
         }
     }
-        # url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-        # result = rro_send(payload=data, url=url)
+        url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+        result = rro_send(payload=data, url=url)
        
     return jsonify({
         'status': 'success',
