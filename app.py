@@ -1203,6 +1203,7 @@ def check_payment_status():
     
 @app.route('/payment_callback', methods=['POST', 'GET'])
 def payment_callback():
+    print("_________________________________________ACTIVATE_________________________________________")
     print(">>> /payment_callback HIT", request.method, request.form or request.args)
     sing = lp.str_to_sign(request.form['data'])
     data_b64 = request.form.get("data", "")
