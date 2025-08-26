@@ -1214,18 +1214,19 @@ def payment_callback():
     try:
         confirmation_data = request.args.get('confirmation_data')
         user_cinf = coerce_to_dict(confirmation_data)
-    except Exception as e:
-        pass
-    # print(sing)
-    print("_________________________________________ACTIVATE_________________________________________")
-    expected_sign = base64.b64encode(
-    hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
-    ).decode()
-    print("EXPECTED SIGNATURE" )
 
-    if signature != expected_sign:
-        print(f"Expected: {expected_sign}, got: {signature}")
-        return "Invalid signature", 403
+        print("_________________________________________ACTIVATE_________________________________________")
+        expected_sign = base64.b64encode(
+        hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
+        ).decode()
+        print("EXPECTED SIGNATURE" )
+
+        if signature != expected_sign:
+            print(f"Expected: {expected_sign}, got: {signature}")
+            return "Invalid signature", 403
+    
+    except Exception as e:
+        print("Error in signature verification:", e)
     
 
     payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
