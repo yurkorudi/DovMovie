@@ -1111,13 +1111,13 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
-        "server_url": f"http://178.62.106.58/payment_callback&confirmation_data={flask_session.get('confirmation_data', {})}",
+        "server_url": f"http://178.62.106.58/payment_callback",
         "sandbox": "1"
     }
         
         
         data_b64 = lp_encode(params)
-        print('data_b64: ', data_b64)
+        # print('data_b64: ', data_b64)
         sign = lp_signature(data_b64)
         user_inf = flask_session['confirmation_data']
         sum_t = 0
@@ -1126,6 +1126,8 @@ def liqpay(movie_data=None, selected_seats=None):
             print("User info:", user_inf)
         except Exception as e:
             return f"Data decode error: {e}", 400
+        
+        print(" adding tickets... ")
         
         for i in user_inf['seats']:
             print(i)
@@ -1148,6 +1150,8 @@ def liqpay(movie_data=None, selected_seats=None):
             })
             db.session.add(tk)
         db.session.commit()
+        
+        print("Tickets added")
             
 
 
