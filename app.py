@@ -62,7 +62,7 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['DM_DEVICE'] = 'kasa'
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
 LIQPAY_PUBLIC_KEY = 'i40470776966'
-LIQPAY_PRIVATE_KEY = '0PBCVkiwpJvl8eBE6MQ1yh1eoL57plD9Wj3mNLxW'
+LIQPAY_PRIVATE_KEY = 'mHLYgc7FLwKeqBrpp6Pay4O7a4GBr9gueYdJLeKB'
 
 
 
