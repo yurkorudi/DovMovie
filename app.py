@@ -59,10 +59,10 @@ app.config['DM_HOST'] = '194.44.116.57'
 app.config['DM_PORT'] = 3939
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['DM_DEVICE'] = 'Тестова каса'
+app.config['DM_DEVICE'] = 'DovzhenkoDM'
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
-LIQPAY_PUBLIC_KEY = 'sandbox_i65007373353'
-LIQPAY_PRIVATE_KEY = 'sandbox_PiK0U7MpSJ69BAmzqIDS38ypRYJYNbDK9Oi2tt4M'
+LIQPAY_PUBLIC_KEY = 'i40470776966'
+LIQPAY_PRIVATE_KEY = '0PBCVkiwpJvl8eBE6MQ1yh1eoL57plD9Wj3mNLxW'
 
 
 
