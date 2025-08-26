@@ -790,7 +790,7 @@ def cash_prod():
     data  = {
     "ver": 6,
     "source": "DM_API",
-    "device": {app.config['DM_DEVICE']},
+    "device": "kasa",
     "tag": "",
     "need_pf_img": "0",
     "need_pf_pdf": "0",
@@ -870,7 +870,7 @@ def card_prod():
     data  = {
     "ver": 6,
     "source": "DM_API",
-    "device": "test",
+    "device": "kasa",
     "tag": "",
     "need_pf_img": "0",
     "need_pf_pdf": "0",
