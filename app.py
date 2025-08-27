@@ -1117,7 +1117,7 @@ def liqpay(movie_data=None, selected_seats=None):
         
         
         data_b64 = lp_encode(params)
-        print('data_b64: ', data_b64)
+        # print('data_b64: ', data_b64)
         sign = lp_signature(data_b64)
         user_inf = flask_session['confirmation_data']
         sum_t = 0
@@ -1126,6 +1126,8 @@ def liqpay(movie_data=None, selected_seats=None):
             print("User info:", user_inf)
         except Exception as e:
             return f"Data decode error: {e}", 400
+        
+        print(" adding tickets... ")
         
         for i in user_inf['seats']:
             print(i)
@@ -1148,6 +1150,8 @@ def liqpay(movie_data=None, selected_seats=None):
             })
             db.session.add(tk)
         db.session.commit()
+        
+        print("Tickets added")
             
 
 
@@ -1203,21 +1207,30 @@ def check_payment_status():
     
 @app.route('/payment_callback', methods=['POST', 'GET'])
 def payment_callback():
-    print(">>> /payment_callback HIT", request.method, request.form or request.args)
-    sing = lp.str_to_sign(request.form['data'])
-    data_b64 = request.form.get("data", "")
-    signature = request.form.get("signature", "")   
-    # confirmation_data = request.args.get('confirmation_data')
-    # user_cinf = coerce_to_dict(confirmation_data)
-    print(sing)
     print("_________________________________________ACTIVATE_________________________________________")
-    expected_sign = base64.b64encode(
-    hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
-    ).decode()
+    print(">>> /payment_callback HIT", request.method, request.form or request.args)
+    # sing = request.form['data']
+    print("SING GOT" )
+    data_b64 = request.form.get("data", "")
+    print("DATA GOT" )
+    signature = request.form.get("signature", "")  
+    print("SIGNATURE GOT" ) 
+    try:
+        confirmation_data = request.args.get('confirmation_data')
+        user_cinf = coerce_to_dict(confirmation_data)
 
-    if signature != expected_sign:
-        print(f"Expected: {expected_sign}, got: {signature}")
-        return "Invalid signature", 403
+        print("_________________________________________ACTIVATE_________________________________________")
+        expected_sign = base64.b64encode(
+        hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
+        ).decode()
+        print("EXPECTED SIGNATURE" )
+
+        if signature != expected_sign:
+            print(f"Expected: {expected_sign}, got: {signature}")
+            return "Invalid signature", 403
+    
+    except Exception as e:
+        print("Error in signature verification:", e)
     
 
     payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
@@ -1232,7 +1245,7 @@ def payment_callback():
         return "Order not found, 404"
     
     # session = payment.sessionId
-    payment.status = payload
+    payment.status = str(payload)
     db.session.commit()
 
     # if payment.status != "success":
@@ -1255,83 +1268,83 @@ def payment_callback():
         #     db.session.add(tk)
         # db.session.commit()
     
-    # if status == "success":
-        # sum = 0 
-        # items_for_banner = []   
-        # user_inf = coerce_to_dict(confirmation_data)
+    if status == "sandbox":
+        sum = 0 
+        items_for_banner = []   
+        user_inf = coerce_to_dict(confirmation_data)
 
-        # for i in user_inf['seats']:
-        #     print(i)
-        #     tk = Ticket(
-        #         seatRow=i['row'] +1 ,
-        #         seatNumb=i['seatNumber'] + 1,
-        #         sessionId=session,
-        #         cost=i['cost'],
-        #         payment_method='online',
-        #         date_of_purchase=datetime.now(),
-        #         first_name=user_inf['first_name'],
-        #         last_name=user_inf['last_name'],
-        #         email=user_inf['email'])
-        #     print("Adding ticket:", tk)
+        for i in user_inf['seats']:
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'] +1 ,
+                seatNumb=i['seatNumber'] + 1,
+                sessionId=session,
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf['first_name'],
+                last_name=user_inf['last_name'],
+                email=user_inf['email'])
+            print("Adding ticket:", tk)
             
-        #     sum += i['cost']
-        #     items_for_banner.append({
-        #         "row": i['row'],
-        #         "seatNumber": i['seatNumber']
-        #     })
-        #     db.session.add(tk)
-        # db.session.commit()
+            sum += i['cost']
+            items_for_banner.append({
+                "row": i['row'],
+                "seatNumber": i['seatNumber']
+            })
+            db.session.add(tk)
+        db.session.commit()
         
         
         
-    #     email = 'yurko@gmail.com'#user_inf['email']
-    #     price = '200'#i['cost']
-    #     time_str = '15:30'
-    #     comments = ''
-    #     print(comments)
+        email = 'yurko@gmail.com'#user_inf['email']
+        price = '200'#i['cost']
+        time_str = '15:30'
+        comments = ''
+        print(comments)
 
-    #     data  = {
-    #     "ver": 6,
-    #     "source": "DM_API",
-    #     "device": " kasa",
-    #     "tag": "",
-    #     "need_pf_img": "0",
-    #     "need_pf_pdf": "0",
-    #     "need_pf_txt": "0",
-    #     "need_pf_doccmd": "0",
-    #     "type": "1",
-    #     "userinfo": {
-    #         "email": email,
-    #         "phone": ""
-    #     },
-    #     "fiscal": {
-    #         "task": 1,
-    #         "cashier": "Рецепція центру Довженка",
-    #         "receipt": {
-    #             "sum": sum,
-    #             "comment_down": comments,
-    #             "rows": [
-    #                 {
+        data  = {
+        "ver": 6,
+        "source": "DM_API",
+        "device": " kasa",
+        "tag": "",
+        "need_pf_img": "0",
+        "need_pf_pdf": "0",
+        "need_pf_txt": "0",
+        "need_pf_doccmd": "0",
+        "type": "1",
+        "userinfo": {
+            "email": email,
+            "phone": ""
+        },
+        "fiscal": {
+            "task": 1,
+            "cashier": "Рецепція центру Довженка",
+            "receipt": {
+                "sum": sum,
+                "comment_down": comments,
+                "rows": [
+                    {
                         
-    #                     "code": "100",
-    #                     "code2": "",
-    #                     "name": "Квиток",
-    #                     "cnt": sum/price,
-    #                     "price":price,
-    #                     "taxgrp": 5,
-    #                 },
-    #             ],
-    #             "pays": [
-    #                 {
-    #                     "type": 2,
-    #                     "sum": sum
-    #                 }
-    #             ]
-    #         }
-    #     }
-    # }
-    #     url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    #     result = rro_send(payload=data, url=url)
+                        "code": "100",
+                        "code2": "",
+                        "name": "Квиток",
+                        "cnt": sum/price,
+                        "price":price,
+                        "taxgrp": 5,
+                    },
+                ],
+                "pays": [
+                    {
+                        "type": 2,
+                        "sum": sum
+                    }
+                ]
+            }
+        }
+    }
+        url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+        result = rro_send(payload=data, url=url)
        
     return jsonify({
         'status': 'success',
