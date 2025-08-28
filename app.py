@@ -56,7 +56,7 @@ import ast
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
 app.config['DM_HOST'] = '194.44.116.57'
-app.config['DM_PORT'] = 3938
+app.config['DM_PORT'] = 3939
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['DM_DEVICE'] = 'kasa'
