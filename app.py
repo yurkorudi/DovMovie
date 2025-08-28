@@ -1306,7 +1306,7 @@ def payment_callback():
         data  = {
         "ver": 6,
         "source": "DM_API",
-        "device": " kasa",
+        "device": " kasar",
         "tag": "",
         "need_pf_img": "0",
         "need_pf_pdf": "0",
