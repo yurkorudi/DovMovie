@@ -733,8 +733,8 @@ def autoopen_shift():
       "type": 1,
       "fiscal": {"task": 0}
     }
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-pkg"
-    result = rro_send(payload, url)
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    result = rro_send(payload=data, url=url)
     print(result)
     
 
