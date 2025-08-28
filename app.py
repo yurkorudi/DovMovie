@@ -59,7 +59,7 @@ app.config['DM_HOST'] = '194.44.116.57'
 app.config['DM_PORT'] = 3939
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['DM_DEVICE'] = 'kasa'
+app.config['DM_DEVICE'] = 'kasar'
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
 LIQPAY_PUBLIC_KEY = 'i40470776966'
 LIQPAY_PRIVATE_KEY = 'mHLYgc7FLwKeqBrpp6Pay4O7a4GBr9gueYdJLeKB'
@@ -790,7 +790,7 @@ def cash_prod():
     data  = {
     "ver": 6,
     "source": "DM_API",
-    "device": "kasa",
+    "device": "kasar",
     "tag": "",
     "need_pf_img": "0",
     "need_pf_pdf": "0",
@@ -870,7 +870,7 @@ def card_prod():
     data  = {
     "ver": 6,
     "source": "DM_API",
-    "device": "kasa",
+    "device": "kasar",
     "tag": "",
     "need_pf_img": "0",
     "need_pf_pdf": "0",
