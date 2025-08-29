@@ -277,8 +277,12 @@ def double_char_fig(num: str) -> list[str]:
             result[i] += ascii_digits[digit][i] + "  "
     return result
 
-def build_comment_for_receipt(items, session_dt_str):
+def build_comment_for_receipt(items, session_dt_str, title=None):
     lines = []
+    lines.append("ЦЕНТР ДОВЖЕНКА, вул. Червоної Калини 81")
+    lines.append("")
+    lines.append("КВИТОК НА ПОКАЗ ФІЛЬМУ: {title}")
+    lines.append("")
     lines.append(f"СЕАНС: {session_dt_str}")
     lines.append("-" * 32)
     for idx, it in enumerate(items, start=1):
@@ -694,7 +698,7 @@ def open_shift():
     payload = {
       "ver": 6,
       "source": "CenterDovzhenkoCinema",
-      "device": device,
+      "device": "kasar",
       "tag": f"open_shift_{uuid4()}",
       "type": 1,
       "fiscal": {"task": 0}
@@ -711,7 +715,7 @@ def close_shift():
     payload = {
       "ver": 6,
       "source": "CenterDovzhenkoCinema",
-      "device": device,
+      "device": "kasar",
       "tag": f"close_shift_{uuid4()}",
       "type": 1,
       "fiscal": {"task": 11, 'cashier': 'Рецепція центру Довженка'}
@@ -782,10 +786,10 @@ def cash_prod():
         })
     db.session.commit()
     
-    
-    time_str = '15:30'  
+    title = item['movie']
+    time_str = item['sessionTime']
     email = item['email']
-    comments = build_comment_for_receipt(items_for_banner, time_str)
+    comments = build_comment_for_receipt(items_for_banner, time_str, title)
     price = sum/len(data)
     data  = {
     "ver": 6,
@@ -863,8 +867,9 @@ def card_prod():
     price = 100
     row = item['row']
     seat = item['seatNumber']
-    time_str = '15:30'
-    comments = build_comment_for_receipt(items_for_banner, time_str)
+    time_str = item['sessionTime']
+    title = item['movie']
+    comments = build_comment_for_receipt(items_for_banner, time_str, title)
     print(comments)
 
     data  = {
