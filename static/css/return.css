@@ -1,0 +1,11 @@
+.kasa-menu{
+    min-width: 400px;
+}
+
+.place{
+    cursor: not-allowed;
+}
+
+.place.occupied {
+  cursor: pointer;
+}

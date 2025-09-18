@@ -88,7 +88,6 @@ class MainViev(BaseView):
         
         return self.render('admin/kasa.html')
     
-    
     def is_accessible(self):
         return session.get('is_admin')
 
@@ -577,7 +576,9 @@ def admin_logout():
 def admin_kasa():
     return render_template('admin/kasa.html')
 
-
+@app.route('/admin/return', methods=['GET'])
+def admin_return():
+    return render_template('admin/return.html')
 
 
 

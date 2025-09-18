@@ -27,7 +27,7 @@ main{
 .kasa-menu{
     display: flex;
     flex-direction: column;
-    width: min-content;
+    width: max-content;
     gap: 15px;
 }
 
