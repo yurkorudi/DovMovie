@@ -1290,9 +1290,10 @@ def payment_callback():
         print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
         sum = 0 
         items_for_banner = []   
-        user_inf = urllib.parse.unquote(confirmation_data)
+        print("Parsing user info...")
         
         try:
+            user_inf = urllib.parse.unquote(confirmation_data)
             data = ast.literal_eval(user_inf)
         except Exception as e:
             return {"error": f"Cannot parse data: {e}", "decoded": user_inf}, 400
