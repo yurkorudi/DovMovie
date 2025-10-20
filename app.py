@@ -1296,7 +1296,7 @@ def payment_callback():
             user_inf = urllib.parse.unquote(confirmation_data)
             data = ast.literal_eval(user_inf)
         except Exception as e:
-            return {"error": f"Cannot parse data: {e}", "decoded": user_inf}, 400
+            print("Data decode error:", e)
             
         
         # user_inf = coerce_to_dict(confirmation_data)
