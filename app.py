@@ -1282,11 +1282,17 @@ def payment_callback():
         # db.session.commit()
     
     if status == "sandbox":
+        print("if heandled sandbox")
         sum = 0 
         items_for_banner = []   
         user_inf = coerce_to_dict(confirmation_data)
+        print(" user info gone")
+
+
 
         for i in user_inf['seats']:
+            print('_________________________________________ADDING TICKETS_________________________________________')
+            
             print(i)
             tk = Ticket(
                 seatRow=i['row'] +1 ,
