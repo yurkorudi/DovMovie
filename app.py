@@ -1218,7 +1218,7 @@ def payment_callback():
     signature = request.form.get("signature", "")  
     print("SIGNATURE GOT" ) 
     print("DATA:", data_b64)
-    print("SIGNATURE:", signature)
+    print("SIGNATURE:", signature)  
     try:
         confirmation_data = request.args.get('confirmation_data')
         user_cinf = coerce_to_dict(confirmation_data)
@@ -1227,7 +1227,7 @@ def payment_callback():
         expected_sign = base64.b64encode(
         hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
         ).decode()
-        print("EXPECTED SIGNATURE" )
+        print("EXPECTED SIGNATURE", expected_sign)
 
         if signature != expected_sign:
             print(f"Expected: {expected_sign}, got: {signature}")
