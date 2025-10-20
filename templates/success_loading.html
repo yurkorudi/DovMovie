@@ -28,7 +28,7 @@
 
     <script>
         const orderId = "{{ order_id }}";
-        const confirmationData = JSON.parse({{ confirmation_data | tojson | safe }});
+        const confirmationData = JSON.parse("{{ confirmation_data }}");
         function checkStatus() {
             fetch(`/check_payment_status?order_id=${orderId}`)
             .then(res => res.json())

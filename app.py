@@ -60,6 +60,7 @@ app.config['DM_PORT'] = 3939
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['DM_DEVICE'] = 'kasar'
+app.config['DM_ONLINE_DEVICE'] = 'kasar_online'
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
 LIQPAY_PUBLIC_KEY = 'i40470776966'
 LIQPAY_PRIVATE_KEY = 'mHLYgc7FLwKeqBrpp6Pay4O7a4GBr9gueYdJLeKB'
@@ -735,7 +736,7 @@ def autoopen_shift():
       "fiscal": {"task": 0}
     }
     url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-    result = rro_send(payload=data, url=url)
+    result = rro_send(payload=payload, url=url)
     print(result)
     
 
