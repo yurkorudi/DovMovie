@@ -1282,11 +1282,24 @@ def payment_callback():
         # db.session.commit()
     
     if status == "sandbox":
-        print("if heandled sandbox")
+        
+        import urllib.parse
+        import ast
+        
+        
+        print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
         sum = 0 
         items_for_banner = []   
-        user_inf = coerce_to_dict(confirmation_data)
-        print(" user info gone")
+        user_inf = urllib.parse.unquote(confirmation_data)
+        
+        try:
+            data = ast.literal_eval(user_inf)
+        except Exception as e:
+            return {"error": f"Cannot parse data: {e}", "decoded": user_inf}, 400
+            
+        
+        # user_inf = coerce_to_dict(confirmation_data)
+        print(" user info gone well ", user_inf)
 
 
 
