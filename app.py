@@ -1241,14 +1241,25 @@ def payment_callback():
     
     print("__________________________________> STATUS:: ")
     print(status)
+    
+    print("ORDER ID:", order_id)
 
     payment = Payment.query.filter_by(id=order_id).first()
-    if not payment:
-        return "Order not found, 404"
     
+    print ("PAYMENT RECORD:", payment)
+    if not payment:
+        print("Payment not found")
+        return "Payment not found", 404
     # session = payment.sessionId
+    
+    
     payment.status = str(payload)
+    
+    print("UPDATING PAYMENT STATUS TO:", payment.status)
+    
     db.session.commit()
+    
+    print("PAYMENT STATUS UPDATED")
 
     # if payment.status != "success":
     #     payment.status = status
