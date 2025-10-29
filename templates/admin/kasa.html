@@ -307,7 +307,7 @@ document.getElementById('pay-return').addEventListener('click', () => {
     const div = document.createElement('div');
     div.className = 'session-item';
     let [hours, minutes] = s.time.split(":").map(Number);
-    hours = (hours + 3) % 24;
+    hours = (hours + 2) % 24;
     div.innerHTML = `
       <strong>${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}</strong>
       <span>${s.title}</span>
