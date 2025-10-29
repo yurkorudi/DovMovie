@@ -148,7 +148,7 @@
         if(todaySessionTime != undefined){
           const matchingSessions = data.filter(session => {
             let [hours, minutes] = session.time.split(":").map(Number);
-            hours = (hours + 3) % 24;
+            hours = (hours + 2) % 24;
             const sessionTimeAdjusted = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
             return sessionTimeAdjusted === todaySessionTime;
           });
