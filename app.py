@@ -1411,17 +1411,11 @@ def payment_callback():
 
 
 
-@app.route('/final_success', methods=['POST'])
+@app.route('/final_success', methods=['GET'])
 def success():
-    data = request.get_json()
-    print("_________________________TYpe__________________-")
-    print(type(data))
-    if not data:
-        return "Missing JSON data", 400
-    success_pay = data.get('is_success')
-    datar = data.get('info')
-    print(type(datar))
     
+    success_pay = request.args.get('is_success')
+    datar = request.args.get('info')
     print('DATA FOR FINAL SUCCESS: ', datar)
     if not datar:
         datar = None
