@@ -32,6 +32,9 @@ import uuid, json, base64, hashlib
 from liqpay.liqpay import LiqPay
 import pyfiglet
 from pyfiglet import figlet_format
+import urllib.parse
+import ast
+import re
 
 
 from reportlab.lib.pagesizes import A6
@@ -403,30 +406,44 @@ def api_tickets_list():
 
 
 def coerce_to_dict(raw: str):
-    # 1) розекранити URL/HTML
-    s = html.unescape(raw)
+    if not raw:
+        raise ValueError("Порожній рядок")
 
-    # 2) якщо рядок обгорнутий лапками — зняти їх
+    s = raw
+
+    # 1️⃣ Повторно розекрануємо escape-послідовності (\u0026#39; → &#39;)
+    s = s.replace("\\u0026#39;", "&#39;")
+    s = s.replace("\\\"", '"')  # \" → "
+
+    # 2️⃣ Розекранування HTML (декілька разів, якщо вкладені)
+    for _ in range(3):
+        new_s = html.unescape(s)
+        if new_s == s:
+            break
+        s = new_s
+
+    # 3️⃣ Прибираємо зовнішні лапки, якщо вони обгортають об'єкт
+    s = s.strip()
     if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
-        inner = s[1:-1].strip()
-        if inner.startswith("{") and inner.endswith("}"):
-            s = inner
+        s = s[1:-1]
 
-    # 3) зрідка всередині трапляються \u0027 (апостроф)
+    # 4️⃣ Заміна внутрішніх escape для апострофів
     s = s.replace("\\u0027", "'").replace("\\u2019", "'")
 
-    # 4) спроба розпарсити як Python-словник
+    # 5️⃣ Спроба Python literal
     try:
         return ast.literal_eval(s)
     except Exception:
         pass
 
-    # 5) якщо не вдалося — замінити одинарні лапки на подвійні та пробувати як JSON
+    # 6️⃣ Спроба JSON після заміни одинарних лапок
+    s_jsonish = re.sub(r"'", '"', s)
+    s_jsonish = re.sub(r'None', 'null', s_jsonish)
     try:
-        s_jsonish = re.sub(r"'", '"', s)
         return json.loads(s_jsonish)
     except Exception as e:
-        raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
+        raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
+
 
 
 
@@ -1288,8 +1305,7 @@ def payment_callback():
     
     if status == "sandbox":
         
-        import urllib.parse
-        import ast
+        
         
         
         print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
