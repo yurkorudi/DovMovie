@@ -406,39 +406,44 @@ def api_tickets_list():
 
 
 def coerce_to_dict(raw: str):
-    """Розпаковує будь-яку закодовану JSON- або Python-подібну структуру до dict."""
-    if not raw:
-        raise ValueError("Порожній рядок")
+    """
+    Перетворює будь-який html/url/строковий JSON у Python-словник або список.
+    Справляється з лапками, HTML-escape та подвійними JSON.
+    """
+    if not isinstance(raw, str):
+        return raw
 
-    # 1️⃣ Повторно розекранити HTML сутності (навіть якщо вкладені)
+    # 1. Розекранити HTML
     s = html.unescape(raw)
-    for _ in range(2):
-        s = html.unescape(s)
 
-    # 2️⃣ Прибрати зовнішні лапки, якщо є
-    s = s.strip()
+    # 2. Декодувати URL-escape (%20, %27 тощо)
+    s = urllib.parse.unquote(s)
+
+    # 3. Якщо є зовнішні лапки — зняти їх
     if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
         s = s[1:-1]
 
-    # 3️⃣ Спробувати одразу JSON
+    # 4. Замінити html-коди лапок типу &#39; та &#34;
+    s = s.replace("&#39;", "'").replace("&quot;", '"').replace("&#34;", '"')
+
+    # 5. Якщо схоже на JSON (подвійні лапки навколо ключів) — пробуємо json.loads
     try:
         return json.loads(s)
     except Exception:
         pass
 
-    # 4️⃣ Якщо JSON не спрацював, спробуємо Python literal
+    # 6. Якщо одинарні лапки — спробувати ast.literal_eval
     try:
         return ast.literal_eval(s)
     except Exception:
         pass
 
-    # 5️⃣ Якщо все ще рядок — замінимо одинарні лапки на подвійні (обережно)
-    s_jsonish = re.sub(r"'", '"', s)
-    s_jsonish = re.sub(r'None', 'null', s_jsonish)
+    # 7. Якщо все ще не вийшло — грубо замінюємо одинарні лапки на подвійні і знову json
     try:
+        s_jsonish = re.sub(r"'", '"', s)
         return json.loads(s_jsonish)
     except Exception as e:
-        raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
+        raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
 
 
 
