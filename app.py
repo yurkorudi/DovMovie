@@ -406,44 +406,43 @@ def api_tickets_list():
 
 
 def coerce_to_dict(raw: str):
-    """
-    Перетворює будь-який html/url/строковий JSON у Python-словник або список.
-    Справляється з лапками, HTML-escape та подвійними JSON.
-    """
-    if not isinstance(raw, str):
-        return raw
+    if not raw:
+        raise ValueError("Порожній рядок")
 
-    # 1. Розекранити HTML
-    s = html.unescape(raw)
+    s = raw
 
-    # 2. Декодувати URL-escape (%20, %27 тощо)
-    s = urllib.parse.unquote(s)
+    # 1️⃣ Повторно розекрануємо escape-послідовності (\u0026#39; → &#39;)
+    s = s.replace("\\u0026#39;", "&#39;")
+    s = s.replace("\\\"", '"')  # \" → "
 
-    # 3. Якщо є зовнішні лапки — зняти їх
+    # 2️⃣ Розекранування HTML (декілька разів, якщо вкладені)
+    for _ in range(3):
+        new_s = html.unescape(s)
+        if new_s == s:
+            break
+        s = new_s
+
+    # 3️⃣ Прибираємо зовнішні лапки, якщо вони обгортають об'єкт
+    s = s.strip()
     if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
         s = s[1:-1]
 
-    # 4. Замінити html-коди лапок типу &#39; та &#34;
-    s = s.replace("&#39;", "'").replace("&quot;", '"').replace("&#34;", '"')
+    # 4️⃣ Заміна внутрішніх escape для апострофів
+    s = s.replace("\\u0027", "'").replace("\\u2019", "'")
 
-    # 5. Якщо схоже на JSON (подвійні лапки навколо ключів) — пробуємо json.loads
-    try:
-        return json.loads(s)
-    except Exception:
-        pass
-
-    # 6. Якщо одинарні лапки — спробувати ast.literal_eval
+    # 5️⃣ Спроба Python literal
     try:
         return ast.literal_eval(s)
     except Exception:
         pass
 
-    # 7. Якщо все ще не вийшло — грубо замінюємо одинарні лапки на подвійні і знову json
+    # 6️⃣ Спроба JSON після заміни одинарних лапок
+    s_jsonish = re.sub(r"'", '"', s)
+    s_jsonish = re.sub(r'None', 'null', s_jsonish)
     try:
-        s_jsonish = re.sub(r"'", '"', s)
         return json.loads(s_jsonish)
     except Exception as e:
-        raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
+        raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
 
 
 
