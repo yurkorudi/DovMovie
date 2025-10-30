@@ -1411,12 +1411,16 @@ def payment_callback():
 
 
 
-@app.route('/final_success', methods=['GET'])
+@app.route('/final_success', methods=['GET', 'POST'])
 def success():
-    
-    success_pay = request.args.get('is_success')
-    datar = request.args.get('info')
-    print('DATA FOR FINAL SUCCESS: ', datar)
+    if request.method == 'POST':
+        data = request.get_json()
+        success_pay = data.get('is_success')
+        datar = data.get('info')
+    else:
+        success_pay = request.args.get('is_success')
+        datar = request.args.get('info')
+        print('DATA FOR FINAL SUCCESS: ', datar)
     if not datar:
         datar = None
         print("Error getting final success data:", e)
