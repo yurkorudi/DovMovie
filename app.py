@@ -1321,7 +1321,7 @@ def payment_callback():
             print("Data decode error:", e)
             
         
-        # user_inf = coerce_to_dict(confirmation_data)
+        user_inf = coerce_to_dict(confirmation_data)
         print(" user info gone well ", user_inf)
 
 
