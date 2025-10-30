@@ -1411,18 +1411,12 @@ def payment_callback():
 
 
 
-@app.route('/final_success', methods=['GET', 'POST'])
+@app.route('/final_success', methods=['GET'])
 def success():
-    if request.method == 'POST':
-        data = request.get_json()
-        print("____________________________POSTDATE___________________________")
-        print(data)
-        success_pay = data.get('is_success')
-        datar = data.get('info')
-    else:
-        success_pay = request.args.get('is_success')
-        datar = request.args.get('info')
-        print('DATA FOR FINAL SUCCESS: ', datar)
+    
+    success_pay = request.args.get('is_success')
+    datar = request.args.get('info')
+    print('DATA FOR FINAL SUCCESS: ', datar)
     if not datar:
         datar = None
         print("Error getting final success data:", e)
@@ -1430,8 +1424,7 @@ def success():
     
     if success_pay:
         user_inf = coerce_to_dict(datar)
-        print("_____________________-USERinfo____________________")
-        print(user_inf)
+
         for i in user_inf.get('seats'):
             print(i)
             tk = Ticket(

@@ -30,42 +30,17 @@
         const orderId = "{{ order_id }}";
         const confirmationData = "{{ confirmation_data }}";
         function checkStatus() {
-        fetch(`/check_payment_status?order_id=${orderId}`)
+            fetch(`/check_payment_status?order_id=${orderId}`)
             .then(res => res.json())
             .then(data => {
-                // Перевіряємо статус платежу
                 if (data.status === 'success' || data.status === 'sandbox') {
-                    // Дані підтвердження
-                    const payload = {
-                        order_id: orderId,
-                        is_success: true,
-                        info: confirmationData  // тут твій об’єкт
-                    };
-
-                    // Відправка POST на /final_success
-                    fetch('/final_success', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(res => res.text())
-                    .then(html => {
-                        // Показуємо HTML сторінку
-                        document.open();
-                        document.write(html);
-                        document.close();
-                    })
-                    .catch(err => {
-                        console.error('Error posting to final_success:', err);
-                    });
-                } else {
-                    // Якщо платіж неуспішний, можна зробити редірект із параметром is_success=false
-                    window.location.href = `/final_success?order_id=${orderId}&is_success=false`;
+                const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
+                window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${encodedInfo}`;
                 }
-            })
-            .catch(err => {
-                console.error('Error checking payment status:', err);
-            });
+                else {
+                    window.location.href = `/final_success?order_id=${orderId}&is_success=false&info=None`;
+            }
+        });
         }
     
         setInterval(checkStatus, 1000);
