@@ -1129,7 +1129,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
-        "server_url": f"http://178.62.106.58/payment_callback",
+        "server_url": f"http://178.62.106.58/payment_callback?confirmation_data={flask_session.get('confirmation_data', {})}",
         "sandbox": "1"
     }
         
@@ -1228,8 +1228,6 @@ def payment_callback():
     PRIVATE_KEY = LIQPAY_PRIVATE_KEY
     print("_________________________________________ACTIVATE_________________________________________")
     print(">>> /payment_callback HIT", request.method, request.form or request.args)
-    # sing = request.form['data']
-    print("SING GOT" )
     data_b64 = request.form.get("data", "")
     print("DATA GOT" )
     signature = request.form.get("signature", "")  
@@ -1254,9 +1252,6 @@ def payment_callback():
         print("Error decoding data:", e)
     
     
-
-        
-        
     try:
         confirmation_data = request.args.get('confirmation_data')
         confirmation_data = coerce_to_dict(confirmation_data)
