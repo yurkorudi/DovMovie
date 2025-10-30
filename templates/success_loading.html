@@ -37,7 +37,7 @@
                 const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
                 window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${encodedInfo}`;
                 }
-                else if (data.status === 'pending' || data.status === 'failure') {
+                else if (data.status === 'pending' || data.status === 'failure') {}
                     window.location.href = `/final_success?order_id=${orderId}&is_success=False`;)
             .catch(console.error);
         }
