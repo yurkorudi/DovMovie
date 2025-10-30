@@ -39,7 +39,8 @@
                 }
                 else if (data.status === 'pending' || data.status === 'failure') {}
                     window.location.href = `/final_success?order_id=${orderId}&is_success=False`;
-            .catch(console.error);
+            }).catch(err => {
+                console.error('Error checking payment status:', err);
         }
 
         setInterval(checkStatus, 1000);
