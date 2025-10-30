@@ -32,6 +32,9 @@ import uuid, json, base64, hashlib
 from liqpay.liqpay import LiqPay
 import pyfiglet
 from pyfiglet import figlet_format
+import urllib.parse
+import ast
+import re
 
 
 from reportlab.lib.pagesizes import A6
@@ -403,30 +406,40 @@ def api_tickets_list():
 
 
 def coerce_to_dict(raw: str):
-    # 1) розекранити URL/HTML
+    """Розпаковує будь-яку закодовану JSON- або Python-подібну структуру до dict."""
+    if not raw:
+        raise ValueError("Порожній рядок")
+
+    # 1️⃣ Повторно розекранити HTML сутності (навіть якщо вкладені)
     s = html.unescape(raw)
+    for _ in range(2):
+        s = html.unescape(s)
 
-    # 2) якщо рядок обгорнутий лапками — зняти їх
+    # 2️⃣ Прибрати зовнішні лапки, якщо є
+    s = s.strip()
     if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
-        inner = s[1:-1].strip()
-        if inner.startswith("{") and inner.endswith("}"):
-            s = inner
+        s = s[1:-1]
 
-    # 3) зрідка всередині трапляються \u0027 (апостроф)
-    s = s.replace("\\u0027", "'").replace("\\u2019", "'")
+    # 3️⃣ Спробувати одразу JSON
+    try:
+        return json.loads(s)
+    except Exception:
+        pass
 
-    # 4) спроба розпарсити як Python-словник
+    # 4️⃣ Якщо JSON не спрацював, спробуємо Python literal
     try:
         return ast.literal_eval(s)
     except Exception:
         pass
 
-    # 5) якщо не вдалося — замінити одинарні лапки на подвійні та пробувати як JSON
+    # 5️⃣ Якщо все ще рядок — замінимо одинарні лапки на подвійні (обережно)
+    s_jsonish = re.sub(r"'", '"', s)
+    s_jsonish = re.sub(r'None', 'null', s_jsonish)
     try:
-        s_jsonish = re.sub(r"'", '"', s)
         return json.loads(s_jsonish)
     except Exception as e:
-        raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
+        raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
+
 
 
 
@@ -1278,8 +1291,7 @@ def payment_callback():
     
     if status == "sandbox":
         
-        import urllib.parse
-        import ast
+        
         
         
         print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
