@@ -1249,33 +1249,19 @@ def payment_callback():
         decoded_json = base64.b64decode(data_b64).decode('utf-8')
         data = json.loads(decoded_json)
         print("_________________________________________DECODED DATA_________________________________________ \n \n \n \n \n \n ")
-        print("✅ DECODED DATA:", data)
+        print("DECODED DATA:", data)
     except Exception as e:
-        print("❌ Error decoding data:", e)
+        print("Error decoding data:", e)
     
     
-    try: 
-        confirmation_data = flask_session['confirmation_data']
+        
+        
+    try:
+        confirmation_data = request.args.get('confirmation_data')
+        confirmation_data = coerce_to_dict(confirmation_data)
     except Exception as e:
-        print("Error getting confirmation_data:", e)
-        confirmation_data = None
-    # try:
-    #     confirmation_data = request.args.get('confirmation_data')
-    #     user_cinf = coerce_to_dict(confirmation_data)
+        pass
 
-    #     print("_________________________________________ACTIVATE_________________________________________")
-    #     expected_sign = base64.b64encode(
-    #     hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
-    #     ).decode()
-    #     print("EXPECTED SIGNATURE", expected_sign)
-
-    #     if signature != expected_sign:
-    #         print(f"Expected: {expected_sign}, got: {signature}")
-    #         return "Invalid signature", 403
-    
-    # except Exception as e:
-    #     print("Error in signature verification:", e)
-    
 
     payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
     order_id = payload.get("order_id")
@@ -1296,32 +1282,14 @@ def payment_callback():
     
     
     payment.status = status
-    
+    payment.liqpay_response = json.dumps(payload)
     print("UPDATING PAYMENT STATUS TO:", payment.status)
     
     db.session.commit()
     
     print("PAYMENT STATUS UPDATED")
 
-    # if payment.status != "success":
-    #     payment.status = status
-    #     payment.liqpay_response = json.dumps(payload, ensure_ascii=False)
 
-        # for i in user_cinf.get('seats'):
-        #     print(i)
-        #     tk = Ticket(
-        #         seatRow=i['row'] +1 ,
-        #         seatNumb=i['seatNumber'] + 1,
-        #         sessionId=user_inf.get('session_id'),
-        #         cost=i['cost'],
-        #         payment_method='online',
-        #         date_of_purchase=datetime.now(),
-        #         first_name=user_inf.get('first_name'),
-        #         last_name=user_inf.get('last_name'),
-        #         email=user_inf.get('email'))
-        #     print("Adding ticket:", tk)
-        #     db.session.add(tk)
-        # db.session.commit()
     
     if status == "sandbox":
         
