@@ -1219,6 +1219,11 @@ def payment_callback():
     print("SIGNATURE GOT" ) 
     print("DATA:", data_b64)
     print("SIGNATURE:", signature)  
+    try: 
+        confirmation_data = request.args.get('confirmation_data')
+    except Exception as e:
+        print("Error getting confirmation_data:", e)
+        confirmation_data = None
     # try:
     #     confirmation_data = request.args.get('confirmation_data')
     #     user_cinf = coerce_to_dict(confirmation_data)
