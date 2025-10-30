@@ -1400,13 +1400,15 @@ def payment_callback():
 
 @app.route('/final_success', methods=['GET'])
 def success():
-    success_pay = request.args.get('is_success')
-    datar = request.args.get('info')
-    print('DATA FOR FINAL SUCCESS: ', datar)
-    if not datar:
-        datar = 'hello'
-    if success_pay is None:
+    try:
+        success_pay = request.args.get('is_success')
+        datar = request.args.get('info')
+        print('DATA FOR FINAL SUCCESS: ', datar)
+    except Exception as e:
+        datar = None
         success_pay = False
+        print("Error getting final success data:", e)
+
     
     if success_pay:
         user_inf = coerce_to_dict(datar)
