@@ -536,7 +536,7 @@ def ticket_pdf():
 
     sess = Showtime.query.filter_by(id=data.get('session_id')).first() if data.get('session_id') else None
     if sess and getattr(sess, 'dateTime', None):
-        dt_str = (sess.dateTime + timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
+        dt_str = (sess.dateTime + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
     else:
         dt_str = "-"
     p.drawString(margin_x, y, f"Сеанс: {dt_str}")
