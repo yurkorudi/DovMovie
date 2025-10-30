@@ -446,6 +446,8 @@ def ticket_pdf():
 
     try:
         data = coerce_to_dict(data_param)
+        print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
+        print(data)
     except Exception as e:
         print('__________________________ DATA DECODE ERROR ___________________________ \n \n \n \n \n \n ')
         print(data_param)
