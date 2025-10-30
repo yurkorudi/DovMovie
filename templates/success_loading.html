@@ -29,19 +29,21 @@
     <script>
         const orderId = "{{ order_id }}";
         const confirmationData = "{{ confirmation_data }}";
-        function checkStatus() {
-            fetch(`/check_payment_status?order_id=${orderId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success' || data.status === 'sandbox') {
-                const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
-                window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${encodedInfo}`;
-                }
-                else {
-                    window.location.href = `/final_success?order_id=${orderId}&is_success=false&info=None`;
-            }
+        fetch('/final_success', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                order_id: orderId,
+                is_success: true,
+                info: confirmationData
+            })
+        })
+        .then(res => res.text())
+        .then(html => {
+            document.open();
+            document.write(html);
+            document.close();
         });
-        }
     
         setInterval(checkStatus, 1000);
 </script>
