@@ -403,44 +403,30 @@ def api_tickets_list():
 
 
 def coerce_to_dict(raw: str):
-    import html, json, ast, re
-
     # 1) розекранити URL/HTML
     s = html.unescape(raw)
 
-    # 🩹 НОВЕ: прибрати зовнішні лапки, якщо вони обгортають увесь об’єкт
-    # наприклад: "{'movie': '...'}" → {'movie': '...'}
+    # 2) якщо рядок обгорнутий лапками — зняти їх
     if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
         inner = s[1:-1].strip()
-        # перевіримо, що всередині дійсно словник або JSON
         if inner.startswith("{") and inner.endswith("}"):
             s = inner
-
-    # 2) поки це валідний JSON – розпаковуємо
-    for _ in range(3):
-        try:
-            v = json.loads(s)
-            if isinstance(v, (dict, list)):
-                return v
-            if isinstance(v, str):
-                s = v
-                continue
-        except Exception:
-            break
 
     # 3) зрідка всередині трапляються \u0027 (апостроф)
     s = s.replace("\\u0027", "'").replace("\\u2019", "'")
 
-    # 4) спроба розпарсити Python-літерал
+    # 4) спроба розпарсити як Python-словник
     try:
         return ast.literal_eval(s)
     except Exception:
-        # 5) остання спроба: замінити одиночні лапки на подвійні і ще раз json
-        try:
-            s_jsonish = re.sub(r"'", '"', s)
-            return json.loads(s_jsonish)
-        except Exception as e:
-            raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
+        pass
+
+    # 5) якщо не вдалося — замінити одинарні лапки на подвійні та пробувати як JSON
+    try:
+        s_jsonish = re.sub(r"'", '"', s)
+        return json.loads(s_jsonish)
+    except Exception as e:
+        raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
 
 
 
