@@ -440,6 +440,7 @@ def ticket_pdf():
     import os
     print('__________________________ TICKET PDF ___________________________ \n \n \n \n \n \n ')    
     data_param = request.args.get('data_')
+    print('DATA PARAM:', data_param)
     if not data_param:
         return "Missing data_", 400
 
