@@ -1320,8 +1320,17 @@ def payment_callback():
         except Exception as e:
             print("Data decode error:", e)
             
-        
-        # user_inf = coerce_to_dict(confirmation_data)
+        print('_________________________________________USER INFO PARSED_________________________________________')
+        print('\n \n \n \n \n ')
+        try:
+            user_inf = coerce_to_dict(confirmation_data)
+        except Exception as e:
+            print("Error coercing user info:", e)
+            
+        print(confirmation_data)
+        print('_________________________________________USER INFO COERCE DONE_________________________________________')
+        print('\n \n \n \n \n ')
+        print(user_inf)
         print(" user info gone well ", user_inf)
 
 
