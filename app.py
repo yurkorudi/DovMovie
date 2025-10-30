@@ -1415,6 +1415,8 @@ def payment_callback():
 def success():
     if request.method == 'POST':
         data = request.get_json()
+        print("____________________________POSTDATE___________________________")
+        print(data)
         success_pay = data.get('is_success')
         datar = data.get('info')
     else:
