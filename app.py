@@ -1430,7 +1430,8 @@ def success():
     
     if success_pay:
         user_inf = coerce_to_dict(datar)
-
+        print("_____________________-USERinfo____________________")
+        print(user_inf)
         for i in user_inf.get('seats'):
             print(i)
             tk = Ticket(
