@@ -1255,7 +1255,7 @@ def payment_callback():
     
     
     try: 
-        confirmation_data = request.args.get('confirmation_data')
+        confirmation_data = flask_session['confirmation_data']
     except Exception as e:
         print("Error getting confirmation_data:", e)
         confirmation_data = None
