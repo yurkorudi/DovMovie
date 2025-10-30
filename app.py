@@ -1225,6 +1225,7 @@ def check_payment_status():
     
 @app.route('/payment_callback', methods=['POST', 'GET'])
 def payment_callback():
+    PRIVATE_KEY = LIQPAY_PRIVATE_KEY
     print("_________________________________________ACTIVATE_________________________________________")
     print(">>> /payment_callback HIT", request.method, request.form or request.args)
     # sing = request.form['data']
@@ -1235,6 +1236,24 @@ def payment_callback():
     print("SIGNATURE GOT" ) 
     print("DATA:", data_b64)
     print("SIGNATURE:", signature)  
+    
+    
+    check_string = PRIVATE_KEY + data_b64 + PRIVATE_KEY
+    generated_signature = base64.b64encode(
+        hashlib.sha1(check_string.encode('utf-8')).digest()
+    ).decode('utf-8')
+
+    print("EXPECTED SIGNATURE:", generated_signature)
+    
+    try:
+        decoded_json = base64.b64decode(data_b64).decode('utf-8')
+        data = json.loads(decoded_json)
+        print("_________________________________________DECODED DATA_________________________________________ \n \n \n \n \n \n ")
+        print("✅ DECODED DATA:", data)
+    except Exception as e:
+        print("❌ Error decoding data:", e)
+    
+    
     try: 
         confirmation_data = flask_session.get('confirmation_data', {})
     except Exception as e:
@@ -1321,6 +1340,7 @@ def payment_callback():
             print("Data decode error:", e)
             
         print('_________________________________________USER INFO PARSED_________________________________________')
+        print(confirmation_data)
         print('\n \n \n \n \n ')
         try:
             user_inf = coerce_to_dict(confirmation_data)
