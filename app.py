@@ -469,6 +469,11 @@ def ticket_pdf():
 
     margin_x = 6 * mm
     header_bottom = height - banner_h - 2 * mm
+    print('__________________________ ___________________________ \n \n \n \n \n \n ')
+    
+    print(type(data))
+    
+    print('__________________________ ___________________________ \n \n \n \n \n \n ')
 
     film = Movie.query.filter_by(title=data.get('movie')).first()
     poster_path = film.poster if film and film.poster else 'static/img/default_poster.png'
