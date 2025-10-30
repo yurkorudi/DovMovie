@@ -1322,8 +1322,11 @@ def payment_callback():
             
         print('_________________________________________USER INFO PARSED_________________________________________')
         print('\n \n \n \n \n ')
-        
-        user_inf = coerce_to_dict(confirmation_data)
+        try:
+            user_inf = coerce_to_dict(confirmation_data)
+        except Exception as e:
+            print("Error coercing user info:", e)
+            
         print(confirmation_data)
         print('_________________________________________USER INFO COERCE DONE_________________________________________')
         print('\n \n \n \n \n ')
