@@ -1219,22 +1219,22 @@ def payment_callback():
     print("SIGNATURE GOT" ) 
     print("DATA:", data_b64)
     print("SIGNATURE:", signature)  
-    try:
-        confirmation_data = request.args.get('confirmation_data')
-        user_cinf = coerce_to_dict(confirmation_data)
+    # try:
+    #     confirmation_data = request.args.get('confirmation_data')
+    #     user_cinf = coerce_to_dict(confirmation_data)
 
-        print("_________________________________________ACTIVATE_________________________________________")
-        expected_sign = base64.b64encode(
-        hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
-        ).decode()
-        print("EXPECTED SIGNATURE", expected_sign)
+    #     print("_________________________________________ACTIVATE_________________________________________")
+    #     expected_sign = base64.b64encode(
+    #     hashlib.sha1(LIQPAY_PRIVATE_KEY.encode() + data_b64.encode() + LIQPAY_PRIVATE_KEY.encode()).digest()
+    #     ).decode()
+    #     print("EXPECTED SIGNATURE", expected_sign)
 
-        if signature != expected_sign:
-            print(f"Expected: {expected_sign}, got: {signature}")
-            return "Invalid signature", 403
+    #     if signature != expected_sign:
+    #         print(f"Expected: {expected_sign}, got: {signature}")
+    #         return "Invalid signature", 403
     
-    except Exception as e:
-        print("Error in signature verification:", e)
+    # except Exception as e:
+    #     print("Error in signature verification:", e)
     
 
     payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
@@ -1252,10 +1252,10 @@ def payment_callback():
     if not payment:
         print("Payment not found")
         return "Payment not found", 404
-    # session = payment.sessionId
+    # session = payment.sessionI
     
     
-    payment.status = str(payload)
+    payment.status = status
     
     print("UPDATING PAYMENT STATUS TO:", payment.status)
     
