@@ -406,39 +406,27 @@ def coerce_to_dict(raw: str):
     # 1) розекранити URL/HTML
     s = html.unescape(raw)
 
-    # 2) поки це валідний JSON – розпаковуємо
-    # часто перший json.loads повертає знову str (бо це був JSON-рядок)
-    for _ in range(3):  # більше й не треба, але надійно
-        try:
-            v = json.loads(s)
-            if isinstance(v, (dict, list)):
-                return v
-            if isinstance(v, str):
-                s = v
-                continue
-        except Exception:
-            break
+    # 2) якщо рядок обгорнутий лапками — зняти їх
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
+        inner = s[1:-1].strip()
+        if inner.startswith("{") and inner.endswith("}"):
+            s = inner
 
-    # 3) прибрати ЗОВНІШНІ лапки, якщо є (саме лапки, не пробіли)
-    t = s
-    if len(t) >= 2 and t[0] == t[-1] and t[0] in ("'", '"'):
-        s = t[1:-1]
-    else:
-        s = t
-
-    # 4) зрідка всередині трапляються \u0027 (апостроф)
+    # 3) зрідка всередині трапляються \u0027 (апостроф)
     s = s.replace("\\u0027", "'").replace("\\u2019", "'")
 
-    # 5) безпечне перетворення python-літералу у dict
+    # 4) спроба розпарсити як Python-словник
     try:
         return ast.literal_eval(s)
     except Exception:
-        # остання спроба: грубо замінити одиночні лапки на подвійні і ще раз json
-        try:
-            s_jsonish = re.sub(r"'", '"', s)
-            return json.loads(s_jsonish)
-        except Exception as e:
-            raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
+        pass
+
+    # 5) якщо не вдалося — замінити одинарні лапки на подвійні та пробувати як JSON
+    try:
+        s_jsonish = re.sub(r"'", '"', s)
+        return json.loads(s_jsonish)
+    except Exception as e:
+        raise ValueError(f"Не вдалось розпарсити info: {e}\nrepr={repr(s)}")
 
 
 
