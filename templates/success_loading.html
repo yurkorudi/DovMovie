@@ -39,9 +39,8 @@
                 }
                 else {
                     window.location.href = `/final_success?order_id=${orderId}&is_success=false&info=None`;
-            }.catch(err => {
-                console.error('Error checking payment status:', err);
-        }));
+            }
+        });
         }
     
         setInterval(checkStatus, 1000);
