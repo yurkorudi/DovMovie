@@ -453,12 +453,17 @@ def ticket_pdf():
     import os
     print('__________________________ TICKET PDF ___________________________ \n \n \n \n \n \n ')    
     data_param = request.args.get('data_')
+    print('DATA PARAM:', data_param)
     if not data_param:
         return "Missing data_", 400
 
     try:
         data = coerce_to_dict(data_param)
+        print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
+        print(data)
     except Exception as e:
+        print('__________________________ DATA DECODE ERROR ___________________________ \n \n \n \n \n \n ')
+        print(data_param)
         return f"Data decode error: {e}", 400
 
     print("DATA OK:", type(data), data)
