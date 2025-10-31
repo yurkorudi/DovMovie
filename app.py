@@ -415,9 +415,15 @@ def coerce_to_dict(raw: str):
     print('\n \n \n \n \n ')
 
     s = raw
-    decoded = html.unescape(s)
-    cleaned = decoded.strip().strip('"').strip("'")
-    return ast.literal_eval(cleaned)
+    return ast.literal_eval(html.unescape(raw.encode('utf-8').decode('unicode_escape').strip('"')))
+    
+    # decoded = html.unescape(s)
+    # cleaned = decoded.strip().strip('"').strip("'")
+    # return ast.literal_eval(cleaned)
+
+
+
+
 
     # s = s.replace("\\u0026#39;", "&#39;")
     # s = s.replace("\\\"", '"')  # \" → "
