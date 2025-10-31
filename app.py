@@ -35,7 +35,7 @@ from pyfiglet import figlet_format
 import urllib.parse
 import ast
 import re
-
+import zlib
 
 from reportlab.lib.pagesizes import A6
 from reportlab.pdfgen import canvas
@@ -142,6 +142,21 @@ def lp_encode(params: dict):
 def lp_signature(data_b64: str):
     digest = hashlib.sha1((LIQPAY_PRIVATE_KEY + data_b64 + LIQPAY_PRIVATE_KEY).encode("utf-8")).digest()
     return str(base64.b64encode(digest).decode("utf-8"))
+
+
+
+def compress_data(data_dict):
+    json_str = json.dumps(data_dict, ensure_ascii=False)
+    compressed = zlib.compress(json_str.encode('utf-8'))
+    return base64.urlsafe_b64encode(compressed).decode('ascii')
+
+def decompress_data(compressed_str):
+    try:
+        compressed = base64.urlsafe_b64decode(compressed_str.encode('ascii'))
+        json_str = zlib.decompress(compressed).decode('utf-8')
+        return json.loads(json_str)
+    except:
+        return None
 
 
     
@@ -1150,6 +1165,7 @@ def liqpay(movie_data=None, selected_seats=None):
         })
         flask_session['confirmation_data'] = sessio_data
         flask_session['user_info'] = user_inf
+        data_coded = compress_data(flask_session.get('confirmation_data', {}))
         
         params = {
         "public_key": LIQPAY_PUBLIC_KEY,
@@ -1159,8 +1175,8 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={flask_session.get('confirmation_data', {})}",
-        "server_url": f"http://178.62.106.58/payment_callback?confirmation_data={flask_session.get('confirmation_data', {})}",
+        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={data_coded}",
+        "server_url": f"http://178.62.106.58/payment_callback?confirmation_data={data_coded}",
         "sandbox": "1"
     }
         
@@ -1285,6 +1301,7 @@ def payment_callback():
     
     try:
         confirmation_data = request.args.get('confirmation_data')
+        confirmation_data = decompress_data(confirmation_data)
         confirmation_data = coerce_to_dict(confirmation_data)
     except Exception as e:
         pass
