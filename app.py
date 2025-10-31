@@ -410,39 +410,36 @@ def coerce_to_dict(raw: str):
         raise ValueError("Порожній рядок")
 
     s = raw
+    decoded = html.unescape(s)
+    cleaned = decoded.strip().strip('"').strip("'")
+    return ast.literal_eval(cleaned)
 
-    # 1️⃣ Повторно розекрануємо escape-послідовності (\u0026#39; → &#39;)
-    s = s.replace("\\u0026#39;", "&#39;")
-    s = s.replace("\\\"", '"')  # \" → "
+    # s = s.replace("\\u0026#39;", "&#39;")
+    # s = s.replace("\\\"", '"')  # \" → "
 
-    # 2️⃣ Розекранування HTML (декілька разів, якщо вкладені)
-    for _ in range(3):
-        new_s = html.unescape(s)
-        if new_s == s:
-            break
-        s = new_s
+    # for _ in range(3):
+    #     new_s = html.unescape(s)
+    #     if new_s == s:
+    #         break
+    #     s = new_s
 
-    # 3️⃣ Прибираємо зовнішні лапки, якщо вони обгортають об'єкт
-    s = s.strip()
-    if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
-        s = s[1:-1]
+    # s = s.strip()
+    # if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
+    #     s = s[1:-1]
 
-    # 4️⃣ Заміна внутрішніх escape для апострофів
-    s = s.replace("\\u0027", "'").replace("\\u2019", "'")
+    # s = s.replace("\\u0027", "'").replace("\\u2019", "'")
 
-    # 5️⃣ Спроба Python literal
-    try:
-        return ast.literal_eval(s)
-    except Exception:
-        pass
+    # try:
+    #     return ast.literal_eval(s)
+    # except Exception:
+    #     pass
 
-    # 6️⃣ Спроба JSON після заміни одинарних лапок
-    s_jsonish = re.sub(r"'", '"', s)
-    s_jsonish = re.sub(r'None', 'null', s_jsonish)
-    try:
-        return json.loads(s_jsonish)
-    except Exception as e:
-        raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
+    # s_jsonish = re.sub(r"'", '"', s)
+    # s_jsonish = re.sub(r'None', 'null', s_jsonish)
+    # try:
+    #     return json.loads(s_jsonish)
+    # except Exception as e:
+    #     raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
 
 
 
