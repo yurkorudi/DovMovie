@@ -1301,10 +1301,17 @@ def payment_callback():
     
     try:
         confirmation_data = request.args.get('confirmation_data')
-        confirmation_data = decompress_data(confirmation_data)
-        confirmation_data = coerce_to_dict(confirmation_data)
+        if confirmation_data:
+            decompressed = decompress_data(confirmation_data)
+            if decompressed:
+                confirmation_data = decompressed
+            else:
+                confirmation_data = coerce_to_dict(confirmation_data)
+        else:
+            confirmation_data = None
     except Exception as e:
-        pass
+        print(f"Помилка обробки confirmation_data: {e}")
+        confirmation_data = None
 
 
     payload = json.loads(base64.b64decode(data_b64).decode("utf-8"))
@@ -1460,33 +1467,41 @@ def success():
     success_pay = request.args.get('is_success')
     datar = request.args.get('info')
     print('DATA FOR FINAL SUCCESS: ', datar)
-    if not datar:
-        datar = None
-        print("Error getting final success data:", e)
-
     
-    if success_pay:
-        user_inf = coerce_to_dict(datar)
-        print('___________________________________________________________________ \n \n \n \n \n \n')
-        print('user info>  ')
+    user_inf = None
+    
+    if datar:
+        try:
+            user_inf = decompress_data(datar)
+        except Exception as e:
+            try:
+                user_inf = coerce_to_dict(datar)
+            except Exception as e2:
+                user_inf = None
+
+    if success_pay and user_inf:
+        print('___________________________________________________________________')
+        print('user info>')
         print(user_inf)
 
-        for i in user_inf.get('seats'):
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'] +1 ,
-                seatNumb=i['seatNumber'] + 1,
-                sessionId=user_inf.get('session_id'),
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf.get('first_name'),
-                last_name=user_inf.get('last_name'),
-                email=user_inf.get('email'))
-            print("Adding ticket:", tk)
-            db.session.add(tk)
-        db.session.commit()
-        
+        if isinstance(user_inf, dict) and 'seats' in user_inf:
+            for i in user_inf['seats']:
+                print(i)
+                tk = Ticket(
+                    seatRow=i['row'] + 1,
+                    seatNumb=i['seatNumber'] + 1,
+                    sessionId=user_inf.get('session_id'),
+                    cost=i['cost'],
+                    payment_method='online',
+                    date_of_purchase=datetime.now(),
+                    first_name=user_inf.get('first_name'),
+                    last_name=user_inf.get('last_name'),
+                    email=user_inf.get('email'))
+                print("Adding ticket:", tk)
+                db.session.add(tk)
+            db.session.commit()
+        else:
+            print("user_inf не містить 'seats' або не є словником")
     
     return render_template(
         'final_success.html',
