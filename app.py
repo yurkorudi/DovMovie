@@ -415,7 +415,24 @@ def coerce_to_dict(raw: str):
     print('\n \n \n \n \n ')
 
     s = raw
-    return ast.literal_eval(html.unescape(raw.encode('utf-8').decode('unicode_escape').strip('"')))
+    
+    decoded = raw.encode('utf-8').decode('unicode_escape')
+
+    html_decoded = html.unescape(decoded)
+
+    cleaned = html_decoded.strip().strip('"').strip("'")
+    
+    print(f"Очищений рядок: {repr(cleaned)}")
+    
+
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+
+        try:
+            return ast.literal_eval(cleaned)
+        except Exception as e:
+            raise ValueError(f"Не вдалось розпарсити: {e}")
     
     # decoded = html.unescape(s)
     # cleaned = decoded.strip().strip('"').strip("'")
