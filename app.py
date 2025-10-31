@@ -490,7 +490,6 @@ def ticket_pdf():
         data = coerce_to_dict(data_param)
         print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
         print(data)
-        data = ast.literal_eval(data)
     except Exception as e:
         print(e)
         print('__________________________ DATA DECODE ERROR ___________________________ \n \n \n \n \n \n ')
