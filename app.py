@@ -408,6 +408,11 @@ def api_tickets_list():
 def coerce_to_dict(raw: str):
     if not raw:
         raise ValueError("Порожній рядок")
+    
+    print('\n \n \n \n \n ')
+    print('real data: ')
+    print(raw)
+    print('\n \n \n \n \n ')
 
     s = raw
     decoded = html.unescape(s)
