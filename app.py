@@ -420,36 +420,91 @@ def api_tickets_list():
     return jsonify(result)
 
 
+def is_compressed_data(s: str):
+    try:
+        if len(s) > 50 and ' ' not in s and '/' not in s and '+' not in s:
+            decoded = base64.urlsafe_b64decode(s + '=' * (-len(s) % 4))
+            return True
+    except:
+        pass
+    return False
+
+
+
+
 def coerce_to_dict(raw: str):
     if not raw:
         raise ValueError("Порожній рядок")
     
-    print('\n \n \n \n \n ')
-    print('real data: ')
+    print('\n' * 3)
+    print('real data:')
     print(raw)
-    print('\n \n \n \n \n ')
+    print('\n' * 3)
 
-    s = raw
+    # Якщо це вже словник, повертаємо як є
+    if isinstance(raw, dict):
+        return raw
 
+    s = raw.strip()
+
+    # 1️⃣ Видаляємо всі рівні екранованих лапок
+    while True:
+        # Видаляємо зовнішні лапки
+        if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
+            s = s[1:-1]
+        # Видаляємо екрановані лапки
+        elif s.startswith('\\"') and s.endswith('\\"'):
+            s = s[2:-2]
+        elif s.startswith("\\'") and s.endswith("\\'"):
+            s = s[2:-2]
+        else:
+            break
+
+    print(f"Після видалення лапок: {repr(s)}")
+
+    # 2️⃣ Спершу пробуємо розпакувати стиснуті дані
     try:
+        decompressed = decompress_data(s)
+        if decompressed:
+            print("✅ Дані були стиснуті, успішно розпаковано")
+            return decompressed
+    except Exception as e:
+        print(f"❌ Помилка розпакування: {e}")
 
-        decoded = raw.encode('utf-8').decode('unicode_escape')
-        html_decoded = html.unescape(decoded)
-        cleaned = html_decoded.strip('"')
+    # 3️⃣ Якщо не стиснуті, обробляємо як звичайний рядок
+    try:
+        # Декодуємо Unicode escape
+        decoded = s.encode('utf-8').decode('unicode_escape')
+        print(f"Після unicode decode: {repr(decoded)}")
         
+        # Декодуємо HTML
+        html_decoded = html.unescape(decoded)
+        print(f"Після HTML unescape: {repr(html_decoded)}")
+        
+        cleaned = html_decoded.strip('"').strip("'")
         cleaned = cleaned.replace("&#39;", "'")
         
+        print(f"Після очищення: {repr(cleaned)}")
+        
+        # Виправляємо незакриті дужки
         if cleaned.count('[') > cleaned.count(']'):
             cleaned += ']'
         if cleaned.count('{') > cleaned.count('}'):
             cleaned += '}'
- 
-        try:
-            return ast.literal_eval(cleaned)
-        except:
 
+        # Спершу пробуємо Python literal
+        try:
+            result = ast.literal_eval(cleaned)
+            print("✅ Успішно через ast.literal_eval")
+            return result
+        except Exception as e:
+            print(f"ast.literal_eval помилка: {e}")
+            
+            # Потім пробуємо JSON
             json_ready = cleaned.replace("'", '"')
-            return json.loads(json_ready)
+            result = json.loads(json_ready)
+            print("✅ Успішно через json.loads")
+            return result
             
     except Exception as e:
         print(f"Помилка парсингу: {e}")
@@ -1472,36 +1527,41 @@ def success():
     
     if datar:
         try:
-            user_inf = decompress_data(datar)
+            user_inf = coerce_to_dict(datar)
         except Exception as e:
-            try:
-                user_inf = coerce_to_dict(datar)
-            except Exception as e2:
-                user_inf = None
+            print(f"Помилка обробки даних: {e}")
+            user_inf = None
 
     if success_pay and user_inf:
         print('___________________________________________________________________')
         print('user info>')
         print(user_inf)
 
-        if isinstance(user_inf, dict) and 'seats' in user_inf:
-            for i in user_inf['seats']:
-                print(i)
-                tk = Ticket(
-                    seatRow=i['row'] + 1,
-                    seatNumb=i['seatNumber'] + 1,
-                    sessionId=user_inf.get('session_id'),
-                    cost=i['cost'],
-                    payment_method='online',
-                    date_of_purchase=datetime.now(),
-                    first_name=user_inf.get('first_name'),
-                    last_name=user_inf.get('last_name'),
-                    email=user_inf.get('email'))
-                print("Adding ticket:", tk)
-                db.session.add(tk)
-            db.session.commit()
+
+        if isinstance(user_inf, dict):
+            if 'error' in user_inf:
+                print(f"❌ Помилка в даних: {user_inf['error']}")
+            elif 'seats' in user_inf:
+                for i in user_inf['seats']:
+                    print(i)
+                    tk = Ticket(
+                        seatRow=i['row'] + 1,
+                        seatNumb=i['seatNumber'] + 1,
+                        sessionId=user_inf.get('session_id'),
+                        cost=i['cost'],
+                        payment_method='online',
+                        date_of_purchase=datetime.now(),
+                        first_name=user_inf.get('first_name'),
+                        last_name=user_inf.get('last_name'),
+                        email=user_inf.get('email'))
+                    print("Adding ticket:", tk)
+                    db.session.add(tk)
+                db.session.commit()
+                print("✅ Квитки успішно додано до БД")
+            else:
+                print("❌ user_inf не містить 'seats'")
         else:
-            print("user_inf не містить 'seats' або не є словником")
+            print(f"❌ user_inf не є словником, а {type(user_inf)}")
     
     return render_template(
         'final_success.html',
