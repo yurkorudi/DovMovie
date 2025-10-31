@@ -1450,6 +1450,9 @@ def success():
     
     if success_pay:
         user_inf = coerce_to_dict(datar)
+        print('___________________________________________________________________ \n \n \n \n \n \n')
+        print('user info>  ')
+        print(user_inf)
 
         for i in user_inf.get('seats'):
             print(i)
