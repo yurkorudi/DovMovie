@@ -440,17 +440,25 @@ def is_compressed_data(s: str):
 
 
 def coerce_to_dict(raw):
-    
+    # Якщо це вже словник, повертаємо як є
+    if isinstance(raw, dict):
+        return raw
+        
+    # Якщо це None або порожній рядок
     if not raw:
         raise ValueError("Порожній рядок")
 
+    # Тепер точно рядок - робимо strip
     s = raw.strip()
 
+    # Прибираємо зовнішні лапки
     if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
         s = s[1:-1]
 
+    # Декодуємо HTML
     s = html.unescape(s)
 
+    # Замінюємо специфічні escape-послідовності
     s = s.replace("\\u0026#39;", "'")
 
     try:
@@ -458,6 +466,7 @@ def coerce_to_dict(raw):
     except Exception:
         pass
 
+    # Спроба через JSON
     s_jsonish = s.replace("'", '"')
     try:
         return json.loads(s_jsonish)
@@ -517,6 +526,7 @@ def ticket_pdf():
         return "Missing data_", 400
 
     try:
+        data_param = decompress_data(data_param)
         data = coerce_to_dict(data_param)
         print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
         print(data)
