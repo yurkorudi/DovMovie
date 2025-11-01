@@ -432,83 +432,30 @@ def is_compressed_data(s: str):
 
 
 
-def coerce_to_dict(raw: str):
+def coerce_to_dict(raw):
+    
     if not raw:
         raise ValueError("Порожній рядок")
-    
-    print('\n' * 3)
-    print('real data:')
-    print(raw)
-    print('\n' * 3)
-
-    # Якщо це вже словник, повертаємо як є
-    if isinstance(raw, dict):
-        return raw
 
     s = raw.strip()
 
-    # 1️⃣ Видаляємо всі рівні екранованих лапок
-    while True:
-        # Видаляємо зовнішні лапки
-        if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
-            s = s[1:-1]
-        # Видаляємо екрановані лапки
-        elif s.startswith('\\"') and s.endswith('\\"'):
-            s = s[2:-2]
-        elif s.startswith("\\'") and s.endswith("\\'"):
-            s = s[2:-2]
-        else:
-            break
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
+        s = s[1:-1]
 
-    print(f"Після видалення лапок: {repr(s)}")
+    s = html.unescape(s)
 
-    # 2️⃣ Спершу пробуємо розпакувати стиснуті дані
+    s = s.replace("\\u0026#39;", "'")
+
     try:
-        decompressed = decompress_data(s)
-        if decompressed:
-            print("✅ Дані були стиснуті, успішно розпаковано")
-            return decompressed
-    except Exception as e:
-        print(f"❌ Помилка розпакування: {e}")
+        return ast.literal_eval(s)
+    except Exception:
+        pass
 
-    # 3️⃣ Якщо не стиснуті, обробляємо як звичайний рядок
+    s_jsonish = s.replace("'", '"')
     try:
-        # Декодуємо Unicode escape
-        decoded = s.encode('utf-8').decode('unicode_escape')
-        print(f"Після unicode decode: {repr(decoded)}")
-        
-        # Декодуємо HTML
-        html_decoded = html.unescape(decoded)
-        print(f"Після HTML unescape: {repr(html_decoded)}")
-        
-        cleaned = html_decoded.strip('"').strip("'")
-        cleaned = cleaned.replace("&#39;", "'")
-        
-        print(f"Після очищення: {repr(cleaned)}")
-        
-        # Виправляємо незакриті дужки
-        if cleaned.count('[') > cleaned.count(']'):
-            cleaned += ']'
-        if cleaned.count('{') > cleaned.count('}'):
-            cleaned += '}'
-
-        # Спершу пробуємо Python literal
-        try:
-            result = ast.literal_eval(cleaned)
-            print("✅ Успішно через ast.literal_eval")
-            return result
-        except Exception as e:
-            print(f"ast.literal_eval помилка: {e}")
-            
-            # Потім пробуємо JSON
-            json_ready = cleaned.replace("'", '"')
-            result = json.loads(json_ready)
-            print("✅ Успішно через json.loads")
-            return result
-            
+        return json.loads(s_jsonish)
     except Exception as e:
-        print(f"Помилка парсингу: {e}")
-        return {"raw_data": raw, "error": str(e)}
+        raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
     
     # decoded = html.unescape(s)
     # cleaned = decoded.strip().strip('"').strip("'")
@@ -1527,7 +1474,8 @@ def success():
     
     if datar:
         try:
-            user_inf = coerce_to_dict(datar)
+            user_inf = decompress_data(datar)
+            user_inf = coerce_to_dict(user_inf)
         except Exception as e:
             print(f"Помилка обробки даних: {e}")
             user_inf = None
@@ -1537,31 +1485,22 @@ def success():
         print('user info>')
         print(user_inf)
 
-
-        if isinstance(user_inf, dict):
-            if 'error' in user_inf:
-                print(f"❌ Помилка в даних: {user_inf['error']}")
-            elif 'seats' in user_inf:
-                for i in user_inf['seats']:
-                    print(i)
-                    tk = Ticket(
-                        seatRow=i['row'] + 1,
-                        seatNumb=i['seatNumber'] + 1,
-                        sessionId=user_inf.get('session_id'),
-                        cost=i['cost'],
-                        payment_method='online',
-                        date_of_purchase=datetime.now(),
-                        first_name=user_inf.get('first_name'),
-                        last_name=user_inf.get('last_name'),
-                        email=user_inf.get('email'))
-                    print("Adding ticket:", tk)
-                    db.session.add(tk)
-                db.session.commit()
-                print("✅ Квитки успішно додано до БД")
-            else:
-                print("❌ user_inf не містить 'seats'")
-        else:
-            print(f"❌ user_inf не є словником, а {type(user_inf)}")
+        for i in user_inf['seats']:
+            print(i)
+            tk = Ticket(
+                seatRow=i['row'] + 1,
+                seatNumb=i['seatNumber'] + 1,
+                sessionId=user_inf.get('session_id'),
+                cost=i['cost'],
+                payment_method='online',
+                date_of_purchase=datetime.now(),
+                first_name=user_inf.get('first_name'),
+                last_name=user_inf.get('last_name'),
+                email=user_inf.get('email'))
+            print("Adding ticket:", tk)
+            db.session.add(tk)
+        db.session.commit()
+        print("✅ Квитки успішно додано до БД")
     
     return render_template(
         'final_success.html',
