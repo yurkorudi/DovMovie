@@ -146,16 +146,23 @@ def lp_signature(data_b64: str):
 
 
 def compress_data(data_dict):
-    json_str = json.dumps(data_dict, ensure_ascii=False)
-    compressed = zlib.compress(json_str.encode('utf-8'))
-    return base64.urlsafe_b64encode(compressed).decode('ascii')
+
+    try:
+        json_str = json.dumps(data_dict, ensure_ascii=False)
+        compressed = zlib.compress(json_str.encode('utf-8'))
+        encoded = base64.urlsafe_b64encode(compressed).decode('ascii')
+        return encoded
+    except Exception as e:
+        print(f"Помилка стиснення: {e}")
+        return None
 
 def decompress_data(compressed_str):
     try:
         compressed = base64.urlsafe_b64decode(compressed_str.encode('ascii'))
         json_str = zlib.decompress(compressed).decode('utf-8')
         return json.loads(json_str)
-    except:
+    except Exception as e:
+        print(f"Помилка розпакування: {e}")
         return None
 
 
