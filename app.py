@@ -44,8 +44,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 import textwrap
 
-import redis
-
 font_path = os.path.join(os.path.dirname(__file__), "static", "fonts", "DejaVuSans-Bold.ttf")
 pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", font_path))
 
@@ -133,11 +131,7 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 # _________ wev page code _______# 
 
 
-r = redis.Redis(
-    host='localhost',
-    port=6379,
-    decode_responses=True  # щоб не повертало байти
-)
+
 
 # _____________________________ api ___________________________________#
 def lp_encode(params: dict):
@@ -1198,11 +1192,6 @@ def liqpay(movie_data=None, selected_seats=None):
         })
         flask_session['confirmation_data'] = sessio_data
         flask_session['user_info'] = user_inf
-
-        # Унікальний ключ для Redis
-        redis_key = str(uuid.uuid4())
-         # Записуємо у Redis у форматі JSON
-        r.set(redis_key, json.dumps(sessio_data), ex=3600)  # ex — час життя (1 година)
         data_coded = compress_data(flask_session.get('confirmation_data', {}))
         
         params = {
@@ -1213,7 +1202,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={data_coded}?redis_key={redis_key}",
+        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={data_coded}",
         "server_url": f"http://178.62.106.58/payment_callback?confirmation_data={data_coded}",
         "sandbox": "1"
     }
@@ -1267,8 +1256,7 @@ def liqpay(movie_data=None, selected_seats=None):
                 total_cost=total_cost,
                 session=session,
                 data=data_b64,
-                signature=sign,
-                redis_key=redis_key
+                signature=sign
         )   
         
     except Exception as e:
