@@ -46,3 +46,4 @@ certificates
 app.py
 liqpay/__pycache__/liqpay.cpython-313.pyc
 liqpay/__pycache__/liqpay3.cpython-313.pyc
+*.pyc
