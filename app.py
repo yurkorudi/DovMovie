@@ -532,18 +532,9 @@ def ticket_pdf():
     import os
     print('__________________________ TICKET PDF ___________________________ \n \n \n \n \n \n ')    
     data_param = request.args.get('data_')
+    data_ses = flask_session.get('confirmation_data', {})
     print('__________________________ TICKET Datta Session ___________________________ \n \n \n \n \n \n ')    
-    
-    redis_key = request.args.get('redis_key')
-    if not redis_key:
-        print("Redis key missing", 400)
-
-    data_json = r.get(redis_key)
-    if not data_json:
-        print("Data not found or expired", 404)
-
-    data_ses = json.loads(data_json)
-    print("Restored data:", data_ses)
+    print("Data0sesion test:", data_ses)
     print('DATA PARAM:', data_param)
     if not data_param:
         return "Missing data_", 400
@@ -1222,7 +1213,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "currency": "UAH",
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
-        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={data_coded}&redis_key={redis_key}",
+        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={data_coded}?redis_key={redis_key}",
         "server_url": f"http://178.62.106.58/payment_callback?confirmation_data={data_coded}",
         "sandbox": "1"
     }
