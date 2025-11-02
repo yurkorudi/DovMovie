@@ -29,7 +29,7 @@
     <script>
         const orderId = "{{ order_id }}";
         const confirmationData = "{{ confirmation_data }}";
-        
+
         function checkStatus() {
             fetch(`/check_payment_status?order_id=${orderId}`)
             .then(res => res.json())
