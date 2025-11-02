@@ -528,7 +528,7 @@ def ticket_pdf():
     data_param = request.args.get('data_')
     data_ses = flask_session.get('confirmation_data', {})
     print('__________________________ TICKET Datta Session ___________________________ \n \n \n \n \n \n ')    
-    print(data_ses)
+    print("Data0sesion test:", data_ses)
     print('DATA PARAM:', data_param)
     if not data_param:
         return "Missing data_", 400
