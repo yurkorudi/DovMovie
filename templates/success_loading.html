@@ -29,17 +29,18 @@
     <script>
         const orderId = "{{ order_id }}";
         const confirmationData = "{{ confirmation_data }}";
+        const redisKey = "{{ redis_key }}";
         function checkStatus() {
             fetch(`/check_payment_status?order_id=${orderId}`)
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success' || data.status === 'sandbox') {
                 const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
-                window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${confirmationData}`;
+                window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${confirmationData}&redis_key=${redisKey}`;
                 }
                 else {
                     const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
-                    window.location.href = `/final_success?order_id=${orderId}&is_success=false&info=${confirmationData}`;
+                    window.location.href = `/final_success?order_id=${orderId}&is_success=false&info=${confirmationData}&redis_key=${redisKey}`;
             }
         });
         }
