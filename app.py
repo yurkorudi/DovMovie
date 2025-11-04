@@ -1200,7 +1200,7 @@ def liqpay(movie_data=None, selected_seats=None):
         amount=total_cost,
         currency='UAH',
         status='pending',
-        tickets_info=flask_session.get('confirmation_data', {})
+        tickets_info=str(flask_session.get('confirmation_data', {}))
         )
         db.session.add(payment)
         db.session.commit()
