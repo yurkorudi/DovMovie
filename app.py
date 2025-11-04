@@ -1407,9 +1407,8 @@ def payment_callback():
 
     if status == "success":
         print("if heandled success CONFIRMATION_DATA:", confirmation_data)
-    else:
-        Ticket.query.filter_by(order_id=order_id).delete()
-        db.session.commit()
+
+
 
         
         
@@ -1491,6 +1490,10 @@ def success():
         except Exception as e:
             print(f"Помилка обробки даних: {e}")
             user_inf = None
+            
+    if success_pay == 'True':
+        Ticket.query.filter_by(order_id=order_id).delete()
+        db.session.commit()
 
     
     return render_template(
