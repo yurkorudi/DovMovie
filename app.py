@@ -1415,10 +1415,9 @@ def payment_callback():
     if status == "success":
         print("if heandled success CONFIRMATION_DATA:", confirmation_data)
     else:
-        for i in Ticket.query.filter_by(orderId=order_id).all():
-            print('_________________________________________ADDING TICKETS_________________________________________')
-            db.session.delete(i)
+        Ticket.query.filter_by(orderId=order_id).delete()
         db.session.commit()
+
         
         
         
