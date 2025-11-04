@@ -513,7 +513,15 @@ def coerce_to_dict(raw):
     # except Exception as e:
     #     raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
 
-
+def clean_db_string(s: str) -> str:
+    # Якщо рядок починається з "('" і закінчується "',)" — забираємо їх
+    if s.startswith("('") and s.endswith("',)"):
+        return s[2:-3]
+    # Якщо рядок починається з '("' і закінчується '",)' — теж забираємо
+    elif s.startswith('("') and s.endswith('",)'):
+        return s[2:-3]
+    else:
+        return s
 
 
 @app.route('/ticket_pdf')
@@ -528,7 +536,8 @@ def ticket_pdf():
     data_ses = Payment.query.with_entities(Payment.tickets_info).filter_by(id=data_param).first()
     print('__________________________ TICKET Datta Session ___________________________ \n \n \n \n \n \n ')    
     print("Data0sesion test:", data_ses)
-    data_param = data_ses
+    data_param = clean_db_string(data_ses)
+
     print('DATA PARAM:', data_param)
     if not data_param:
         return "Missing data_", 400
@@ -537,7 +546,7 @@ def ticket_pdf():
         # data_param = decompress_data(data_param)
         # data = coerce_to_dict(data_param)
 
-        data = data_param
+        data = json.loads(data_param)
         print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
         print(data)
     except Exception as e:
