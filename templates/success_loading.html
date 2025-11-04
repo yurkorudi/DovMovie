@@ -36,11 +36,11 @@
             .then(data => {
                 if (data.status === 'success' || data.status === 'sandbox') {
                 const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
-                window.location.href = `/final_success?order_id=${orderId}&is_success=True&info=${confirmationData}`;
+                window.location.href = `/final_success?order_id=${orderId}&is_success=True`;
                 }
                 else {
                     const encodedInfo = encodeURIComponent(JSON.stringify(confirmationData));
-                    window.location.href = `/final_success?order_id=${orderId}&is_success=false&info=${confirmationData}`;
+                    window.location.href = `/final_success?order_id=${orderId}&is_success=false`;
             }
         });
         }

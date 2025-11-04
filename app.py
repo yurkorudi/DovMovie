@@ -145,30 +145,35 @@ def lp_signature(data_b64: str):
 
 
 
-def compress_data(data_dict):
-    try:
-        json_str = json.dumps(data_dict, ensure_ascii=False, separators=(',', ':'))
-        compressed = zlib.compress(json_str.encode('utf-8'))
-        encoded = base64.urlsafe_b64encode(compressed).decode('ascii')
-        return encoded.rstrip('=')
-    except Exception as e:
-        print(f"Помилка стиснення: {e}")
+
+def safe_decode(data_str):
+    if not data_str:
         return None
 
-def decompress_data(compressed_str):
     try:
-        padding = 4 - len(compressed_str) % 4
-        if padding != 4:
-            compressed_str += '=' * padding
-        
-        compressed = base64.urlsafe_b64decode(compressed_str.encode('ascii'))
-        json_str = zlib.decompress(compressed).decode('utf-8')  
-        return json.loads(json_str)
-    except Exception as e:
-        print(f"Помилка розпакування: {e}")
-        print(f"Вхідний рядок: {compressed_str}")
-        print(f"Довжина рядка: {len(compressed_str)}")
-        return None
+        return json.loads(data_str)
+    except json.JSONDecodeError:
+        pass
+
+    try:
+        data = ast.literal_eval(data_str)
+
+        return decode_unicode(data)
+    except Exception:
+        return data_str 
+
+
+def decode_unicode(obj):
+    if isinstance(obj, str):
+        try:
+            return json.loads(f'"{obj}"')
+        except json.JSONDecodeError:
+            return obj
+    elif isinstance(obj, list):
+        return [decode_unicode(i) for i in obj]
+    elif isinstance(obj, dict):
+        return {k: decode_unicode(v) for k, v in obj.items()}
+    return obj
 
 
     
@@ -542,7 +547,7 @@ def ticket_pdf():
         # data_param = decompress_data(data_param)
         # data = coerce_to_dict(data_param)
 
-        data = json.loads(data_ses)
+        data = safe_decode(data_ses)
         print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
         print(data)
     except Exception as e:
@@ -1189,8 +1194,6 @@ def liqpay(movie_data=None, selected_seats=None):
         flask_session['confirmation_data'] = sessio_data
         print('\n \n \n \n \n \n CONFIRMATION DATA REFORM \n \n \n \n \n ')
         flask_session['user_info'] = user_inf
-        data_coded = compress_data(flask_session.get('confirmation_data', {}))
-        data_json = json.dumps(flask_session['confirmation_data'])
 
         payment = Payment(
         id=pid,
@@ -1342,7 +1345,7 @@ def payment_callback():
     try:
         oder_id = request.args.get('order_id')
         confirmation_data = Payment.query.filter_by(id=oder_id).first().tickets_info
-        confirmation_data = json.loads(confirmation_data)
+        confirmation_data = safe_decode(confirmation_data)
 
     except Exception as e:
         print(f"Помилка обробки confirmation_data: {e}")
