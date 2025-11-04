@@ -1219,8 +1219,7 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
-        "sandbox": "1"
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
     }
         
         
