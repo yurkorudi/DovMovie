@@ -1387,10 +1387,11 @@ def payment_callback():
         
         
         print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
-        sum = 0 
+        sum = Payment.query.filter_by(oredId=order_id).first().amount
         items_for_banner = []   
         print("Parsing user info...")
         user_inf = confirmation_data
+        price = confirmation_data['seats'][0]['cost']
 
             
         print('_________________________________________USER INFO PARSED_________________________________________')
@@ -1414,15 +1415,14 @@ def payment_callback():
         
         
         email = user_inf['email']
-        price = '200'#i['cost']
-        time_str = '15:30'
+
         comments = ''
         print(comments)
 
         data  = {
         "ver": 6,
         "source": "DM_API",
-        "device": " kasar",
+        "device": " kasar_online",
         "tag": "",
         "need_pf_img": "0",
         "need_pf_pdf": "0",
