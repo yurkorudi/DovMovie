@@ -532,27 +532,22 @@ def ticket_pdf():
     from reportlab.lib.units import mm
     import os
     print('__________________________ TICKET PDF ___________________________ \n \n \n \n \n \n ')    
-    data_param = request.args.get('order_id')
-    data_ses = Payment.query.with_entities(Payment.tickets_info).filter_by(id=data_param).first()
+    order_id = request.args.get('order_id')
+    data_ses = Payment.query.filter_by(id=order_id).first().tickets_info
     print('__________________________ TICKET Datta Session ___________________________ \n \n \n \n \n \n ')    
     print("Data0sesion test:", data_ses)
-    data_param = clean_db_string(data_ses)
 
-    print('DATA PARAM:', data_param)
-    if not data_param:
-        return "Missing data_", 400
 
     try:
         # data_param = decompress_data(data_param)
         # data = coerce_to_dict(data_param)
 
-        data = json.loads(data_param)
+        data = json.loads(data_ses)
         print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
         print(data)
     except Exception as e:
         print(e)
         print('__________________________ DATA DECODE ERROR ___________________________ \n \n \n \n \n \n ')
-        print(data_param)
         return f"Data decode error: {e}", 400
 
     print("DATA OK:", type(data), data)
@@ -1219,9 +1214,9 @@ def liqpay(movie_data=None, selected_seats=None):
         "description": f"Оплата квитка (сеанс {user_inf['title']})",
         "order_id": order_id,
 
-        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}&confirmation_data={data_coded}",
+        "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?confirmation_data={data_coded}",
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
         "sandbox": "1"
     }
         
@@ -1345,15 +1340,10 @@ def payment_callback():
     
     
     try:
-        confirmation_data = request.args.get('confirmation_data')
-        if confirmation_data:
-            decompressed = decompress_data(confirmation_data)
-            if decompressed:
-                confirmation_data = decompressed
-            else:
-                confirmation_data = coerce_to_dict(confirmation_data)
-        else:
-            confirmation_data = None
+        oder_id = request.args.get('order_id')
+        confirmation_data = Payment.query.filter_by(id=oder_id).first().tickets_info
+        confirmation_data = json.loads(confirmation_data)
+
     except Exception as e:
         print(f"Помилка обробки confirmation_data: {e}")
         confirmation_data = None
