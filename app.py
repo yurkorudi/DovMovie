@@ -1249,7 +1249,7 @@ def liqpay(movie_data=None, selected_seats=None):
                 first_name=user_inf['first_name'],
                 last_name=user_inf['last_name'],
                 email=user_inf['email'],
-                orderId = order_id)
+                order_id = order_id)
             print("Adding ticket:", tk)
             
             sum_t += i['cost']
