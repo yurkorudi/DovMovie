@@ -312,9 +312,10 @@ def double_char_fig(num: str) -> list[str]:
             result[i] += ascii_digits[digit][i] + "  "
     return result
 
-def build_comment_for_receipt(items, session_dt_str):
+def build_comment_for_receipt(items, session_dt_str, name):
     lines = []
-    lines.append(f"СЕАНС: {session_dt_str}")
+    lines.append(f"СЕАНС: {name}")
+    lines.append(f"ЧАС: {session_dt_str}")
     lines.append("-" * 32)
     for idx, it in enumerate(items, start=1):
         row = str(it['row'])
@@ -885,9 +886,10 @@ def cash_prod():
     db.session.commit()
     
     
-    time_str = '15:30'  
+    time_str = data[0]['sessionTime']  
+    name = data[0]['movieTitle']
     email = item['email']
-    comments = build_comment_for_receipt(items_for_banner, time_str)
+    comments = build_comment_for_receipt(items_for_banner, time_str, name)
     price = sum/len(data)
     data  = {
     "ver": 6,
@@ -1419,45 +1421,45 @@ def payment_callback():
         print(comments)
 
         data  = {
-        "ver": 6,
-        "source": "DM_API",
-        "device": " kasar_online",
-        "tag": "",
-        "need_pf_img": "0",
-        "need_pf_pdf": "0",
-        "need_pf_txt": "0",
-        "need_pf_doccmd": "0",
-        "type": "1",
-        "userinfo": {
-            "email": email,
-            "phone": ""
-        },
-        "fiscal": {
-            "task": 1,
-            "cashier": "Рецепція центру Довженка",
-            "receipt": {
-                "sum": sum,
-                "comment_down": comments,
-                "rows": [
-                    {
-                        
-                        "code": "100",
-                        "code2": "",
-                        "name": "Квиток",
-                        "cnt": sum/price,
-                        "price":price,
-                        "taxgrp": 5,
-                    },
-                ],
-                "pays": [
-                    {
-                        "type": 2,
-                        "sum": sum
-                    }
-                ]
-            }
+    "ver": 6,
+    "source": "DM_API",
+    "device": "kasar_online",
+    "tag": "",
+    "need_pf_img": "0",
+    "need_pf_pdf": "0",
+    "need_pf_txt": "0",
+    "need_pf_doccmd": "0",
+    "type": "1",
+    "userinfo": {
+        "email": email,
+        "phone": ""
+    },
+    "fiscal": {
+        "task": 1,
+        "cashier": "Рецепція центру Довженка",
+        "receipt": {
+            "sum": sum,
+            "comment_down": comments,
+            "rows": [
+                {
+                    
+                    "code": "100",
+                    "code2": "",
+                    "name": "Квиток",
+                    "cnt": sum/price,
+                    "price":price,
+                    "taxgrp": 5,
+                },
+            ],
+            "pays": [
+                {
+                    "type": 0,
+                    "sum": sum,
+                }
+            ]
         }
     }
+}
         url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
         result = rro_send(payload=data, url=url)
        
