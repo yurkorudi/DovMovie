@@ -1183,6 +1183,7 @@ def liqpay(movie_data=None, selected_seats=None):
         flask_session['confirmation_data'] = sessio_data
         flask_session['user_info'] = user_inf
         data_coded = compress_data(flask_session.get('confirmation_data', {}))
+        data_json = json.dumps(flask_session['confirmation_data'])
 
         payment = Payment(
         id=pid,
@@ -1192,7 +1193,7 @@ def liqpay(movie_data=None, selected_seats=None):
         amount=total_cost,
         currency='UAH',
         status='pending',
-        tickets_info=flask_session['confirmation_data']
+        tickets_info=data_json
         )
         db.session.add(payment)
         db.session.commit()
