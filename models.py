@@ -180,6 +180,7 @@ class Ticket(db.Model):
     cost       = Column(String(45), nullable=False)
     sessionId  = Column(String(80), ForeignKey('Showtime.id'), nullable=False)
     sessionId  = Column('sessionId', String(80), ForeignKey('Showtime.id'), nullable=False)
+    orderId   = Column(Text, nullable=True)
     date_of_purchase = Column(Date, default=datetime.utcnow().date)
     
 

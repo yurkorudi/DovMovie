@@ -1248,7 +1248,8 @@ def liqpay(movie_data=None, selected_seats=None):
                 date_of_purchase=datetime.now(),
                 first_name=user_inf['first_name'],
                 last_name=user_inf['last_name'],
-                email=user_inf['email'])
+                email=user_inf['email'],
+                orderId = order_id)
             print("Adding ticket:", tk)
             
             sum_t += i['cost']
@@ -1411,29 +1412,12 @@ def payment_callback():
         print(" user info gone well ", user_inf)
 
 
-
-        for i in user_inf['seats']:
+    if status == "success":
+        print("if heandled success CONFIRMATION_DATA:", confirmation_data)
+    else:
+        for i in Ticket.query.filter_by(orderId=order_id).all():
             print('_________________________________________ADDING TICKETS_________________________________________')
-            
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'] +1 ,
-                seatNumb=i['seatNumber'] + 1,
-                sessionId=session,
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf['first_name'],
-                last_name=user_inf['last_name'],
-                email=user_inf['email'])
-            print("Adding ticket:", tk)
-            
-            sum += i['cost']
-            items_for_banner.append({
-                "row": i['row'],
-                "seatNumber": i['seatNumber']
-            })
-            db.session.add(tk)
+            db.session.delete(i)
         db.session.commit()
         
         
@@ -1516,27 +1500,6 @@ def success():
             print(f"Помилка обробки даних: {e}")
             user_inf = None
 
-    if success_pay == 'True' and user_inf:
-        print('___________________________________________________________________')
-        print('user info>')
-        print(user_inf)
-
-        for i in user_inf['seats']:
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'] + 1,
-                seatNumb=i['seatNumber'] + 1,
-                sessionId=user_inf.get('session_id'),
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf.get('first_name'),
-                last_name=user_inf.get('last_name'),
-                email=user_inf.get('email'))
-            print("Adding ticket:", tk)
-            db.session.add(tk)
-        db.session.commit()
-        print("✅ Квитки успішно додано до БД")
     
     return render_template(
         'final_success.html',
