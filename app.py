@@ -529,7 +529,7 @@ def ticket_pdf():
     data_ses = Payment.query.with_entities(Payment.tickets_info).filter_by(id=data_param).first()
     print('__________________________ TICKET Datta Session ___________________________ \n \n \n \n \n \n ')    
     print("Data0sesion test:", data_ses)
-    data_param = json.loads(data_ses)
+    data_param = json.loads(data_ses[0])
     print('DATA PARAM:', data_param)
     if not data_param:
         return "Missing data_", 400
