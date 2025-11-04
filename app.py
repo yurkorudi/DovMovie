@@ -514,41 +514,6 @@ def coerce_to_dict(raw):
     #     raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
 
 
-def parse_db_json_string(raw: Any) -> Any:
-    if raw is None:
-        raise ValueError("Input is None")
-    s = raw if isinstance(raw, str) else str(raw)
-    try:
-        evaluated = ast.literal_eval(s)
-        if isinstance(evaluated, (tuple, list)) and len(evaluated) > 0 and isinstance(evaluated[0], (str, bytes)):
-            json_str = evaluated[0].decode() if isinstance(evaluated[0], bytes) else evaluated[0]
-        elif isinstance(evaluated, (dict, list)):
-            return evaluated
-        else:
-            json_str = s
-    except Exception:
-        m = re.match(r'^\(\s*([\'"])(.*)\1\s*,\s*\)\s*$', s, re.DOTALL)
-        if m:
-            json_str = m.group(2)
-        else:
-            m2 = re.match(r'^\(\s*([\'"])(.*)\1\s*\)\s*$', s, re.DOTALL)  # без коми
-            if m2:
-                json_str = m2.group(2)
-            else:
-                if s.startswith("('") and s.endswith("',)"):
-                    json_str = s[2:-3]
-                elif s.startswith('("') and s.endswith('",)'):
-                    json_str = s[2:-3]
-                else:
-                    json_str = s
-    try:
-        return json.loads(json_str)
-    except json.JSONDecodeError:
-        try:
-            unescaped = json_str.encode('utf-8').decode('unicode_escape')
-            return json.loads(unescaped)
-        except Exception as e:
-            raise ValueError(f"Не вдалось розпарсити JSON. Оригінал починається: {json_str[:80]!r}") from e
 
 
 @app.route('/ticket_pdf')
