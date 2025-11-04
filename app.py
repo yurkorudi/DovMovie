@@ -1492,6 +1492,8 @@ def success():
             user_inf = None
             
     if success_pay == 'True':
+        pass
+    else:
         Ticket.query.filter_by(order_id=order_id).delete()
         db.session.commit()
 
