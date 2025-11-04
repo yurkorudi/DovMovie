@@ -20,7 +20,7 @@
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
     {% endif %}
     <div class="sucsess-button">
-        {% if success_pay %}
+        {% if success_pay == 'True' %}
         <button class="btn btn-load" onclick="load()">Завантажити квиток</button>
         {% endif %}
         <button class="btn btn-return" onclick="home()">Повернутися на головну</button>
