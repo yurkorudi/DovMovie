@@ -1390,20 +1390,13 @@ def payment_callback():
         sum = 0 
         items_for_banner = []   
         print("Parsing user info...")
-        
-        try:
-            user_inf = urllib.parse.unquote(confirmation_data)
-            data = ast.literal_eval(user_inf)
-        except Exception as e:
-            print("Data decode error:", e)
+        user_inf = confirmation_data
+
             
         print('_________________________________________USER INFO PARSED_________________________________________')
         print(confirmation_data)
         print('\n \n \n \n \n ')
-        try:
-            user_inf = coerce_to_dict(confirmation_data)
-        except Exception as e:
-            print("Error coercing user info:", e)
+
             
         print(confirmation_data)
         print('_________________________________________USER INFO COERCE DONE_________________________________________')
@@ -1415,13 +1408,13 @@ def payment_callback():
     if status == "success":
         print("if heandled success CONFIRMATION_DATA:", confirmation_data)
     else:
-        Ticket.query.filter_by(orderId=order_id).delete()
+        Ticket.query.filter_by(order_id=order_id).delete()
         db.session.commit()
 
         
         
         
-        email = 'yurko@gmail.com'#user_inf['email']
+        email = user_inf['email']
         price = '200'#i['cost']
         time_str = '15:30'
         comments = ''
