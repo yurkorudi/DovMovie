@@ -14,7 +14,7 @@
     {% if success_pay %}
     <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf">
-      <embed src="{{ url_for('ticket_pdf') }}?data_={{ order_id }}">
+      <embed src="{{ url_for('ticket_pdf') }}?order_id={{ order_id }}">
     </div>
     {% else %}
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
