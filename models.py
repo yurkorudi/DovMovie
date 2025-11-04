@@ -198,6 +198,8 @@ class Payment(db.Model):
     liqpay_response = Column('liqpay_response', Text, nullable=True)
     createdAt = Column('createdAt', DateTime, default=datetime.utcnow)
     updatedAt = Column('updatedAt', DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    tickets_info = Column('tickets_info', Text, nullable=True)
     
     
 

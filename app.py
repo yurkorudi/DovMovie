@@ -525,8 +525,8 @@ def ticket_pdf():
     from reportlab.lib.units import mm
     import os
     print('__________________________ TICKET PDF ___________________________ \n \n \n \n \n \n ')    
-    data_param = request.args.get('data_')
-    data_ses = flask_session.get('confirmation_data', {})
+    data_param = request.args.get('order_id')
+    data_ses = Payment.query.with_entities(Payment.tickets_info).filter_by(id=data_param).first()
     print('__________________________ TICKET Datta Session ___________________________ \n \n \n \n \n \n ')    
     print("Data0sesion test:", data_ses)
     print('DATA PARAM:', data_param)
@@ -1172,17 +1172,7 @@ def liqpay(movie_data=None, selected_seats=None):
         total_cost = sum(seat['cost'] for seat in seats_raw)
         session = user_inf['session_id']
         
-        payment = Payment(
-        id=pid,
-        orderId=pid,
-        sessionId=session,
-        email=user_inf['email'],
-        amount=total_cost,
-        currency='UAH',
-        status='pending'
-        )
-        db.session.add(payment)
-        db.session.commit()
+        
         
         sessio_data = flask_session.get('confirmation_data', {})
         sessio_data.update({
@@ -1193,6 +1183,19 @@ def liqpay(movie_data=None, selected_seats=None):
         flask_session['confirmation_data'] = sessio_data
         flask_session['user_info'] = user_inf
         data_coded = compress_data(flask_session.get('confirmation_data', {}))
+
+        payment = Payment(
+        id=pid,
+        orderId=pid,
+        sessionId=session,
+        email=user_inf['email'],
+        amount=total_cost,
+        currency='UAH',
+        status='pending',
+        tickets_info=flask_session['confirmation_data']
+        )
+        db.session.add(payment)
+        db.session.commit()
         
         params = {
         "public_key": LIQPAY_PUBLIC_KEY,
@@ -1495,6 +1498,7 @@ def success():
     
     success_pay = request.args.get('is_success')
     datar = request.args.get('info')
+    order_id = request.args.get('order_id')
     print('DATA FOR FINAL SUCCESS: ', datar)
     
     user_inf = None
@@ -1532,7 +1536,8 @@ def success():
     return render_template(
         'final_success.html',
         success_pay=success_pay,
-        info=datar
+        info=datar,
+        order_id=order_id
     )
 
 
