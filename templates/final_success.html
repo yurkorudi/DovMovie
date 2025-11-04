@@ -11,7 +11,7 @@
   {% include 'header.html' %}
 
   <main class="sucsess">
-    {% if success_pay === 'True' %}
+    {% if success_pay == 'True' %}
     <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf">
       <embed src="{{ url_for('ticket_pdf') }}?order_id={{ order_id }}">
