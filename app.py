@@ -1192,6 +1192,7 @@ def liqpay(movie_data=None, selected_seats=None):
             'email': user_inf['email']
         })
         flask_session['confirmation_data'] = sessio_data
+        print('\n \n \n \n \n \n CONFIRMATION DATA REFORM \n \n \n \n \n ')
         flask_session['user_info'] = user_inf
         data_coded = compress_data(flask_session.get('confirmation_data', {}))
         data_json = json.dumps(flask_session['confirmation_data'])
@@ -1204,7 +1205,7 @@ def liqpay(movie_data=None, selected_seats=None):
         amount=total_cost,
         currency='UAH',
         status='pending',
-        tickets_info=data_json
+        tickets_info=flask_session.get('confirmation_data', {})
         )
         db.session.add(payment)
         db.session.commit()
