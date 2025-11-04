@@ -887,7 +887,7 @@ def cash_prod():
     
     sessio = Showtime.query.filter_by(id=data[0]['sessionId']).first()
     mov = Movie.query.filter_by(id=sessio.movieId).first()
-    time_str = (sessio.dateTime + timedelta(hours=2)).strftime('%H:%M')
+    time_str = (sessio.dateTime + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
     name = mov.title
     email = item['email']
     comments = build_comment_for_receipt(items_for_banner, time_str, name)
