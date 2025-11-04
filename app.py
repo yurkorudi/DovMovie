@@ -1503,21 +1503,20 @@ def payment_callback():
 def success():
     
     success_pay = request.args.get('is_success')
-    datar = request.args.get('info')
     order_id = request.args.get('order_id')
-    print('DATA FOR FINAL SUCCESS: ', datar)
+
     
     user_inf = None
     
-    if datar:
+    if order_id:
         try:
-            user_inf = decompress_data(datar)
-            user_inf = coerce_to_dict(user_inf)
+            user_inf = Payment.query.filter_by(id=order_id).first().tickets_info
+            user_inf = safe_decode(user_inf)
         except Exception as e:
             print(f"Помилка обробки даних: {e}")
             user_inf = None
 
-    if success_pay and user_inf:
+    if success_pay == 'True' and user_inf:
         print('___________________________________________________________________')
         print('user info>')
         print(user_inf)
@@ -1542,7 +1541,6 @@ def success():
     return render_template(
         'final_success.html',
         success_pay=success_pay,
-        info=datar,
         order_id=order_id
     )
 
