@@ -10,6 +10,7 @@ from flask_admin import helpers as admin_helpers
 from flask_admin import AdminIndexView
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from flask_mail import Mail, Message
 from uuid import uuid4
 import os
 from user_agents import *
@@ -69,6 +70,12 @@ LIQPAY_PUBLIC_KEY = 'i40470776966'
 LIQPAY_PRIVATE_KEY = 'mHLYgc7FLwKeqBrpp6Pay4O7a4GBr9gueYdJLeKB'
 
 
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'SmmAgeOfficialPage@gmail.com'
+app.config['MAIL_PASSWORD'] = 'SmmAgeOfficialPagePasswordSecond'
+
 
 lp = LiqPay(LIQPAY_PUBLIC_KEY, LIQPAY_PRIVATE_KEY)
 
@@ -76,7 +83,7 @@ lp = LiqPay(LIQPAY_PUBLIC_KEY, LIQPAY_PRIVATE_KEY)
 
 db.init_app(app)
 Session(app)
-
+mail = Mail(app)
 
 UTC = pytz.UTC
 
@@ -134,6 +141,28 @@ admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
 # _____________________________ api ___________________________________#
+def send_ticket_to_mail(to_mail, ticket_bytes, movie_title, session_dt_str):
+    msg= Message(
+        subject=f'Ваш квиток на {movie_title} \n на сеанс {session_dt_str}',
+        sender=("Dovzhenko Cinema", 'SmmAgeOfficialPage@gmail.com'),
+        recipients=[to_mail])
+    
+    
+    msg.body = f"Вітаємо! Ваш квиток на '{movie_title}' у вкладенні."
+    
+    msg.attach(
+    "ticket.pdf",
+    "application/pdf",
+    ticket_bytes
+    )
+
+    mail.send(msg)
+
+
+
+
+
+
 def lp_encode(params: dict):
     return str(base64.b64encode(json.dumps(params, ensure_ascii=False).encode("utf-8")).decode("utf-8"))
 
@@ -450,74 +479,7 @@ def is_compressed_data(s: str):
 
 
 
-def coerce_to_dict(raw):
-    # Якщо це вже словник, повертаємо як є
-    if isinstance(raw, dict):
-        return raw
-        
-    # Якщо це None або порожній рядок
-    if not raw:
-        raise ValueError("Порожній рядок")
 
-    # Тепер точно рядок - робимо strip
-    s = raw.strip()
-
-    # Прибираємо зовнішні лапки
-    if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
-        s = s[1:-1]
-
-    # Декодуємо HTML
-    s = html.unescape(s)
-
-    # Замінюємо специфічні escape-послідовності
-    s = s.replace("\\u0026#39;", "'")
-
-    try:
-        return ast.literal_eval(s)
-    except Exception:
-        pass
-
-    # Спроба через JSON
-    s_jsonish = s.replace("'", '"')
-    try:
-        return json.loads(s_jsonish)
-    except Exception as e:
-        raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
-    
-    # decoded = html.unescape(s)
-    # cleaned = decoded.strip().strip('"').strip("'")
-    # return ast.literal_eval(cleaned)
-
-
-
-
-
-    # s = s.replace("\\u0026#39;", "&#39;")
-    # s = s.replace("\\\"", '"')  # \" → "
-
-    # for _ in range(3):
-    #     new_s = html.unescape(s)
-    #     if new_s == s:
-    #         break
-    #     s = new_s
-
-    # s = s.strip()
-    # if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
-    #     s = s[1:-1]
-
-    # s = s.replace("\\u0027", "'").replace("\\u2019", "'")
-
-    # try:
-    #     return ast.literal_eval(s)
-    # except Exception:
-    #     pass
-
-    # s_jsonish = re.sub(r"'", '"', s)
-    # s_jsonish = re.sub(r'None', 'null', s_jsonish)
-    # try:
-    #     return json.loads(s_jsonish)
-    # except Exception as e:
-    #     raise ValueError(f"Не вдалось розпарсити дані: {e}\nrepr={repr(s)}")
 
 def clean_db_string(s: str) -> str:
     # Якщо рядок починається з "('" і закінчується "',)" — забираємо їх
@@ -545,9 +507,6 @@ def ticket_pdf():
 
 
     try:
-        # data_param = decompress_data(data_param)
-        # data = coerce_to_dict(data_param)
-
         data = safe_decode(data_ses)
         print('__________________________data_to_coerce_____________________________ \n \n \n \n \n \n ')
         print(data)
@@ -1223,6 +1182,7 @@ def liqpay(movie_data=None, selected_seats=None):
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
         "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
+        "sandbox": 1
     }
         
         
@@ -1231,11 +1191,6 @@ def liqpay(movie_data=None, selected_seats=None):
         sign = lp_signature(data_b64)
         user_inf = flask_session['confirmation_data']
         sum_t = 0
-        try:
-            # user_inf = coerce_to_dict(user_inf)
-            print("User info:", user_inf)
-        except Exception as e:
-            return f"Data decode error: {e}", 400
         
         print(" adding tickets... ")
         
@@ -1412,9 +1367,11 @@ def payment_callback():
         print("if heandled success CONFIRMATION_DATA:", confirmation_data)
 
 
-
-        
-        
+        try:
+            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+            send_ticket_to_mail(payment.email, pdf_bytes, user_inf['movie_title'], '15:30')
+        except Exception as e:
+            print("Error sending ticket email:", e)
         
         email = user_inf['email']
 
