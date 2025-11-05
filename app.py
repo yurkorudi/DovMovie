@@ -923,14 +923,14 @@ def card_prod():
         db.session.add(t)
     db.session.commit()
     
+       
+    sessio = Showtime.query.filter_by(id=data[0]['sessionId']).first()
+    mov = Movie.query.filter_by(id=sessio.movieId).first()
+    time_str = (sessio.dateTime + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
+    name = mov.title
     email = item['email']
-    price = 100
-    row = item['row']
-    seat = item['seatNumber']
-    time_str = '15:30'
-    comments = build_comment_for_receipt(items_for_banner, time_str)
-    print(comments)
-
+    comments = build_comment_for_receipt(items_for_banner, time_str, name)
+    price = sum/len(data)
     data  = {
     "ver": 6,
     "source": "DM_API",
