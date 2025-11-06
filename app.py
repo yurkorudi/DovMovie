@@ -694,7 +694,7 @@ def admin_full_reports():
     tickets = db.session.query(Ticket, Showtime, Movie) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
-        .filter(Ticket.date_of_purchase == selected_date) \
+        .filter(Showtime.dateTime == selected_date) \
         .all()
 
     print('Всього квитків:', len(tickets))
