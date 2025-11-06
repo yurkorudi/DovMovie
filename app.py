@@ -1183,8 +1183,7 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
-        "sandbox": 1
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
     }
         
         
@@ -1419,7 +1418,7 @@ def payment_callback():
                 }
             }
         }
-            url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+            url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute"
             result = rro_send(payload=data, url=url)
             print("\n \n \n Receipt printed:", result)
             
