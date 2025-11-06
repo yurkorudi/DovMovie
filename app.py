@@ -742,8 +742,10 @@ def admin_tickets():
                         # total_revenue=total_revenue)
 
 
-def rro_send(payload: dict, url: str = None):
+def rro_send(payload: dict, url: str):
+    print('\n \n \n \n url_for_send RRO: ')
     print(url)
+    print('\n \n \n \n ')
     resp = requests.post(url, json=payload, headers={'Content-Type':'application/json'})
     resp.raise_for_status()
     return resp.json()
@@ -1288,7 +1290,7 @@ def payment_callback():
         hashlib.sha1(check_string.encode('utf-8')).digest()
     ).decode('utf-8')
 
-    print("EXPECTED SIGNATURE:", generated_signature)
+    print("\n \n \n \n EXPECTED SIGNATURE:", generated_signature)
     
     try:
         decoded_json = base64.b64decode(data_b64).decode('utf-8')
@@ -1313,18 +1315,19 @@ def payment_callback():
     order_id = payload.get("order_id")
     status = payload.get("status")
     
-    print("__________________________________> STATUS:: ")
+    print("\n \n \n __________________________________> STATUS:: ")
     print(status)
-    
+    print("\n \n \n __________________________________> ORDER ID:: ")
     print("ORDER ID:", order_id)
 
     payment = Payment.query.filter_by(id=order_id).first()
     
-    print ("PAYMENT RECORD:", payment)
+    print ("\n \n \n PAYMENT RECORD:", payment)
+    
     if not payment:
         print("Payment not found")
         return "Payment not found", 404
-    # session = payment.sessionI
+
     
     
     payment.status = status
@@ -1337,17 +1340,17 @@ def payment_callback():
 
 
     
-    if status == "sandbox":
-        
-        
+    if status == "succces":
+        try:
+            print("\n \n \n \n Sending ticket email...")
+            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+            send_ticket_to_mail(payment.email, pdf_bytes, user_inf['movie_title'], '15:30')
+        except Exception as e:
+            print("Error sending ticket email:", e)
         
         
         print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
-        sum = Payment.query.filter_by(oredId=order_id).first().amount
-        items_for_banner = []   
-        print("Parsing user info...")
-        user_inf = confirmation_data
-        price = confirmation_data['seats'][0]['cost']
+
 
             
         print('_________________________________________USER INFO PARSED_________________________________________')
@@ -1355,70 +1358,72 @@ def payment_callback():
         print('\n \n \n \n \n ')
 
             
-        print(confirmation_data)
-        print('_________________________________________USER INFO COERCE DONE_________________________________________')
-        print('\n \n \n \n \n ')
-        print(user_inf)
-        print(" user info gone well ", user_inf)
 
 
-    if status == "success":
+
+
         print("if heandled success CONFIRMATION_DATA:", confirmation_data)
 
 
-        try:
-            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
-            send_ticket_to_mail(payment.email, pdf_bytes, user_inf['movie_title'], '15:30')
-        except Exception as e:
-            print("Error sending ticket email:", e)
+
+            
         
-        email = user_inf['email']
+        try:
+            print("\n \n \n \n RRO START PRINTING RECEIPT \n \n \n \n  ")
+            sum = Payment.query.filter_by(orderId=order_id).first().amount
+            price = confirmation_data['seats'][0]['cost']
+            email = confirmation_data['email']
+            comments = ' comments for receipt \n'
 
-        comments = ''
-        print(comments)
-
-        data  = {
-    "ver": 6,
-    "source": "DM_API",
-    "device": "kasar_online",
-    "tag": "",
-    "need_pf_img": "0",
-    "need_pf_pdf": "0",
-    "need_pf_txt": "0",
-    "need_pf_doccmd": "0",
-    "type": "1",
-    "userinfo": {
-        "email": email,
-        "phone": ""
-    },
-    "fiscal": {
-        "task": 1,
-        "cashier": "Рецепція центру Довженка",
-        "receipt": {
-            "sum": sum,
-            "comment_down": comments,
-            "rows": [
-                {
-                    
-                    "code": "100",
-                    "code2": "",
-                    "name": "Квиток",
-                    "cnt": sum/price,
-                    "price":price,
-                    "taxgrp": 5,
-                },
-            ],
-            "pays": [
-                {
-                    "type": 0,
+            data  = {
+            "ver": 6,
+            "source": "DM_API",
+            "device": "kasar_online",
+            "tag": "",
+            "need_pf_img": "0",
+            "need_pf_pdf": "0",
+            "need_pf_txt": "0",
+            "need_pf_doccmd": "0",
+            "type": "1",
+            "userinfo": {
+                "email": email,
+                "phone": ""
+            },
+            "fiscal": {
+                "task": 1,
+                "cashier": "Рецепція центру Довженка",
+                "receipt": {
                     "sum": sum,
+                    "comment_down": comments,
+                    "rows": [
+                        {
+                            
+                            "code": "100",
+                            "code2": "",
+                            "name": "Квиток",
+                            "cnt": sum/price,
+                            "price":price,
+                            "taxgrp": 5,
+                        },
+                    ],
+                    "pays": [
+                        {
+                            "type": 0,
+                            "sum": sum,
+                        }
+                    ]
                 }
-            ]
+            }
         }
-    }
-}
-        url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
-        result = rro_send(payload=data, url=url)
+            url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+            result = rro_send(payload=data, url=url)
+            print("\n \n \n Receipt printed:", result)
+            
+        except Exception as e:
+            print("\n \n \n \n \n _______________________________ rror printing receipt:", e)
+       
+       
+       
        
     return jsonify({
         'status': 'success',
