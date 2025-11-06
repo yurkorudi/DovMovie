@@ -17,6 +17,12 @@
     color: white;
 }
 
+.sucsess-button{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 .sucsess button{
     background: #E1CB84;
     border: none;

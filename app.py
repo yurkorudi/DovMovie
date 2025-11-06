@@ -1341,7 +1341,7 @@ def payment_callback():
 
 
     
-    if status == "succces":
+    if status == "succces" and status == "sandbox":
         try:
             print("\n \n \n \n Sending ticket email...")
             pdf_bytes = url_for('ticket_pdf', order_id=order_id)
@@ -1419,7 +1419,7 @@ def payment_callback():
                 }
             }
         }
-            url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+            url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute"
             result = rro_send(payload=data, url=url)
             print("\n \n \n Receipt printed:", result)
             
