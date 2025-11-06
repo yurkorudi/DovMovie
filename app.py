@@ -1340,7 +1340,7 @@ def payment_callback():
 
 
     
-    if status == "succces" or status == "sandbox":
+    if status == "success  " or status == "sandbox":
         try:
             print("\n \n \n \n Sending ticket email...")
             pdf_bytes = url_for('ticket_pdf', order_id=order_id)
