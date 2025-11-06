@@ -1412,7 +1412,7 @@ def payment_callback():
                             "type": 17,
                             "sum": int(sum),
                             "change": 0,
-                            "comment": {comments},
+                            "comment": comments,
                             "currency": payload.get("currency")
                         }
                     ]
