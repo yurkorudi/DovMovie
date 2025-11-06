@@ -11,7 +11,7 @@
 
     <h2>Звіт по проданих квитках</h2>
 
-    <form method="get" action="{{ url_for('admin_reports') }}">
+    <form method="get" action="{{ url_for('admin_full_reports') }}">
         <label for="date">Оберіть дату:</label>
         <input type="date" name="date" id="date" value="{{ selected_date }}">
         <button type="submit">Показати</button>
