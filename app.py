@@ -1394,7 +1394,7 @@ def payment_callback():
                 "task": 1,
                 "cashier": "Рецепція центру Довженка",
                 "receipt": {
-                    "sum": sum,
+                    "sum": int(sum),
                     "comment_down": comments,
                     "rows": [
                         {
@@ -1402,16 +1402,16 @@ def payment_callback():
                             "code": "100",
                             "code2": "",
                             "name": "Квиток",
-                            "cnt": sum/price,
-                            "price":price,
+                            "cnt": int(sum/price),
+                            "price":int(price),
                             "taxgrp": 5,
                         },
                     ],
                     "pays": [
                         {
                             "type": 17,
-                            "sum": sum,
-                            "change": 0.00,
+                            "sum": int(sum),
+                            "change": 0,
                             "comment": {comments},
                             "currency": payload.get("currency")
                         }
