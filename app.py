@@ -1183,7 +1183,8 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
+        "sandbox": 1
     }
         
         
@@ -1344,7 +1345,7 @@ def payment_callback():
         try:
             print("\n \n \n \n Sending ticket email...")
             pdf_bytes = url_for('ticket_pdf', order_id=order_id)
-            send_ticket_to_mail(payment.email, pdf_bytes, confirmation_data['movie_title'], '15:30')
+            # send_ticket_to_mail(payment.email, pdf_bytes, confirmation_data['movie_title'], '15:30')
         except Exception as e:
             print("Error sending ticket email:", e)
         
