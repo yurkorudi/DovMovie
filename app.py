@@ -1460,7 +1460,7 @@ def success():
                             "sum": int(sum),
                             "change": 0,
                             "comment": comments,
-                            "currency": payload.get("currency")
+                            "currency": "UAN"
                         }
                     ]
                 }
