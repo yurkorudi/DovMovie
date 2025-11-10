@@ -1345,8 +1345,115 @@ def payment_callback():
     payment.status = status
     payment.liqpay_response = json.dumps(payload)
     print("UPDATING PAYMENT STATUS TO:", payment.status)
-    
     db.session.commit()
+    
+    
+    
+    
+    if order_id:
+        try:
+            user_inf = Payment.query.filter_by(id=order_id).first().tickets_info
+            status = Payment.query.filter_by(id=order_id).order_by(Payment.updatedAt.desc()).first().status
+            
+            confirmation_data = safe_decode(user_inf)
+        except Exception as e:
+            print(f"Помилка обробки даних: {e}")
+            user_inf = "error"
+            
+        
+        
+    if status == "success" or status == "sandbox":
+        try:
+            print("\n \n \n \n Sending ticket email...")
+            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+            # send_ticket_to_mail(payment.email, pdf_bytes, confirmation_data['movie_title'], '15:30')
+        except Exception as e:
+            print("Error sending ticket email:", e)
+        
+        
+        print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
+
+
+            
+        print('_________________________________________USER INFO PARSED_________________________________________')
+        print(confirmation_data)
+        print('\n \n \n \n \n ')
+
+            
+
+
+
+
+        print("if heandled success CONFIRMATION_DATA:", confirmation_data)
+        result = None
+
+
+
+            
+        while not result:
+            try:
+                print("\n \n \n \n RRO START PRINTING RECEIPT \n \n \n \n  ")
+                sum = Payment.query.filter_by(orderId=order_id).first().amount
+                price = confirmation_data['seats'][0]['cost']
+                email = confirmation_data['email']
+                comments = ' comments for receipt \n'
+
+                data  = {
+                "ver": 6,
+                "source": "DM_API",
+                "device": "kasar_online",
+                "tag": "",
+                "need_pf_img": "0",
+                "need_pf_pdf": "0",
+                "need_pf_txt": "0",
+                "need_pf_doccmd": "0",
+                "type": "1",
+                "userinfo": {
+                    "email": email,
+                    "phone": ""
+                },
+                "fiscal": {
+                    "task": 1,
+                    "cashier": "Рецепція центру Довженка",
+                    "receipt": {
+                        "sum": int(sum),
+                        "comment_down": comments,
+                        "rows": [
+                            {
+                                
+                                "code": "100",
+                                "code2": "",
+                                "name": "Квиток",
+                                "cnt": int(sum/price),
+                                "price":int(price),
+                                "taxgrp": 5,
+                            },
+                        ],
+                        "pays": [
+                            {
+                                "type": 17,
+                                "sum": int(sum),
+                                "change": 0,
+                                "comment": comments,
+                                "currency": "UAN"
+                            }
+                        ]
+                    }
+                }
+            }
+                url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute"
+                result = rro_send(payload=data, url=url)
+                print("\n \n \n Receipt printed:", result)
+                
+            except Exception as e:
+                print("\n \n \n \n \n _______________________________ rror printing receipt:", e)
+        
+        
+    else:
+        Ticket.query.filter_by(order_id=order_id).delete()
+        db.session.commit()
+    
+    
     
     print("PAYMENT STATUS UPDATED")
 
@@ -1376,107 +1483,7 @@ def success():
     
     user_inf = None
     
-    if order_id:
-        try:
-            user_inf = Payment.query.filter_by(id=order_id).first().tickets_info
-            status = Payment.query.filter_by(id=order_id).order_by(Payment.updatedAt.desc()).first().status
-            
-            confirmation_data = safe_decode(user_inf)
-        except Exception as e:
-            print(f"Помилка обробки даних: {e}")
-            user_inf = "error"
-            
-            
-            
-    if status == "success" or status == "sandbox":
-        try:
-            print("\n \n \n \n Sending ticket email...")
-            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
-            # send_ticket_to_mail(payment.email, pdf_bytes, confirmation_data['movie_title'], '15:30')
-        except Exception as e:
-            print("Error sending ticket email:", e)
-        
-        
-        print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
 
-
-            
-        print('_________________________________________USER INFO PARSED_________________________________________')
-        print(confirmation_data)
-        print('\n \n \n \n \n ')
-
-            
-
-
-
-
-        print("if heandled success CONFIRMATION_DATA:", confirmation_data)
-
-
-
-            
-        
-        try:
-            print("\n \n \n \n RRO START PRINTING RECEIPT \n \n \n \n  ")
-            sum = Payment.query.filter_by(orderId=order_id).first().amount
-            price = confirmation_data['seats'][0]['cost']
-            email = confirmation_data['email']
-            comments = ' comments for receipt \n'
-
-            data  = {
-            "ver": 6,
-            "source": "DM_API",
-            "device": "kasar_online",
-            "tag": "",
-            "need_pf_img": "0",
-            "need_pf_pdf": "0",
-            "need_pf_txt": "0",
-            "need_pf_doccmd": "0",
-            "type": "1",
-            "userinfo": {
-                "email": email,
-                "phone": ""
-            },
-            "fiscal": {
-                "task": 1,
-                "cashier": "Рецепція центру Довженка",
-                "receipt": {
-                    "sum": int(sum),
-                    "comment_down": comments,
-                    "rows": [
-                        {
-                            
-                            "code": "100",
-                            "code2": "",
-                            "name": "Квиток",
-                            "cnt": int(sum/price),
-                            "price":int(price),
-                            "taxgrp": 5,
-                        },
-                    ],
-                    "pays": [
-                        {
-                            "type": 17,
-                            "sum": int(sum),
-                            "change": 0,
-                            "comment": comments,
-                            "currency": "UAN"
-                        }
-                    ]
-                }
-            }
-        }
-            url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute"
-            result = rro_send(payload=data, url=url)
-            print("\n \n \n Receipt printed:", result)
-            
-        except Exception as e:
-            print("\n \n \n \n \n _______________________________ rror printing receipt:", e)
-       
-       
-    else:
-        Ticket.query.filter_by(order_id=order_id).delete()
-        db.session.commit()
             
 
 
