@@ -1183,7 +1183,8 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
+        "sandbox": 1
     }
         
         
@@ -1194,31 +1195,42 @@ def liqpay(movie_data=None, selected_seats=None):
         sum_t = 0
         
         print(" adding tickets... ")
+        operacion = False 
         
-        for i in user_inf['seats']:
-            print(i)
-            tk = Ticket(
-                seatRow=i['row'] +1 ,
-                seatNumb=i['seatNumber'] + 1,
-                sessionId=session,
-                cost=i['cost'],
-                payment_method='online',
-                date_of_purchase=datetime.now(),
-                first_name=user_inf['first_name'],
-                last_name=user_inf['last_name'],
-                email=user_inf['email'],
-                order_id = order_id)
-            print("Adding ticket:", tk)
-            
-            sum_t += i['cost']
-            items_for_banner.append({
-                "row": i['row'],
-                "seatNumber": i['seatNumber']
-            })
-            db.session.add(tk)
-        db.session.commit()
-        
-        print("Tickets added")
+
+        while not operacion:
+            try:
+    
+                for i in user_inf['seats']:
+                    print(i)
+                    tk = Ticket(
+                        seatRow=i['row'] +1 ,
+                        seatNumb=i['seatNumber'] + 1,
+                        sessionId=session,
+                        cost=i['cost'],
+                        payment_method='online',
+                        date_of_purchase=datetime.now(),
+                        first_name=user_inf['first_name'],
+                        last_name=user_inf['last_name'],
+                        email=user_inf['email'],
+                        order_id = order_id)
+                    print("Adding ticket:", tk)
+                    
+                    sum_t += i['cost']
+                    items_for_banner.append({
+                        "row": i['row'],
+                        "seatNumber": i['seatNumber']
+                    })
+                    db.session.add(tk)
+                db.session.commit()
+                
+                print("Tickets added")
+                
+                operacion = True
+            except Exception as e:
+                print("\n \n \n \n \n \n Error adding tickets, retrying...", e)
+                print("\n \n \n \n \n \n ")
+
             
 
 
@@ -1258,7 +1270,7 @@ def success_loading():
 @app.route('/check_payment_status', methods=['GET'])
 def check_payment_status():
     order_id = request.args.get('order_id')
-    payment = Payment.query.filter_by(id=order_id).first()
+    payment = Payment.query.filter_by(id=order_id).order_by(Payment.updatedAt.desc()).first()
     try: 
         print(payment.status)
     except:
@@ -1340,7 +1352,43 @@ def payment_callback():
 
 
     
-    if status == "success  " or status == "sandbox":
+    
+       
+       
+       
+    return jsonify({
+        'message': 'Payment successful',
+        'order_id': order_id,
+        'payment_status': payment.status
+    })   
+
+
+
+
+
+
+@app.route('/final_success', methods=['GET'])
+def success():
+    
+    success_pay = request.args.get('is_success')
+    order_id = request.args.get('order_id')
+
+    
+    user_inf = None
+    
+    if order_id:
+        try:
+            user_inf = Payment.query.filter_by(id=order_id).first().tickets_info
+            status = Payment.query.filter_by(id=order_id).order_by(Payment.updatedAt.desc()).first().status
+            
+            confirmation_data = safe_decode(user_inf)
+        except Exception as e:
+            print(f"Помилка обробки даних: {e}")
+            user_inf = "error"
+            
+            
+            
+    if status == "success" or status == "sandbox":
         try:
             print("\n \n \n \n Sending ticket email...")
             pdf_bytes = url_for('ticket_pdf', order_id=order_id)
@@ -1429,36 +1477,6 @@ def payment_callback():
     else:
         Ticket.query.filter_by(order_id=order_id).delete()
         db.session.commit()
-       
-       
-       
-    return jsonify({
-        'message': 'Payment successful',
-        'order_id': order_id,
-        'payment_status': payment.status
-    })   
-
-
-
-
-
-
-@app.route('/final_success', methods=['GET'])
-def success():
-    
-    success_pay = request.args.get('is_success')
-    order_id = request.args.get('order_id')
-
-    
-    user_inf = None
-    
-    if order_id:
-        try:
-            user_inf = Payment.query.filter_by(id=order_id).first().tickets_info
-            user_inf = safe_decode(user_inf)
-        except Exception as e:
-            print(f"Помилка обробки даних: {e}")
-            user_inf = None
             
 
 
