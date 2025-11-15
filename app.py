@@ -1449,7 +1449,8 @@ def payment_callback():
         
         
     else:
-        Ticket.query.filter_by(order_id=order_id).delete()
+        for i in Ticket.query.filter_by(order_id=order_id).all():
+            db.session.delete(i)
         db.session.commit()
     
     
