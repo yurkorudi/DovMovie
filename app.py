@@ -413,27 +413,6 @@ def get_session_dates():
     return jsonify([d.isoformat() for d in dates])
 
 
-def cleanup_pending_order(order_id):
-    time_count = 0 
-    for a in range(31):
-        time.sleep(120)
-        time_count += 2
-        try: 
-            payment = Payment.query.filter_by(orderId=order_id).first()
-            if not payment:
-                return
-            if payment.status == 'pending' and time_count < 60:
-                pass 
-            elif payment.status == 'pending' and time_count >= 62:
-                for i in Ticket.query.filter_by(order_id=order_id).all():
-                    db.session.delete(i)
-                db.session.commit()
-            elif payment.status != 'pending':
-                break
-        except Exception as e:
-            print(f"[CLEANUP] Error checking payment status for order {order_id}: {e}")
-            return
-    return
                 
                 
     
@@ -1263,7 +1242,6 @@ def liqpay(movie_data=None, selected_seats=None):
                 print("\n \n \n \n \n \n Error adding tickets, retrying...", e)
                 print("\n \n \n \n \n \n ")
                 
-        threading.Thread(target=cleanup_pending_order, args=(order_id,)).start()
 
             
 
@@ -1384,6 +1362,17 @@ def payment_callback():
     print("UPDATING PAYMENT STATUS TO:", payment.status)
     db.session.commit()
     
+    if status == "failure" or status == "error":
+        for i in Ticket.query.filter_by(order_id=order_id).all():
+            db.session.delete(i)
+        db.session.commit()
+        return jsonify({
+        'message': 'Payment successful',
+        'order_id': order_id,
+        'payment_status': payment.status
+    })   
+        
+    
     
     
     
@@ -1469,11 +1458,7 @@ def payment_callback():
                 print("\n \n \n \n \n _______________________________ rror printing receipt:", e)
         
         
-    elif status == "failure":
-        for i in Ticket.query.filter_by(order_id=order_id).all():
-            db.session.delete(i)
-        db.session.commit()
-    
+
     
     
     print("PAYMENT STATUS UPDATED")
