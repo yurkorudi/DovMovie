@@ -26,6 +26,9 @@ import json
 from sqlalchemy import func
 import traceback
 from flask import send_file, session as flask_session
+import threading 
+import time 
+
 
 
 
@@ -408,6 +411,35 @@ def get_session_dates():
     sorted_dates = sorted(dates)
     print(sorted_dates)
     return jsonify([d.isoformat() for d in dates])
+
+
+def cleanup_pending_order(order_id):
+    time_count = 0 
+    for a in range(31):
+        time.sleep(120)
+        time_count += 2
+        try: 
+            payment = Payment.query.filter_by(orderId=order_id).first()
+            if not payment:
+                return
+            if payment.status == 'pending' and time_count < 60:
+                pass 
+            elif payment.status == 'pending' and time_count >= 62:
+                for i in Ticket.query.filter_by(order_id=order_id).all():
+                    db.session.delete(i)
+                db.session.commit()
+            elif payment.status != 'pending':
+                break
+        except Exception as e:
+            print(f"[CLEANUP] Error checking payment status for order {order_id}: {e}")
+            return
+    return
+                
+                
+    
+
+
+
 
 
 @app.route('/api/sessions/times')
@@ -1183,7 +1215,8 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
+        'sandbox': 1
     }
         
         
@@ -1229,6 +1262,8 @@ def liqpay(movie_data=None, selected_seats=None):
             except Exception as e:
                 print("\n \n \n \n \n \n Error adding tickets, retrying...", e)
                 print("\n \n \n \n \n \n ")
+                
+        threading.Thread(target=cleanup_pending_order, args=(order_id,)).start()
 
             
 
@@ -1341,9 +1376,13 @@ def payment_callback():
 
     
     
-    payment.status = status
-    payment.liqpay_response = json.dumps(payload)
-    print("UPDATING PAYMENT STATUS TO:", payment.status)
+    if payment.updatedAt > payment.createdAt + timedelta(minutes=3) and payment.status != 'pending':
+        payment.status = 'timeout'
+    
+    else:
+        payment.status = status
+        payment.liqpay_response = json.dumps(payload)
+        print("UPDATING PAYMENT STATUS TO:", payment.status)
     db.session.commit()
     
     
@@ -1362,33 +1401,15 @@ def payment_callback():
         
         
     if status == "success" or status == "sandbox":
-        try:
-            print("\n \n \n \n Sending ticket email...")
-            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+        # try:
+        #     print("\n \n \n \n Sending ticket email...")
+            # pdf_bytes = url_for('ticket_pdf', order_id=order_id)
             # send_ticket_to_mail(payment.email, pdf_bytes, confirmation_data['movie_title'], '15:30')
-        except Exception as e:
-            print("Error sending ticket email:", e)
+        # except Exception as e:
+        #     print("Error sending ticket email:", e)
         
-        
-        print("if heandled sandbox CONFIRMATION_DATA:", confirmation_data)
 
-
-            
-        print('_________________________________________USER INFO PARSED_________________________________________')
-        print(confirmation_data)
-        print('\n \n \n \n \n ')
-
-            
-
-
-
-
-        print("if heandled success CONFIRMATION_DATA:", confirmation_data)
         result = None
-
-
-
-            
         while not result:
             try:
                 print("\n \n \n \n RRO START PRINTING RECEIPT \n \n \n \n  ")
