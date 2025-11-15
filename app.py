@@ -1376,14 +1376,14 @@ def payment_callback():
 
     
     
-    if payment.updatedAt > payment.createdAt + timedelta(minutes=3) and payment.status != 'pending':
-        payment.status = 'timeout'
+
     
-    else:
-        payment.status = status
-        payment.liqpay_response = json.dumps(payload)
-        print("UPDATING PAYMENT STATUS TO:", payment.status)
+
+    payment.status = status
+    payment.liqpay_response = json.dumps(payload)
+    print("UPDATING PAYMENT STATUS TO:", payment.status)
     db.session.commit()
+    
     
     
     
@@ -1469,7 +1469,7 @@ def payment_callback():
                 print("\n \n \n \n \n _______________________________ rror printing receipt:", e)
         
         
-    else:
+    elif status == "failure":
         for i in Ticket.query.filter_by(order_id=order_id).all():
             db.session.delete(i)
         db.session.commit()
