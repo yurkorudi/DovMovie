@@ -23,7 +23,7 @@ import time
 from zoneinfo import ZoneInfo
 import pytz
 import json
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, exists
 import traceback
 from flask import send_file, session as flask_session
 import threading 
@@ -702,17 +702,22 @@ def admin_full_reports():
     except ValueError:
         selected_date = date.today()
 
-    tickets = db.session.query(Ticket, Showtime, Movie, Payment) \
+    tickets = db.session.query(Ticket, Showtime, Movie) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
-        .outerjoin(Payment, Payment.orderId == Ticket.order_id) \
+        .filter(func.date(Showtime.dateTime) == selected_date) \
         .filter(
             or_(
-                Ticket.order_id == None,                     # всі без order_id
-                Payment.status == "success"                  # тільки успішні, якщо Payment існує
+                Ticket.order_id == None,
+
+                exists().where(
+                    and_(
+                        Payment.orderId == Ticket.order_id,
+                        Payment.status == "success"
+                    )
+                )
             )
         )\
-        .filter(func.date(Showtime.dateTime) == selected_date) \
         .all()
 
     print('Всього квитків:', len(tickets))
