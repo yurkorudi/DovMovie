@@ -674,7 +674,7 @@ def admin_reports():
 
     report_data = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=3)).strftime('%H:%M'), ticket.cost)
+        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
 
     formatted_data = [{
@@ -726,7 +726,7 @@ def admin_full_reports():
     # Групування по фільму, годині і ціні
     report_data = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=3)).strftime('%H:%M'), ticket.cost)
+        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
 
     # Форматування для шаблону
