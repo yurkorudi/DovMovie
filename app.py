@@ -708,11 +708,8 @@ def admin_full_reports():
         .outerjoin(Payment, Payment.orderId == Ticket.order_id) \
         .filter(
             or_(
-                Ticket.order_id == None,                     # беремо всі без order_id
-                and_(
-                    Ticket.order_id != None,                 # якщо order_id є
-                    Payment.status == "success"              # тільки success
-                )
+                Ticket.order_id == None,                     # всі без order_id
+                Payment.status == "success"                  # тільки успішні, якщо Payment існує
             )
         )\
         .filter(func.date(Showtime.dateTime) == selected_date) \
