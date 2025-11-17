@@ -705,17 +705,18 @@ def admin_full_reports():
     tickets = db.session.query(Ticket, Showtime, Movie) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
-        .filter(func.date(Showtime.dateTime) == selected_date) \
         .filter(
+            func.date(Showtime.dateTime) == selected_date,
             or_(
                 Ticket.order_id == None,
-
-                exists().where(
-                    and_(
-                        Payment.orderId == Ticket.order_id,
-                        Payment.status == "success"
-                    )
+                db.session.query(Payment.id)
+                .filter(
+                    Payment.orderId.op('COLLATE')('utf8mb4_unicode_ci')
+                    ==
+                    Ticket.order_id.op('COLLATE')('utf8mb4_unicode_ci'),
+                    Payment.status == 'success'
                 )
+                .exists()
             )
         )\
         .all()
