@@ -702,7 +702,7 @@ def admin_full_reports():
     except ValueError:
         selected_date = date.today()
 
-    tickets = db.session.query(Ticket, Showtime, Movie) \
+    tickets = db.session.query(Ticket, Showtime, Movie, Payment) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
         .outerjoin(Payment, Payment.orderId == Ticket.order_id) \
