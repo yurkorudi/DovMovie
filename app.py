@@ -702,12 +702,10 @@ def admin_full_reports():
     except ValueError:
         selected_date = date.today()
 
-    tickets = db.session.query(Ticket, Showtime, Movie, Payment) \
+    tickets = db.session.query(Ticket, Showtime, Movie) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
-        .join(Payment, Payment.orderId == Ticket.order_id)\
         .filter(func.date(Showtime.dateTime) == selected_date) \
-        .filter(~Payment.status.in_(["pending", "created"])) \
         .all()
 
     print('Всього квитків:', len(tickets))
