@@ -707,7 +707,6 @@ def admin_full_reports():
         .join(Movie, Movie.id == Showtime.movieId) \
         .join(Payment, Payment.orderId == Ticket.order_id)\
         .filter(Showtime.dateTime.date() == selected_date) \
-        .filter(~Payment.status.in_(["pending", "created"])) \
         .all()
 
     print('Всього квитків:', len(tickets))
