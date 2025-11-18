@@ -51,7 +51,10 @@
         const method = document.createElement('div');
         method.classList.add('payments');
 
-        const tickets = "{{ data.pay_method }}".split('');
+        const tickets = "{{ data.pay_method }}";
+        console.log(tickets);
+
+        tickets = tickets.split('');
 
         methods = {};
         for (const item of tickets) {
