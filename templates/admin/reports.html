@@ -51,7 +51,7 @@
         const method = document.createElement('div');
         method.classList.add('payments')
 
-        const tickets = "{{ item.pay_method }}"
+        const tickets = "{{ data.pay_method }}"
 
         methods = {};
         for (const item of tickets) {
