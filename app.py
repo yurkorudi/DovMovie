@@ -772,10 +772,13 @@ def admin_reports():
     report_data = {}
     payment_amounts = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost, ticket.payment_method)
+        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
         method = ticket.payment_method or "unknown"
         payment_amounts[method] = payment_amounts.get(method, 0) + ticket.cost
+
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!PAYMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(payment_amounts)
 
     formatted_data = [{
         'title': k[0],
