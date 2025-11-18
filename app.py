@@ -1501,7 +1501,7 @@ def payment_callback():
             print(f"Помилка обробки даних: {e}")
             user_inf = "error"
             
-    print("\n \n \n \n \n \n \n \n entering if \n \n \n \n \n )
+    print("\n \n \n \n \n \n \n \n entering if \n \n \n \n \n ")
         
     if status == "success" or status == "sandbox":
         
