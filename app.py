@@ -1511,13 +1511,13 @@ def payment_callback():
         
         try:
             print("\n \n \n \n Sending ticket email...\n \n \n \n ")
-            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
-            send_dovzhenko_ticket_email(
-        recipient=payment.email,
-        movie_title=confirmation_data['movie'],
-        session_datetime='15^40 20.12',
+            # pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+            # send_dovzhenko_ticket_email(
+        # recipient=payment.email,
+        # movie_title=confirmation_data['movie'],
+        # session_datetime='15^40 20.12',
         # session_datetime=Showtime.query.filter_by(id=payment.sessionId).first().dateTime.strftime('%d.%m %H:%M'),
-        pdf_bytes=pdf_bytes)
+        # pdf_bytes=pdf_bytes)
             print("\n \n \n \n \n \n \n \n Ticket email sent.\n \n \n \n \n \n \n \n ")
         except Exception as e:
             print("\n \n \n Error sending ticket email: \n \n \n ", e)
