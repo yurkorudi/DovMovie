@@ -1510,10 +1510,11 @@ def payment_callback():
             send_dovzhenko_ticket_email(
         recipient=payment.email,
         movie_title=confirmation_data['movie_title'],
-        session_datetime=Showtime.query.filter_by(id=payment.sessionId).first().dateTime.strftime('%d.%m %H:%M'),
+        session_datetime='15^40 20.12',
+        # session_datetime=Showtime.query.filter_by(id=payment.sessionId).first().dateTime.strftime('%d.%m %H:%M'),
         pdf_bytes=pdf_bytes)
         except Exception as e:
-            print("Error sending ticket email:", e)
+            print("\n \n \n Error sending ticket email: \n \n \n ", e)
         
 
         result = None
