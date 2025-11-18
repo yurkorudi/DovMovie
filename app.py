@@ -770,15 +770,15 @@ def admin_reports():
 
 
     report_data = {}
-    payment_amounts = {}
+    # payment_amounts = {}
     for ticket, session, film in tickets:
         key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
-        method = ticket.payment_method or "unknown"
-        payment_amounts[method] = payment_amounts.get(method, 0) + ticket.cost
+    #     method = ticket.payment_method or "unknown"
+    #     payment_amounts[method] = payment_amounts.get(method, 0) + ticket.cost
 
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!PAYMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(payment_amounts)
+    # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!PAYMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # print(payment_amounts)
 
     formatted_data = [{
         'title': k[0],
@@ -793,7 +793,7 @@ def admin_reports():
 
     return render_template('admin/reports.html',
                         data=formatted_data,
-                        payment_amounts = payment_amounts,
+                        # payment_amounts = payment_amounts,
                         selected_date=selected_date.strftime('%Y-%m-%d'),
                         total_tickets=total_tickets,
                         total_revenue=total_revenue)
@@ -1311,8 +1311,7 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
-        'sandbox': 1
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
     }
         
         
