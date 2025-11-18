@@ -686,15 +686,17 @@ def admin_reports():
 
 
     report_data = {}
+    payment_amounts = {}
     for ticket, session, film in tickets:
         key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost, ticket.payment_method)
         report_data[key] = report_data.get(key, 0) + 1
+        method = ticket.payment_method or "unknown"
+        payment_amounts[method] = payment_amounts.get(method, 0) + ticket.cost
 
     formatted_data = [{
         'title': k[0],
         'time': k[1],
         'price': k[2],
-        'pay_method': k[3],
         'count': v
     } for k, v in report_data.items()]
 
@@ -704,6 +706,7 @@ def admin_reports():
 
     return render_template('admin/reports.html',
                         data=formatted_data,
+                        payment_amounts = payment_amounts,
                         selected_date=selected_date.strftime('%Y-%m-%d'),
                         total_tickets=total_tickets,
                         total_revenue=total_revenue)
