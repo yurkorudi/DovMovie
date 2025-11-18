@@ -666,7 +666,20 @@ def admin_reports():
     tickets = db.session.query(Ticket, Showtime, Movie) \
         .join(Showtime, Showtime.id == Ticket.sessionId) \
         .join(Movie, Movie.id == Showtime.movieId) \
-        .filter(Ticket.date_of_purchase == selected_date) \
+        .filter(
+            Ticket.date_of_purchase == selected_date,
+            or_(
+                Ticket.order_id == None,
+                db.session.query(Payment.id)
+                .filter(
+                    Payment.orderId.op('COLLATE')('utf8mb4_unicode_ci')
+                    ==
+                    Ticket.order_id.op('COLLATE')('utf8mb4_unicode_ci'),
+                    Payment.status == 'success'
+                )
+                .exists()
+            )
+        )\
         .all()
 
     print('Всього квитків:', len(tickets))
@@ -674,7 +687,7 @@ def admin_reports():
 
     report_data = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%H:%M'), ticket.cost)
+        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%m-%d %H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
 
     formatted_data = [{
