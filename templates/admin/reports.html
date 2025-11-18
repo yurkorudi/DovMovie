@@ -47,5 +47,26 @@
         <p>Квитки не знайдено на обрану дату.</p>
     {% endif %}
 
+    <script>
+        const method = document.createElement('div');
+        method.classList.add('payments')
+
+        const tickets = "{{ item.pay_method }}"
+
+        methods = {};
+        for (const item of tickets) {
+            methods[item] = (methods[item] || 0) + 1;
+        }
+
+        for (const key in methods){
+            const p = document.createElement('p');
+            p.textContent = `${key}: ${methods[key]}`;
+            method.appendChild(p);
+        }
+
+
+
+    </script>
+
 </body>
 </html>

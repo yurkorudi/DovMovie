@@ -687,13 +687,14 @@ def admin_reports():
 
     report_data = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%m-%d %H:%M'), ticket.cost)
+        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost, ticket.payment_method)
         report_data[key] = report_data.get(key, 0) + 1
 
     formatted_data = [{
         'title': k[0],
         'time': k[1],
         'price': k[2],
+        'pay_method': k[3],
         'count': v
     } for k, v in report_data.items()]
 
