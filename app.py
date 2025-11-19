@@ -784,12 +784,15 @@ def admin_reports():
 
 
     report_data = {}
-    payment_amounts = {}
+    # payment_amounts = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost, ticket.payment_method)
+        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
-        method = ticket.payment_method or "unknown"
-        payment_amounts[method] = payment_amounts.get(method, 0) + ticket.cost
+    #     method = ticket.payment_method or "unknown"
+    #     payment_amounts[method] = payment_amounts.get(method, 0) + ticket.cost
+
+    # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!PAYMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # print(payment_amounts)
 
     formatted_data = [{
         'title': k[0],
@@ -804,7 +807,7 @@ def admin_reports():
 
     return render_template('admin/reports.html',
                         data=formatted_data,
-                        payment_amounts = payment_amounts,
+                        # payment_amounts = payment_amounts,
                         selected_date=selected_date.strftime('%Y-%m-%d'),
                         total_tickets=total_tickets,
                         total_revenue=total_revenue)
@@ -1322,8 +1325,8 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
-        'sandbox': 1
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
+
     }
         
         
@@ -1521,13 +1524,13 @@ def payment_callback():
         
         try:
             print("\n \n \n \n Sending ticket email...\n \n \n \n ")
-            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
-            send_dovzhenko_ticket_email(
-        recipient=payment.email,
-        movie_title=confirmation_data['movie'],
-        session_datetime='15^40 20.12',
+            # pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+            # send_dovzhenko_ticket_email(
+        # recipient=payment.email,
+        # movie_title=confirmation_data['movie'],
+        # session_datetime='15^40 20.12',
         # session_datetime=Showtime.query.filter_by(id=payment.sessionId).first().dateTime.strftime('%d.%m %H:%M'),
-        pdf_bytes=pdf_bytes)
+        # pdf_bytes=pdf_bytes)
             print("\n \n \n \n \n \n \n \n Ticket email sent.\n \n \n \n \n \n \n \n ")
         except Exception as e:
             print("\n \n \n Error sending ticket email: \n \n \n ", e)
