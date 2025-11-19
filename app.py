@@ -542,7 +542,21 @@ def api_tickets_list():
         return jsonify({"error": "Missing session_id"}), 400
 
     try:
-        tickets = Ticket.query.filter_by(sessionId=session_id).all()
+        tickets = Ticket.query.filter_by(sessionId=session_id)\
+        .filter(
+            or_(
+                Ticket.order_id == None,
+                db.session.query(Payment.id)
+                .filter(
+                    Payment.orderId.op('COLLATE')('utf8mb4_unicode_ci')
+                    ==
+                    Ticket.order_id.op('COLLATE')('utf8mb4_unicode_ci'),
+                    Payment.status == 'success'
+                )
+                .exists()
+            )
+        )\
+        .all()
     except Exception as e:
         print("Помилка в базі:", e)
         return jsonify({"error": "DB query failed"}), 500
