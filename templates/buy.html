@@ -323,16 +323,16 @@
       const buttonExists = hallSection.querySelector('button') !== null;
       if(!buttonExists){
         const btn = document.createElement('button');
-        // btn.textContent = 'Придбати квитки';
-        btn.textContent = 'Через виключення світла, квитки можна придбати лише на касі кінотеатру. За деталями можете звертатися за номер +380 (96) 825 83 60';
+        btn.textContent = 'Придбати квитки';
+        // btn.textContent = 'Через виключення світла, квитки можна придбати лише на касі кінотеатру. За деталями можете звертатися за номер +380 (96) 825 83 60';
         console.log("button");
         console.log(arr);
-        // btn.addEventListener('click', () => buyTicket(arr));
+        btn.addEventListener('click', () => buyTicket(arr));
         hallSection.appendChild(btn);
       }
       else{
         const btn = hallSection.querySelector('button');
-        // btn.addEventListener('click', () => buyTicket(arr));
+        btn.addEventListener('click', () => buyTicket(arr));
         hallSection.appendChild(btn, btn);
 
       }
