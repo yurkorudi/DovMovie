@@ -786,7 +786,7 @@ def admin_reports():
     report_data = {}
     # payment_amounts = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%d.%m %H:%M'), ticket.cost)
+        key = (film.title, (session.dateTime + timedelta(hours=3)).strftime('%d.%m %H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
     #     method = ticket.payment_method or "unknown"
     #     payment_amounts[method] = payment_amounts.get(method, 0) + ticket.cost
@@ -844,7 +844,7 @@ def admin_full_reports():
     # Групування по фільму, годині і ціні
     report_data = {}
     for ticket, session, film in tickets:
-        key = (film.title, (session.dateTime + timedelta(hours=2)).strftime('%H:%M'), ticket.cost)
+        key = (film.title, (session.dateTime + timedelta(hours=3)).strftime('%H:%M'), ticket.cost)
         report_data[key] = report_data.get(key, 0) + 1
 
     # Форматування для шаблону
