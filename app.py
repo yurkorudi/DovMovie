@@ -996,46 +996,46 @@ def cash_prod():
     comments = build_comment_for_receipt(items_for_banner, time_str, name)
     price = sum/len(data)
     data  = {
-    "ver": 6,
-    "source": "DM_API",
-    "device": "kasar",
-    "tag": "",
-    "need_pf_img": "0",
-    "need_pf_pdf": "0",
-    "need_pf_txt": "0",
-    "need_pf_doccmd": "0",
-    "type": "1",
-    "userinfo": {
-        "email": email,
-        "phone": ""
-    },
-    "fiscal": {
-        "task": 1,
-        "cashier": "Рецепція центру Довженка",
-        "receipt": {
-            "sum": sum,
-            "comment_down": comments,
-            "rows": [
-                {
-                    
-                    "code": "100",
-                    "code2": "",
-                    "name": "Квиток",
-                    "cnt": sum/price,
-                    "price":price,
-                    "taxgrp": 5,
-                },
-            ],
-            "pays": [
-                {
-                    "type": 0,
-                    "sum": sum,
-                }
-            ]
+        "ver": 6,
+        "source": "DM_API",
+        "device": "kasar",
+        "tag": "",
+        "need_pf_img": "0",
+        "need_pf_pdf": "0",
+        "need_pf_txt": "0",
+        "need_pf_doccmd": "0",
+        "type": "1",
+        "userinfo": {
+            "email": email,
+            "phone": ""
+        },
+        "fiscal": {
+            "task": 1,
+            "cashier": "Рецепція центру Довженка",
+            "receipt": {
+                "sum": sum,
+                "comment_down": comments,
+                "rows": [
+                    {
+                        
+                        "code": "100",
+                        "code2": "",
+                        "name": "Квиток",
+                        "cnt": sum/price,
+                        "price":price,
+                        "taxgrp": 5,
+                    },
+                ],
+                "pays": [
+                    {
+                        "type": 0,
+                        "sum": sum,
+                    }
+                ]
+            }
         }
     }
-}
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute"
     result = rro_send(payload=data, url=url)
     
     return jsonify({'status':'ok'})
