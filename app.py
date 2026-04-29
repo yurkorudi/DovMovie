@@ -1035,7 +1035,7 @@ def cash_prod():
             }
         }
     }
-    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute"
+    url = f"http://{app.config['DM_HOST']}:{app.config['DM_PORT']}/dm/execute-prn?dev_id=print"
     result = rro_send(payload=data, url=url)
     
     return jsonify({'status':'ok'})
