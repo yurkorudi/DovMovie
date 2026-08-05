@@ -70,7 +70,7 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['DM_DEVICE'] = 'kasar'
 app.config['DM_ONLINE_DEVICE'] = 'kasar_online'
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
-LIQPAY_PUBLIC_KEY = 'i40470776966'
+LIQPAY_PUBLIC_KEY = 'sandbox_i65007373353'
 LIQPAY_PRIVATE_KEY = 'mHLYgc7FLwKeqBrpp6Pay4O7a4GBr9gueYdJLeKB'
 
 
@@ -1333,7 +1333,7 @@ def liqpay(movie_data=None, selected_seats=None):
         db.session.commit()
         
         params = {
-        "public_key": 'sandbox_i65007373353',
+        "public_key": LIQPAY_PUBLIC_KEY,
         "version": "3",
         "action": "pay",
         "amount": str(total_cost),
