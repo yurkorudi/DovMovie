@@ -697,12 +697,19 @@ def ticket_pdf():
 
     p.showPage()
     p.save()
+    pdf_butes = buf.getvalue()
     buf.seek(0)
 
     download = request.args.get("download", "false").lower() == "true"
     try:
-        pdf_butes = buf
-        send_dovzhenko_ticket_email(recipient=buyer_email, movie_title=title, session_datetime=dt_str, sender_email=EMAIL, sender_password=PASSWORD, pdf_bytes=pdf_butes)
+        send_dovzhenko_ticket_email(
+        recipient=buyer_email,
+        movie_title=title,
+        session_datetime=dt_str,
+        sender_email=EMAIL,
+        sender_password=PASSWORD,
+        pdf_bytes=pdf_butes
+    )
     except Exception as error_:
 
         print('__________________________________________________________________________________________ВСЬО НАХЄР ЛЯГЛО ВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛО')
