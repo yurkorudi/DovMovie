@@ -437,72 +437,7 @@ def send_dovzhenko_ticket_email(
     sender_email,
     sender_password
 ):
-    html_content = f"""
-<!doctype html>
-<html lang="uk">
-  <body style="margin:0;padding:0;background-color:#0A1A2F;font-family:Arial,Helvetica,sans-serif;color:#333;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 0;">
-      <tr>
-        <td align="center">
 
-          <table role="presentation" width="600" cellpadding="0" cellspacing="0"
-                 style="background:#ffffff;border-radius:8px;overflow:hidden;">
-
-            <tr>
-              <td style="background:#111;padding:24px;text-align:center;">
-                <span style="font-size:22px;color:white;font-weight:bold;">
-                    🎬 Dovzhenko Кіно
-                </span>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:30px;">
-                <h2 style="color:#e53935;margin-top:0;">
-                    Ваш квиток готовий
-                </h2>
-
-                <p>
-                    <strong>Фільм:</strong> {movie_title}
-                </p>
-
-                <p>
-                    <strong>Сеанс:</strong> {session_datetime}
-                </p>
-
-                <p>
-                    Дякуємо за покупку квитка!
-                </p>
-
-                <p>
-                    Ваш електронний квиток знаходиться у вкладенні до цього листа.
-                </p>
-
-                <p style="margin-top:25px;">
-                    Якщо виникли питання, звертайтесь:
-                    <a href="mailto:lviv.dovzhenkocentre@gmail.com">
-                        lviv.dovzhenkocentre@gmail.com
-                    </a>
-                </p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="background:#111;color:#ccc;text-align:center;padding:20px;font-size:13px;">
-                © 2025 Dovzhenko Center<br>
-                проспект Червоної Калини 81, Львів<br>
-                +380 (96) 825 83 60
-              </td>
-            </tr>
-
-          </table>
-
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-"""
 
     msg = EmailMessage()
 
@@ -520,12 +455,11 @@ def send_dovzhenko_ticket_email(
             """
                 )
 
-    msg.add_alternative(html_content, subtype="html")
 
-    pdf_data = pdf_bytes
+
 
     msg.add_attachment(
-        pdf_data,
+        pdf_bytes,
         maintype="application",
         subtype="pdf",
         filename="ticket.pdf"
@@ -767,7 +701,7 @@ def ticket_pdf():
 
     download = request.args.get("download", "false").lower() == "true"
     try:
-        pdf_butes = buf.getvalue()
+        pdf_butes = buf
         send_dovzhenko_ticket_email(recipient=buyer_email, movie_title=title, session_datetime=dt_str, sender_email=EMAIL, sender_password=PASSWORD, pdf_bytes=pdf_butes)
     except Exception as error_:
 
