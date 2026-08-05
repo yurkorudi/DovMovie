@@ -79,12 +79,12 @@ PASSWORD = 'ypgg dhnr aubi kzyi'
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'SmmAgeOfficialPage@gmail.com'
-app.config['MAIL_PASSWORD'] = 'SmmAgeOfficialPagePasswordSecond'
+app.config['MAIL_USERNAME'] = 'lviv.dovzhenkocentre@gmail.com'
+app.config['MAIL_PASSWORD'] = 'ypgg dhnr aubi kzyi'
 
 
 lp = LiqPay(LIQPAY_PUBLIC_KEY, LIQPAY_PRIVATE_KEY)
-gm = yagmail.SMTP('lviv.dovzhenkocinema@gmail.com', 'sefp vmne atyf mxqv')
+gm = yagmail.SMTP('lviv.dovzhenkocentre@gmail.com', 'ypgg dhnr aubi kzyi')
 
 
 db.init_app(app)
@@ -697,23 +697,13 @@ def ticket_pdf():
 
     p.showPage()
     p.save()
-    pdf_butes = buf.getvalue()
     buf.seek(0)
 
     download = request.args.get("download", "false").lower() == "true"
-    try:
-        send_dovzhenko_ticket_email(
-        recipient=buyer_email,
-        movie_title=title,
-        session_datetime=dt_str,
-        sender_email=EMAIL,
-        sender_password=PASSWORD,
-        pdf_bytes=pdf_butes
-    )
-    except Exception as error_:
 
-        print('__________________________________________________________________________________________ВСЬО НАХЄР ЛЯГЛО ВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛО')
-        print(error_)
+
+    print('__________________________________________________________________________________________ВСЬО НАХЄР ЛЯГЛО ВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛО')
+
     return send_file(buf, as_attachment=download, download_name='ticket.pdf', mimetype='application/pdf')
 
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -1522,13 +1512,13 @@ def payment_callback():
         
         try:
             print("\n \n \n \n Sending ticket email...\n \n \n \n ")
-            # pdf_bytes = url_for('ticket_pdf', order_id=order_id)
-            # send_dovzhenko_ticket_email(
-        # recipient=payment.email,
-        # movie_title=confirmation_data['movie'],
-        # session_datetime='15^40 20.12',
-        # session_datetime=Showtime.query.filter_by(id=payment.sessionId).first().dateTime.strftime('%d.%m %H:%M'),
-        # pdf_bytes=pdf_bytes)
+            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+            send_dovzhenko_ticket_email(
+                recipient=payment.email,
+                movie_title=confirmation_data['movie'],
+                session_datetime='1540 20.12',
+                # session_datetime=Showtime.query.filter_by(id=payment.sessionId).first().dateTime.strftime('%d.%m %H:%M'),
+                pdf_bytes=pdf_bytes)
             print("\n \n \n \n \n \n \n \n Ticket email sent.\n \n \n \n \n \n \n \n ")
         except Exception as e:
             print("\n \n \n Error sending ticket email: \n \n \n ", e)
