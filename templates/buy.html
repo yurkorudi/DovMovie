@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
   <meta charset="UTF-8">
   <title>{{ movie_data['title'] }}</title>
@@ -8,13 +9,17 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    .hidden { display: none; }
+    .hidden {
+      display: none;
+    }
+
     .session-blocks {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
       margin: 1rem 0;
     }
+
     .session-block {
       padding: 0.5rem 1rem;
       background: #f0f0f0;
@@ -23,19 +28,26 @@
       user-select: none;
       transition: background 0.2s;
     }
+
     .session-block:hover {
       background: #e0e0e0;
     }
+
     .session-block.active {
       background: #ff416c;
       color: #fff;
     }
-    .booking-layout { padding: 1rem; }
-    .hall-wrapper { 
+
+    .booking-layout {
+      padding: 1rem;
+    }
+
+    .hall-wrapper {
       margin-top: 1.5rem;
     }
   </style>
-</head> 
+</head>
+
 <body>
   {% include 'header.html' %}
 
@@ -52,8 +64,8 @@
 
     </div>
     <section class="film-info">
-      
-      
+
+
       <div class="details">
         <h1>{{ movie_data['title'] }}</h1>
         <p><strong>Вік</strong> {{ movie_data['age'] }}</p>
@@ -72,272 +84,276 @@
       </div>
 
       <section class="hall-wrapper hidden" id="hall-section">
-      <div class="hall">
-        <div class="screen">Екран</div>
-        <div id="price-display" class="price-display"></div>
-        <div id="seats"></div>
-      </div>
-    </section>
-    {% if is_mobile %}
+        <div class="hall">
+          <div class="screen">Екран</div>
+          <div id="price-display" class="price-display"></div>
+          <div id="seats"></div>
+        </div>
+      </section>
+      {% if is_mobile %}
       <div id="selected-seats-info"></div>
       {% endif %}
     </section>
 
-    
+
   </main>
 
   {% include 'footer.html' %}
 
   <script>
 
-  window.addEventListener('DOMContentLoaded', () => {
-    size = 0;
-    if ("{{ is_mobile }}" === "False"){
-      size = 32;
-    }
-    else {
-      size = 20;
-    }
-
-    let todaySessionDate;
-    let todaySessionTime;
-    let selectedSessionID;
-
-    const movieId    = "{{ movie_data['id'] }}";
-    const dateBlocks = document.getElementById('date-blocks');
-    const timeContainer = document.getElementById('time-container');
-    const timeBlocks = document.getElementById('time-blocks');
-    const hallSection = document.getElementById('hall-section');
-
-    // API endpoints
-    const datesUrl = `/api/sessions/dates?movie_id=${movieId}`;
-    const timesUrl = date => `/api/sessions/times?movie_id=${movieId}&date=${date}`;
-
-    let dayOfWeek;
-    const bookedBySession = {};
-    let occupiedBySession = [];
-
-    async function loadAllTickets() {
-      try {
-        const res  = await fetch('/api/tickets');
-        const data = await res.json();
-        data.forEach(t => {
-          if (!bookedBySession[t.sessionId]) 
-            bookedBySession[t.sessionId] = [];
-          bookedBySession[t.sessionId].push({ row: t.row, seatNumber: t.seatNumber });
-        });
-      } catch (e) {
-        console.error('Не вдалося завантажити продані квитки', e);
-      }
-    }
-
-    async function fetchSessions(date) {
-      console.log('Запит сесій на дату:', date);
-      const timeOnly = /^\d{2}:\d{2}$/;
-      try {
-        if(timeOnly.test(date)){
-          res = await fetch(`/api/sessions?date=${todaySessionDate}`);
-        }
-        else{
-          res = await fetch(`/api/sessions?date=${date}`);
-        }
-        console.log('Статус відповіді:', res.status);
-        const data = await res.json();
-        console.log('Отримані сесії:', data);
-
-        if(todaySessionTime != undefined){
-          const matchingSessions = data.filter(session => {
-            let [hours, minutes] = session.time.split(":").map(Number);
-            hours = (hours + 3) % 24; //changeTime
-            const sessionTimeAdjusted = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-            return sessionTimeAdjusted === todaySessionTime;
-          });
-
-          selectedSessionID = matchingSessions.map(s => s.id);
-          console.log("selected sessio id: " + selectedSessionID);
-        }
-        renderSessions(selectedSessionID);
-      } catch (err) {
-        console.error('Помилка fetchSessions:', err);
-      }
-    }
-
-    function renderSessions(session) {  
-      occupiedBySession = bookedBySession[session] || [];
-      console.log('Обрано сесію:', session, 'Зайняті місця:', occupiedBySession);
-    }
-
-    // Отримати дати
-    fetch(datesUrl)
-      .then(r => r.json())
-      .then(dates => {
-        dates.sort((a, b) => new Date(a) - new Date(b));
-        dates.forEach(date => {
-          today = new Date();
-          today = today.toISOString().split('T')[0];
-          sessionDate = new Date(date);
-          sessionDate = sessionDate.toISOString().split('T')[0];
-          if (sessionDate<today) return;
-          const block = document.createElement('div');
-          block.className = 'session-block';
-          block.textContent = new Date(date)
-            .toLocaleDateString('uk-UA', { weekday:'short', day:'numeric', month:'numeric' });
-          block.dataset.value = date;
-          block.addEventListener('click', () => onDateSelect(block));
-          dateBlocks.appendChild(block);
-        });
-      });
-
-    function onDateSelect(block) {
-      Array.from(dateBlocks.children).forEach(b => b.classList.remove('active'));
-      block.classList.add('active');
-      timeBlocks.innerHTML = '';
-      timeContainer.classList.remove('hidden');
-      hallSection.classList.add('hidden');
-
-      const selectedDay = new Date(block.dataset.value);
-      const selectedDayNumber = selectedDay.getDay();
-      dayOfWeek = selectedDayNumber;
-
-      loadAllTickets();
-
-      todaySessionDate = block.dataset.value;
-      fetchSessions(block.dataset.value);
-
-      fetch(timesUrl(block.dataset.value))
-        .then(r => r.json())
-        .then(times => {
-          times.forEach(time => {
-            const tblock = document.createElement('div');
-            tblock.className = 'session-block';
-            tblock.textContent = time;
-            tblock.dataset.value = time;
-
-            tblock.addEventListener('click', () => {
-              onTimeSelect(tblock);
-            });
-            timeBlocks.appendChild(tblock);
-          });
-        });
-    }
-
-    function onTimeSelect(block) {
-      Array.from(timeBlocks.children).forEach(b => b.classList.remove('active'));
-      block.classList.add('active');
-      todaySessionTime = block.textContent;  
-      hallSection.classList.remove('hidden');
-      fetchSessions(todaySessionTime).then(() =>drawHall());
-    }
-
-    
-
-    // Структура залу
-    const hallStructure = [
-    [3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0],
-    [3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0],
-    [3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0],
-    [3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0],
-    [3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-    [2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0],
-    [2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0],
-    [2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0],
-    ];
-    const seatsEl      = document.getElementById('seats');
-    const priceDisplay = document.getElementById('price-display');
-    const priceMap = {};
-    
-
-    function drawHall() {
-
-      if (dayOfWeek === 6 || dayOfWeek === 0) {
-        priceMap[1] = 110;
-        priceMap[2] = 110;
-        priceMap[3] = 110;
-      } 
-      else if (dayOfWeek === 2) {
-        priceMap[1] = 80;
-        priceMap[2] = 80;
-        priceMap[3] = 80;
+    window.addEventListener('DOMContentLoaded', () => {
+      size = 0;
+      if ("{{ is_mobile }}" === "False") {
+        size = 32;
       }
       else {
-        priceMap[1] = 100;
-        priceMap[2] = 100;
-        priceMap[3] = 100;
+        size = 20;
       }
-      
-      seatsEl.innerHTML = '';
-      priceDisplay.textContent = '';
-      const stylesST = getComputedStyle(seatsEl);
-      seatsEl.style.display = 'inline-grid';
-      seatsEl.style.gridTemplateColumns = `repeat(${Math.max(...hallStructure.map(r=>r.length))+1}, ${size}px)`;
 
-      hallStructure.forEach((row, r) => {
-        const p = document.createElement('p');
-        p.textContent = r + 1;
-        p.style.color = '#fff';
-        p.style.textAlign = 'center';
-        p.style.margin = '5px';
-        seatsEl.appendChild(p);
-        row.forEach((cell, c) => {
-          if (cell === 0) {
-            const spacer = document.createElement('div'); spacer.className = 'seat-gap';
-            seatsEl.appendChild(spacer);
-            return;
+      let todaySessionDate;
+      let todaySessionTime;
+      let selectedSessionID;
+
+      const movieId = "{{ movie_data['id'] }}";
+      const dateBlocks = document.getElementById('date-blocks');
+      const timeContainer = document.getElementById('time-container');
+      const timeBlocks = document.getElementById('time-blocks');
+      const hallSection = document.getElementById('hall-section');
+
+      // API endpoints
+      const datesUrl = `/api/sessions/dates?movie_id=${movieId}`;
+      const timesUrl = date => `/api/sessions/times?movie_id=${movieId}&date=${date}`;
+
+      let dayOfWeek;
+      const bookedBySession = {};
+      let occupiedBySession = [];
+
+      async function loadAllTickets() {
+        try {
+          hallSection.style.display = "none";
+          const res = await fetch('/api/tickets');
+          const data = await res.json();
+          data.forEach(t => {
+            if (!bookedBySession[t.sessionId])
+              bookedBySession[t.sessionId] = [];
+            bookedBySession[t.sessionId].push({ row: t.row, seatNumber: t.seatNumber });
+          });
+          hallSection.style.display = "flex";
+
+        } catch (e) {
+          console.error('Не вдалося завантажити продані квитки', e);
+        }
+      }
+
+      async function fetchSessions(date) {
+        console.log('Запит сесій на дату:', date);
+        const timeOnly = /^\d{2}:\d{2}$/;
+        try {
+          if (timeOnly.test(date)) {
+            res = await fetch(`/api/sessions?date=${todaySessionDate}`);
           }
-          const div = document.createElement('div');
-          div.className = `place type-${cell}`;
-          div.dataset.row = r;
-          div.dataset.col = c;
-          div.dataset.price = priceMap[cell];
-          div.textContent = c + 1;
-          const occupied = occupiedBySession.some(o => o.row===r && o.seatNumber===c);
-          console.log("occupied: "+occupied);
-          if (occupied) div.classList.add('occupied');
           else {
-            div.addEventListener('mouseover', () => priceDisplay.textContent = `${div.dataset.price} ₴`);
-            div.addEventListener('mouseout',  () => priceDisplay.textContent = '');
-            div.addEventListener('click',    () => { div.classList.toggle('selected'); updateSelectedSeats(); });
+            res = await fetch(`/api/sessions?date=${date}`);
           }
-          seatsEl.appendChild(div);
+          console.log('Статус відповіді:', res.status);
+          const data = await res.json();
+          console.log('Отримані сесії:', data);
+
+          if (todaySessionTime != undefined) {
+            const matchingSessions = data.filter(session => {
+              let [hours, minutes] = session.time.split(":").map(Number);
+              hours = (hours + 3) % 24; //changeTime
+              const sessionTimeAdjusted = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+              return sessionTimeAdjusted === todaySessionTime;
+            });
+
+            selectedSessionID = matchingSessions.map(s => s.id);
+            console.log("selected sessio id: " + selectedSessionID);
+          }
+          renderSessions(selectedSessionID);
+        } catch (err) {
+          console.error('Помилка fetchSessions:', err);
+        }
+      }
+
+      function renderSessions(session) {
+        occupiedBySession = bookedBySession[session] || [];
+        console.log('Обрано сесію:', session, 'Зайняті місця:', occupiedBySession);
+      }
+
+      // Отримати дати
+      fetch(datesUrl)
+        .then(r => r.json())
+        .then(dates => {
+          dates.sort((a, b) => new Date(a) - new Date(b));
+          dates.forEach(date => {
+            today = new Date();
+            today = today.toISOString().split('T')[0];
+            sessionDate = new Date(date);
+            sessionDate = sessionDate.toISOString().split('T')[0];
+            if (sessionDate < today) return;
+            const block = document.createElement('div');
+            block.className = 'session-block';
+            block.textContent = new Date(date)
+              .toLocaleDateString('uk-UA', { weekday: 'short', day: 'numeric', month: 'numeric' });
+            block.dataset.value = date;
+            block.addEventListener('click', () => onDateSelect(block));
+            dateBlocks.appendChild(block);
+          });
         });
-      });
-    }
 
-    function buyTicket(tickets){
-      const dataParam = encodeURIComponent(JSON.stringify(tickets));
-      const sessionParam = encodeURIComponent(selectedSessionID);
-      window.location.href = `/payment?seats=${dataParam}&movie_id={{ movie_data['id'] }}&session_id=${sessionParam}`;
-    }
+      function onDateSelect(block) {
+        Array.from(dateBlocks.children).forEach(b => b.classList.remove('active'));
+        block.classList.add('active');
+        timeBlocks.innerHTML = '';
+        timeContainer.classList.remove('hidden');
+        hallSection.classList.add('hidden');
 
-    function updateSelectedSeats() {
-      const selected = Array.from(seatsEl.querySelectorAll('.place.selected'));
-      const arr = selected.map(el => ({ row:+el.dataset.row, seatNumber:+el.dataset.col, cost:+el.dataset.price }));
-      const input = document.getElementById('selectedSeatsInput'); if (input) input.value = JSON.stringify(arr);
-      const info = document.getElementById('selected-seats-info'); info.innerHTML = '';
-      arr.forEach((s,i) => info.innerHTML += `<p>Квиток <br> Ряд ${s.row+1}, Місце ${s.seatNumber+1}, ${s.cost}₴</p>`);
-      
-      const buttonExists = hallSection.querySelector('button') !== null;
-      if(!buttonExists){
-        const btn = document.createElement('button');
-        btn.textContent = 'Придбати квитки';
-        //btn.textContent = 'Через виключення світла, квитки можна придбати лише на касі кінотеатру. За деталями можете звертатися за номер +380 (96) 825 83 60';
-        console.log("button");
-        console.log(arr);
-        btn.addEventListener('click', () => buyTicket(arr));
-        hallSection.appendChild(btn);
+        const selectedDay = new Date(block.dataset.value);
+        const selectedDayNumber = selectedDay.getDay();
+        dayOfWeek = selectedDayNumber;
+
+        loadAllTickets();
+
+        todaySessionDate = block.dataset.value;
+        fetchSessions(block.dataset.value);
+
+        fetch(timesUrl(block.dataset.value))
+          .then(r => r.json())
+          .then(times => {
+            times.forEach(time => {
+              const tblock = document.createElement('div');
+              tblock.className = 'session-block';
+              tblock.textContent = time;
+              tblock.dataset.value = time;
+
+              tblock.addEventListener('click', () => {
+                onTimeSelect(tblock);
+              });
+              timeBlocks.appendChild(tblock);
+            });
+          });
       }
-      else{
-        const btn = hallSection.querySelector('button');
-        btn.addEventListener('click', () => buyTicket(arr));
-        hallSection.appendChild(btn, btn);
 
+      function onTimeSelect(block) {
+        Array.from(timeBlocks.children).forEach(b => b.classList.remove('active'));
+        block.classList.add('active');
+        todaySessionTime = block.textContent;
+        hallSection.classList.remove('hidden');
+        fetchSessions(todaySessionTime).then(() => drawHall());
       }
-    }
-  });
+
+
+
+      // Структура залу
+      const hallStructure = [
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0],
+        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0],
+      ];
+      const seatsEl = document.getElementById('seats');
+      const priceDisplay = document.getElementById('price-display');
+      const priceMap = {};
+
+
+      function drawHall() {
+
+        if (dayOfWeek === 6 || dayOfWeek === 0) {
+          priceMap[1] = 110;
+          priceMap[2] = 110;
+          priceMap[3] = 110;
+        }
+        else if (dayOfWeek === 2) {
+          priceMap[1] = 80;
+          priceMap[2] = 80;
+          priceMap[3] = 80;
+        }
+        else {
+          priceMap[1] = 100;
+          priceMap[2] = 100;
+          priceMap[3] = 100;
+        }
+
+        seatsEl.innerHTML = '';
+        priceDisplay.textContent = '';
+        const stylesST = getComputedStyle(seatsEl);
+        seatsEl.style.display = 'inline-grid';
+        seatsEl.style.gridTemplateColumns = `repeat(${Math.max(...hallStructure.map(r => r.length)) + 1}, ${size}px)`;
+
+        hallStructure.forEach((row, r) => {
+          const p = document.createElement('p');
+          p.textContent = r + 1;
+          p.style.color = '#fff';
+          p.style.textAlign = 'center';
+          p.style.margin = '5px';
+          seatsEl.appendChild(p);
+          row.forEach((cell, c) => {
+            if (cell === 0) {
+              const spacer = document.createElement('div'); spacer.className = 'seat-gap';
+              seatsEl.appendChild(spacer);
+              return;
+            }
+            const div = document.createElement('div');
+            div.className = `place type-${cell}`;
+            div.dataset.row = r;
+            div.dataset.col = c;
+            div.dataset.price = priceMap[cell];
+            div.textContent = c + 1;
+            const occupied = occupiedBySession.some(o => o.row === r && o.seatNumber === c);
+            console.log("occupied: " + occupied);
+            if (occupied) div.classList.add('occupied');
+            else {
+              div.addEventListener('mouseover', () => priceDisplay.textContent = `${div.dataset.price} ₴`);
+              div.addEventListener('mouseout', () => priceDisplay.textContent = '');
+              div.addEventListener('click', () => { div.classList.toggle('selected'); updateSelectedSeats(); });
+            }
+            seatsEl.appendChild(div);
+          });
+        });
+      }
+
+      function buyTicket(tickets) {
+        const dataParam = encodeURIComponent(JSON.stringify(tickets));
+        const sessionParam = encodeURIComponent(selectedSessionID);
+        window.location.href = `/payment?seats=${dataParam}&movie_id={{ movie_data['id'] }}&session_id=${sessionParam}`;
+      }
+
+      function updateSelectedSeats() {
+        const selected = Array.from(seatsEl.querySelectorAll('.place.selected'));
+        const arr = selected.map(el => ({ row: +el.dataset.row, seatNumber: +el.dataset.col, cost: +el.dataset.price }));
+        const input = document.getElementById('selectedSeatsInput'); if (input) input.value = JSON.stringify(arr);
+        const info = document.getElementById('selected-seats-info'); info.innerHTML = '';
+        arr.forEach((s, i) => info.innerHTML += `<p>Квиток <br> Ряд ${s.row + 1}, Місце ${s.seatNumber + 1}, ${s.cost}₴</p>`);
+
+        const buttonExists = hallSection.querySelector('button') !== null;
+        if (!buttonExists) {
+          const btn = document.createElement('button');
+          btn.textContent = 'Придбати квитки';
+          //btn.textContent = 'Через виключення світла, квитки можна придбати лише на касі кінотеатру. За деталями можете звертатися за номер +380 (96) 825 83 60';
+          console.log("button");
+          console.log(arr);
+          btn.addEventListener('click', () => buyTicket(arr));
+          hallSection.appendChild(btn);
+        }
+        else {
+          const btn = hallSection.querySelector('button');
+          btn.addEventListener('click', () => buyTicket(arr));
+          hallSection.appendChild(btn, btn);
+
+        }
+      }
+    });
   </script>
 </body>
+
 </html>
