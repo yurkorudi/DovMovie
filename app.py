@@ -713,6 +713,8 @@ def admin_login():
         if pwd == app.config['ADMIN_PASSWORD']:
             session['is_admin'] = True
             return redirect(url_for('admin.index'))
+
+
         flash('Невірний пароль', 'error')
     return render_template('admin/admin-login.html')
 
@@ -1518,7 +1520,9 @@ def payment_callback():
                 movie_title=confirmation_data['movie'],
                 session_datetime='1540 20.12',
                 # session_datetime=Showtime.query.filter_by(id=payment.sessionId).first().dateTime.strftime('%d.%m %H:%M'),
-                pdf_bytes=pdf_bytes)
+                pdf_bytes=pdf_bytes,
+                sender_email=EMAIL,
+                sender_password=PASSWORD)
             print("\n \n \n \n \n \n \n \n Ticket email sent.\n \n \n \n \n \n \n \n ")
         except Exception as e:
             print("\n \n \n Error sending ticket email: \n \n \n ", e)
