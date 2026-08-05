@@ -735,7 +735,7 @@ def ticket_pdf():
     buf.seek(0)
 
     download = request.args.get("download", "false").lower() == "true"
-    send_ticket_to_mail(to_mail=buyer_email, ticket_bytes=download, movie_title=film.title, session_dt_str=dt_str)
+    # send_ticket_to_mail(to_mail=buyer_email, ticket_bytes=download, movie_title=film.title, session_dt_str=dt_str)
     return send_file(buf, as_attachment=download, download_name='ticket.pdf', mimetype='application/pdf')
 
 @app.route('/admin/login', methods=['GET', 'POST'])
