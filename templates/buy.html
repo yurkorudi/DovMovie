@@ -241,6 +241,7 @@
         block.classList.add('active');
         todaySessionTime = block.textContent;
         hallSection.classList.remove('hidden');
+        loadAllTickets().then(() => fetchSessions(block.dataset.value));
         fetchSessions(todaySessionTime).then(() => drawHall());
       }
 
