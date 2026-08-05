@@ -16,7 +16,7 @@
     {% if success_pay == 'True' %}
     <h1 class='h1'>Операція успіщна</h1>
     <div class="ticket-pdf">
-      <embed src="{{ url_for('ticket_pdf') }}?order_id={{ order_id }}">
+      <embed id="ticket" src="{{ url_for('ticket_pdf') }}?order_id={{ order_id }}">
     </div>
     {% else %}
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
@@ -45,8 +45,28 @@
     }
 
     function load() {
-      const orderId = encodeURIComponent("{{ order_id }}");
-      window.location.href = "{{ url_for('ticket_pdf') }}?download=true&data_=" + orderId;
+      try {
+        const pdfUrl = document.getElementById("ticket").src;
+
+        const response = await fetch(pdfUrl);
+        if (!response.ok) {
+          throw new Error("Не вдалося отримати PDF");
+        }
+
+        const blob = await response.blob();
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "ticket.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+      }
     }
   </script>
 </body>

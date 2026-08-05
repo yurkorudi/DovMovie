@@ -29,7 +29,8 @@ from flask import send_file, session as flask_session
 import threading 
 import time 
 import yagmail
-
+import smtplib
+from email.message import EmailMessage
 
 
 
@@ -72,7 +73,8 @@ app.config['DM_ONLINE_DEVICE'] = 'kasar_online'
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'DovzhenkoAdminPassword')
 LIQPAY_PUBLIC_KEY = 'sandbox_i65007373353'
 LIQPAY_PRIVATE_KEY = 'sandbox_PiK0U7MpSJ69BAmzqIDS38ypRYJYNbDK9Oi2tt4M'
-
+EMAIL = 'lviv.dovzhenkocentre@gmail.com'
+PASSWORD = 'ypgg dhnr aubi kzyi'
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -424,86 +426,113 @@ def get_session_dates():
     return jsonify([d.isoformat() for d in dates])
 
 
-def send_dovzhenko_ticket_email(recipient, movie_title, session_datetime, pdf_bytes, sender_email=None, sender_password=None):
-    global gm
-    
-    # Аргументи:
-    #     recipient (str): email одержувача
-    #     movie_title (str): назва фільму
-    #     session_datetime (str): дата та час сеансу
-    #     pdf_file_path (str): шлях до PDF-файлу з квитками
-    #     sender_email (str): email відправника
-    #     sender_password (str): пароль відправника
 
-    
 
-    html_content = f"""\
+
+def send_dovzhenko_ticket_email(
+    recipient,
+    movie_title,
+    session_datetime,
+    pdf_bytes,
+    sender_email,
+    sender_password
+):
+    html_content = f"""
 <!doctype html>
 <html lang="uk">
   <body style="margin:0;padding:0;background-color:#0A1A2F;font-family:Arial,Helvetica,sans-serif;color:#333;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-            
 
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                 style="background:#ffffff;border-radius:8px;overflow:hidden;">
 
             <tr>
-              <td style="background:#111; padding:24px 28px; text-align:center;">
-                <div style="color:#fff; font-size:20px; font-weight:600;">
-                  DovzhenkoКіно — Квиток
-                </div>
-              </td>
-            </tr>
-            
-            <tr>
-              <td style="padding:28px;">
-                <h2 style="margin:0 0 16px 0; font-size:22px; color:#e53935;">Ваш квиток на фільм</h2>
-                
-                <div style="font-size:18px; margin-bottom:12px; color:#222;">
-                  <strong>Фільм:</strong> {movie_title}
-                </div>
-                <div style="font-size:16px; margin-bottom:20px; color:#555;">
-                  <strong>Сеанс:</strong> {session_datetime}
-                </div>
-                
-                <div style="font-size:14px; color:#444; line-height:1.5;">
-                  Ми раді вітати вас у Dovzhenko Center — культурному просторі кіно, музики та мистецтва.
-                  <br><br>
-                  Якщо ви не очікували цей лист або маєте запитання, зверніться до нас за адресою:
-                  <a href="mailto:lviv.dovzhenkocentre@gmail.com" style="color:#e53935; text-decoration:none;">lviv.dovzhenkocentre@gmail.com</a>.
-                </div>
+              <td style="background:#111;padding:24px;text-align:center;">
+                <span style="font-size:22px;color:white;font-weight:bold;">
+                    🎬 Dovzhenko Кіно
+                </span>
               </td>
             </tr>
 
-            <!-- Футер -->
             <tr>
-              <td style="background:#111; padding:18px 28px; text-align:center; color:#bbb; font-size:13px;">
-                © {2025} Dovzhenko Center — проспект Червоної Калини 81, Львів<br>
-                Телефон: +380 (96) 825 83 60 <br>
-                Сайт: <a href="https://www.dovzhenko-center.lviv.ua/en" style="color:#bbb; text-decoration:none;">https://www.dovzhenko-center.lviv.ua/en</a>
+              <td style="padding:30px;">
+                <h2 style="color:#e53935;margin-top:0;">
+                    Ваш квиток готовий
+                </h2>
+
+                <p>
+                    <strong>Фільм:</strong> {movie_title}
+                </p>
+
+                <p>
+                    <strong>Сеанс:</strong> {session_datetime}
+                </p>
+
+                <p>
+                    Дякуємо за покупку квитка!
+                </p>
+
+                <p>
+                    Ваш електронний квиток знаходиться у вкладенні до цього листа.
+                </p>
+
+                <p style="margin-top:25px;">
+                    Якщо виникли питання, звертайтесь:
+                    <a href="mailto:lviv.dovzhenkocentre@gmail.com">
+                        lviv.dovzhenkocentre@gmail.com
+                    </a>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background:#111;color:#ccc;text-align:center;padding:20px;font-size:13px;">
+                © 2025 Dovzhenko Center<br>
+                проспект Червоної Калини 81, Львів<br>
+                +380 (96) 825 83 60
               </td>
             </tr>
 
           </table>
+
         </td>
       </tr>
     </table>
   </body>
 </html>
 """
-    
 
-        
+    msg = EmailMessage()
 
-    gm.send(
-        to=recipient,
-        subject=f"🎬 Квитки на фільм '{movie_title}' - Dovzhenko Center",
-        contents=html_content,
-        attachments=[('ticket.pdf', pdf_bytes)]
+    msg["Subject"] = f"🎬 Квиток на фільм «{movie_title}»"
+    msg["From"] = sender_email
+    msg["To"] = recipient
+
+    msg.set_content(
+        f"""Дякуємо за покупку!
+
+            Фільм: {movie_title}
+            Сеанс: {session_datetime}
+
+            Ваш квиток знаходиться у вкладенні.
+            """
+                )
+
+    msg.add_alternative(html_content, subtype="html")
+
+
+    msg.add_attachment(
+        pdf_data,
+        maintype="application",
+        subtype="pdf",
+        filename="ticket.pdf"
     )
-    
-    print(f"✅ Лист з квитками успішно надіслано до {recipient}")
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(sender_email, sender_password)
+        smtp.send_message(msg)
     return True
         
 
@@ -517,6 +546,7 @@ def send_dovzhenko_ticket_email(recipient, movie_title, session_datetime, pdf_by
 
 @app.route('/api/sessions/times')
 def get_session_times():
+
     print("STATE: ___________________________________ TIMES _______________________________________")
     movie_id = request.args.get('movie_id', type=str)
     date_str = request.args.get('date')  
@@ -735,6 +765,8 @@ def ticket_pdf():
     buf.seek(0)
 
     download = request.args.get("download", "false").lower() == "true"
+    pdf_butes = buf.getvalue()
+    send_dovzhenko_ticket_email(recipient=buyer_email, movie_title=title, session_datetime=dt_str, sender_email=EMAIL, sender_password=PASSWORD, pdf_bytes=pdf_butes)
     return send_file(buf, as_attachment=download, download_name='ticket.pdf', mimetype='application/pdf')
 
 @app.route('/admin/login', methods=['GET', 'POST'])
