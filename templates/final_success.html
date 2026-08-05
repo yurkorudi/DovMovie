@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
   <meta charset="UTF-8">
   <title>квиток</title>
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/success.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   {% include 'header.html' %}
 
@@ -20,32 +22,33 @@
     <h1 class='h1'>Не вдалося провести транзакцію</h1>
     {% endif %}
     <div class="sucsess-button">
-        {% if success_pay == 'True' %}
-        <button class="btn btn-load" onclick="load()">Завантажити квиток</button>
-        {% endif %}
-        <button class="btn btn-return" onclick="home()">Повернутися на головну</button>
+      {% if success_pay == 'True' %}
+      <button class="btn btn-load" onclick="load()">Завантажити квиток</button>
+      {% endif %}
+      <button class="btn btn-return" onclick="home()">Повернутися на головну</button>
     </div>
   </main>
 
   {% include 'footer.html' %}
 
   <script>
-    
-    console.log("success: " + '{{ success_pay }}' );
-    console.log("info: " + '{{ info }}' );
-    
-    window.onload = function() {
-      console.log("info: " + '{{ info }}' );
+
+    console.log("success: " + '{{ success_pay }}');
+    console.log("info: " + '{{ info }}');
+
+    window.onload = function () {
+      console.log("info: " + '{{ info }}');
     };
 
-    function home(){ 
+    function home() {
       window.location.href = 'https://www.dovzhenko-center.lviv.ua/en/movies';
     }
 
-     function load(){ 
-      window.location.href = "{{ url_for('ticket_pdf') }}?download=true&data_={{ order_id }}";
-      console.log("info: " + '{{ info }}' );
+    function load() {
+      const orderId = encodeURIComponent("{{ order_id }}");
+      window.location.href = "{{ url_for('ticket_pdf') }}?download=true&data_=" + orderId;
     }
   </script>
 </body>
+
 </html>
