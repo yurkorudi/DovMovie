@@ -769,8 +769,10 @@ def ticket_pdf():
     try:
         pdf_butes = buf.getvalue()
         send_dovzhenko_ticket_email(recipient=buyer_email, movie_title=title, session_datetime=dt_str, sender_email=EMAIL, sender_password=PASSWORD, pdf_bytes=pdf_butes)
-    except:
+    except Exception as error_:
+
         print('__________________________________________________________________________________________ВСЬО НАХЄР ЛЯГЛО ВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛОВСЬО НАХЄР ЛЯГЛО')
+        print(error_)
     return send_file(buf, as_attachment=download, download_name='ticket.pdf', mimetype='application/pdf')
 
 @app.route('/admin/login', methods=['GET', 'POST'])
