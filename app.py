@@ -64,7 +64,7 @@ import ast
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dvzh_dev:19950812amZ@usbmr293.mysql.network:10279/dvzh_dev'
 app.config['DM_HOST'] = '194.44.116.57'
-app.config['DM_PORT'] = 3939
+app.config['DM_PORT'] = 3940
 app.config['SECRET_KEY'] = 'AdminSecretKey(2025)s'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['DM_DEVICE'] = 'kasar'
@@ -88,6 +88,16 @@ gm = yagmail.SMTP('lviv.dovzhenkocinema@gmail.com', 'sefp vmne atyf mxqv')
 db.init_app(app)
 Session(app)
 mail = Mail(app)
+
+INVALID_SESSION_IDS = {'', 'none', 'null'}
+
+def normalize_session_id(session_id):
+    if session_id is None:
+        return None
+    session_id = str(session_id).strip()
+    if session_id.lower() in INVALID_SESSION_IDS:
+        return None
+    return session_id
 
 UTC = pytz.UTC
 
@@ -134,7 +144,7 @@ class AuthModelView(ModelView):
         return redirect(url_for('admin_login'))
     
 
-admin = Admin(app, name="Каса", template_mode='bootstrap3', url='/admin', endpoint='admin', index_view=CustomHomeView())
+admin = Admin(app, name="Каса", url='/admin', endpoint='admin', index_view=CustomHomeView())
 admin.add_view(MainViev(endpoint='kasa', name='Каса'))
 
 
@@ -1206,7 +1216,11 @@ def political():
 def payment(movie_data=None, selected_seats=None):  
     try: 
         mov_id = request.args.get('movie_id')
-        session_id = request.args.get('session_id')
+        session_id = normalize_session_id(request.args.get('session_id'))
+        if not session_id:
+            return jsonify({'status': 'error', 'message': 'Missing session_id'}), 400
+        if not Showtime.query.filter_by(id=session_id).first():
+            return jsonify({'status': 'error', 'message': 'Invalid session_id'}), 400
         movie = Movie.query.filter_by(id=mov_id).first()
         if not movie:
             movie_data = {'title' : 'Movie ot found',
@@ -1287,7 +1301,11 @@ def liqpay(movie_data=None, selected_seats=None):
         seats_raw = html.unescape(seats_raw)
         seats_raw = ast.literal_eval(seats_raw)
         total_cost = sum(seat['cost'] for seat in seats_raw)
-        session = user_inf['session_id']
+        session = normalize_session_id(user_inf.get('session_id'))
+        if not session:
+            return jsonify({'status': 'error', 'message': 'Missing session_id'}), 400
+        if not Showtime.query.filter_by(id=session).first():
+            return jsonify({'status': 'error', 'message': 'Invalid session_id'}), 400
         
         
         
@@ -1315,7 +1333,7 @@ def liqpay(movie_data=None, selected_seats=None):
         db.session.commit()
         
         params = {
-        "public_key": LIQPAY_PUBLIC_KEY,
+        "public_key": 'sandbox_i65007373353',
         "version": "3",
         "action": "pay",
         "amount": str(total_cost),
@@ -1325,7 +1343,8 @@ def liqpay(movie_data=None, selected_seats=None):
 
         "result_url": f"http://178.62.106.58/success_loading?order_id={order_id}",
 
-        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}"
+        "server_url": f"http://178.62.106.58/payment_callback?order_id={order_id}",
+        "sendbox":1
 
     }
         
