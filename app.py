@@ -1514,7 +1514,9 @@ def payment_callback():
         
         try:
             print("\n \n \n \n Sending ticket email...\n \n \n \n ")
-            pdf_bytes = url_for('ticket_pdf', order_id=order_id)
+            pdf_bytes = requests.get(
+                url_for("ticket_pdf", order_id=order_id, _external=True)
+            ).content
             send_dovzhenko_ticket_email(
                 recipient=payment.email,
                 movie_title=confirmation_data['movie'],
